@@ -130,7 +130,7 @@ export function PartnerProfileView({ partner, onBack }: PartnerProfileViewProps)
 
   const risk = getRiskLevel(partner.novaScore) // Changed from novaScore
 
-    const chartConfig = {
+  const chartConfig = {
     score: {
       label: "Nova Score",
       color: "oklch(1 0 0)",
@@ -143,7 +143,7 @@ export function PartnerProfileView({ partner, onBack }: PartnerProfileViewProps)
       label: "Performance",
       color: "oklch(1 0 0)",
     },
-  }; // closes chartConfig ONLY
+  };
 
   return (
     <div className="min-h-screen bg-background">
