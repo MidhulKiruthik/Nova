@@ -192,7 +192,7 @@ export function ForecastCharts() {
       label: "Forecast",
       color: "var(--chart-2)",
     },
-  } // Added missing closing brace here
+  }; // Added missing closing brace here
 
   return (
     <div className="space-y-6">
@@ -252,6 +252,7 @@ export function ForecastCharts() {
                     stroke="var(--color-novaScore)"
                     strokeWidth={2}
                     dot={(props) => {
+                      // Validate props to prevent null cx/cy errors
                       if (!props || typeof props.cx !== "number" || typeof props.cy !== "number" || !props.payload) {
                         return null
                       }
