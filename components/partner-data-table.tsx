@@ -93,6 +93,26 @@ export function PartnerDataTable({ partners, onPartnerSelect }: PartnerDataTable
     return "destructive" // Using destructive variant for better contrast
   }
 
+  const getRiskBadgeClasses = (risk: string) => {
+    switch (risk) {
+      case "low":
+        return "bg-emerald-600 text-white border-emerald-600 hover:bg-emerald-700"
+      case "medium":
+        return "bg-amber-600 text-white border-amber-600 hover:bg-amber-700"
+      case "high":
+        return "bg-red-600 text-white border-red-600 hover:bg-red-700"
+      default:
+        return "bg-gray-600 text-white border-gray-600 hover:bg-gray-700"
+    }
+  }
+
+  const getScoreBadgeClasses = (score: number) => {
+    if (score >= 800) return "bg-emerald-600 text-white border-emerald-600 hover:bg-emerald-700"
+    if (score >= 700) return "bg-blue-600 text-white border-blue-600 hover:bg-blue-700"
+    if (score >= 600) return "bg-amber-600 text-white border-amber-600 hover:bg-amber-700"
+    return "bg-red-600 text-white border-red-600 hover:bg-red-700"
+  }
+
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("en-US", {
       style: "currency",
@@ -113,6 +133,26 @@ export function PartnerDataTable({ partners, onPartnerSelect }: PartnerDataTable
     if (sentiment > 0.3) return "text-chart-2"
     if (sentiment < -0.3) return "text-destructive"
     return "text-muted-foreground"
+  }
+
+  const getRiskBadgeStyle = (risk: string) => {
+    switch (risk) {
+      case "low":
+        return { backgroundColor: "#047857", color: "#ffffff", border: "1px solid #047857" }
+      case "medium":
+        return { backgroundColor: "#b45309", color: "#ffffff", border: "1px solid #b45309" }
+      case "high":
+        return { backgroundColor: "#b91c1c", color: "#ffffff", border: "1px solid #b91c1c" }
+      default:
+        return { backgroundColor: "#374151", color: "#ffffff", border: "1px solid #374151" }
+    }
+  }
+
+  const getScoreBadgeStyle = (score: number) => {
+    if (score >= 800) return { backgroundColor: "#047857", color: "#ffffff", border: "1px solid #047857" }
+    if (score >= 700) return { backgroundColor: "#1d4ed8", color: "#ffffff", border: "1px solid #1d4ed8" }
+    if (score >= 600) return { backgroundColor: "#b45309", color: "#ffffff", border: "1px solid #b45309" }
+    return { backgroundColor: "#b91c1c", color: "#ffffff", border: "1px solid #b91c1c" }
   }
 
   return (
@@ -286,9 +326,12 @@ export function PartnerDataTable({ partners, onPartnerSelect }: PartnerDataTable
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge variant={getScoreBadgeVariant(partner.novaScore)}>
+                      <div
+                        className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium font-mono"
+                        style={getScoreBadgeStyle(partner.novaScore)} // Changed from novaScore
+                      >
                         {partner.novaScore}
-                      </Badge>
+                      </div>
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
@@ -339,9 +382,12 @@ export function PartnerDataTable({ partners, onPartnerSelect }: PartnerDataTable
                       <div className="text-xs text-muted-foreground">★ rating</div>
                     </TableCell>
                     <TableCell>
-                      <Badge variant={getRiskBadgeVariant(partner.riskLevel)}>
+                      <div
+                        className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+                        style={getRiskBadgeStyle(partner.riskLevel)}
+                      >
                         {partner.riskLevel.toUpperCase()}
-                      </Badge>
+                      </div>
                     </TableCell>
                     <TableCell>
                       <div className="text-sm">

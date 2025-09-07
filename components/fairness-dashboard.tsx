@@ -92,14 +92,13 @@ export function FairnessDashboard({ fairnessMetrics }: FairnessDashboardProps) {
     .map((metric) => {
       const fairnessScore = Math.max(0, Math.min(100, Math.round((1 - Math.abs(metric.bias)) * 100)))
       const bias = Math.max(0, Math.min(100, Math.abs(metric.bias) * 100))
-      // Normalize avgScore from 0-1000 scale to 0-100 for radar chart
-      const avgScoreNormalized = Math.max(0, Math.min(100, Math.round((metric.averageScore / 1000) * 100)))
+      const avgScore = Math.max(0, Math.min(850, metric.averageScore))
 
       return {
         demographic: metric.demographic.length > 12 ? metric.demographic.substring(0, 12) + "..." : metric.demographic,
         fairnessScore,
         bias,
-        avgScore: avgScoreNormalized, // Use normalized score for radar
+        avgScore,
       }
     })
     .filter(
@@ -161,7 +160,7 @@ export function FairnessDashboard({ fairnessMetrics }: FairnessDashboardProps) {
       label: "Bias Level",
       color: "var(--chart-3)",
     },
-    avgScore: { // Changed from averageScore to avgScore for consistency with radarData
+    averageScore: {
       label: "Average Score",
       color: "var(--chart-1)",
     },

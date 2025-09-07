@@ -31,7 +31,7 @@ interface UserManagementProps {
 }
 
 export function UserManagement({ partners, onPartnersUpdate }: UserManagementProps) {
-  const { addPartner, updatePartner, deletePartner, setPartners, fairnessMetrics } = useDataStore()
+  const { addPartner, updatePartner, deletePartner, setPartners } = useDataStore()
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [editingPartner, setEditingPartner] = useState<Partner | null>(null)
 
@@ -71,7 +71,7 @@ export function UserManagement({ partners, onPartnersUpdate }: UserManagementPro
 
       <ExportManager
         partners={partners}
-        fairnessMetrics={fairnessMetrics} // Pass actual fairness metrics
+        fairnessMetrics={[]} // Pass actual fairness metrics from props if available
       />
 
       {/* Existing User Management Card */}
