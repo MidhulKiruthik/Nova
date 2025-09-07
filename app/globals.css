@@ -40,9 +40,9 @@
 }
 
 .dark {
-  --background: oklch(0.08 0.01 258); /* Very dark background */
+  --background: oklch(0.10 0.01 258); /* Slightly lighter dark background */
   --foreground: oklch(0.95 0.01 195); /* Light cyan text */
-  --card: oklch(0.12 0.01 258); /* Dark card background */
+  --card: oklch(0.15 0.01 258); /* Lighter dark card background for better contrast */
   --card-foreground: oklch(0.95 0.01 195); /* Light card text */
   --popover: oklch(0.12 0.01 258); /* Dark popover */
   --popover-foreground: oklch(0.95 0.01 195); /* Light popover text */
@@ -52,8 +52,8 @@
   --secondary-foreground: oklch(0.95 0.01 195); /* Light secondary text */
   --muted: oklch(0.18 0.01 258); /* Dark muted */
   --muted-foreground: oklch(0.65 0.01 195); /* Muted text */
-  --accent: oklch(0.18 0.01 258); /* Dark accent */
-  --accent-foreground: oklch(0.95 0.01 195); /* Light accent text */
+  --accent: oklch(0.6 0.15 35); /* Brighter orange accent for dark mode */
+  --accent-foreground: oklch(1 0 0); /* White text on accent */
   --destructive: oklch(0.45 0.15 25); /* Lighter red for dark mode */
   --destructive-foreground: oklch(0.7 0.2 25); /* Light red text */
   --border: oklch(0.18 0.01 258); /* Dark border */
