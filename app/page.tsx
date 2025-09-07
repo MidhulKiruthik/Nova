@@ -1,5 +1,6 @@
 "use client"
 
+import React, { useState, useEffect } from "react" // Explicitly import React
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { PartnerDataTable } from "@/components/partner-data-table"
@@ -15,11 +16,10 @@ import {
   getScoreDistribution,
   getRiskDistribution,
 } from "@/lib/mock-data"
-import { useState, useEffect } from "react"
 import type { Partner } from "@/lib/mock-data"
 import { dataStore } from "@/lib/data-store"
 
-export default function NovaPage() {
+const NovaPage = () => { // Changed to an arrow function component
   // Initialize with an empty array to ensure consistent SSR. Data will be loaded in useEffect.
   const [partners, setPartners] = useState<Partner[]>([])
 
@@ -161,12 +161,10 @@ export default function NovaPage() {
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium">Good (700-799)</span>
                     <div className="flex items-center gap-2">
-                      <div className="w-24 h-2 bg-muted rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-primary rounded-full"
-                          style={{ width: `${partners.length > 0 ? (scoreData.good / partners.length) * 100 : 0}%` }}
-                        ></div>
-                      </div>
+                      <div
+                        className="h-full bg-primary rounded-full"
+                        style={{ width: `${partners.length > 0 ? (scoreData.good / partners.length) * 100 : 0}%` }}
+                      ></div>
                       <span className="text-sm text-muted-foreground w-8">{scoreData.good}</span>
                     </div>
                   </div>
@@ -204,3 +202,5 @@ export default function NovaPage() {
     </div>
   )
 }
+
+export default NovaPage
