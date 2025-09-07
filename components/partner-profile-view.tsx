@@ -23,7 +23,7 @@ import {
   PolarRadiusAxis,
   Radar,
 } from "recharts"
-import { ChartTooltipContent } from "@/components/ui/chart" // Import ChartTooltipContent
+import { ChartContainer, ChartTooltipContent } from "@/components/ui/chart" // Import ChartContainer and ChartTooltipContent
 import type { Partner } from "@/lib/mock-data"
 
 interface PartnerProfileViewProps {
@@ -125,6 +125,17 @@ export function PartnerProfileView({ partner, onBack }: PartnerProfileViewProps)
   }
 
   const risk = getRiskLevel(partner.novaScore)
+
+  const chartConfig = {
+    score: {
+      label: "Nova Score",
+      color: "hsl(var(--primary))",
+    },
+    earnings: {
+      label: "Earnings",
+      color: "hsl(var(--chart-2))",
+    },
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -337,21 +348,23 @@ export function PartnerProfileView({ partner, onBack }: PartnerProfileViewProps)
                 <CardDescription>Nova Score trends over the past 12 months</CardDescription>
               </CardHeader>
               <CardContent>
-                <ResponsiveContainer width="100%" height={400}>
-                  <LineChart data={historicalScores} key={partner.id}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="month" />
-                    <YAxis />
-                    <Tooltip content={<ChartTooltipContent className="bg-white text-black dark:bg-white dark:text-black" />} />
-                    <Line
-                      type="monotone"
-                      dataKey="score"
-                      stroke="hsl(var(--primary))"
-                      strokeWidth={2}
-                      // Removed dot prop to show only lines
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
+                <ChartContainer config={chartConfig} className="h-[400px]" key={`historical-chart-${partner.id}`}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={historicalScores}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="month" />
+                      <YAxis />
+                      <Tooltip content={<ChartTooltipContent className="bg-white text-black dark:bg-white dark:text-black" />} />
+                      <Line
+                        type="monotone"
+                        dataKey="score"
+                        stroke="hsl(var(--primary))"
+                        strokeWidth={2}
+                        dot={false} // Removed dot prop to show only lines
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </ChartContainer>
               </CardContent>
             </Card>
           </TabsContent>
@@ -388,21 +401,23 @@ export function PartnerProfileView({ partner, onBack }: PartnerProfileViewProps)
                 <CardDescription>Predicted earnings based on historical patterns</CardDescription>
               </CardHeader>
               <CardContent>
-                <ResponsiveContainer width="100%" height={400}>
-                  <AreaChart data={forecastData} key={partner.id}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="month" />
-                    <YAxis />
-                    <Tooltip content={<ChartTooltipContent className="bg-white text-black dark:bg-white dark:text-black" />} />
-                    <Area
-                      type="monotone"
-                      dataKey="earnings"
-                      stroke="hsl(var(--chart-2))"
-                      fill="hsl(var(--chart-2))"
-                      fillOpacity={0.3}
-                    />
-                  </AreaChart>
-                </ResponsiveContainer>
+                <ChartContainer config={chartConfig} className="h-[400px]" key={`forecast-chart-${partner.id}`}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={forecastData}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="month" />
+                      <YAxis />
+                      <Tooltip content={<ChartTooltipContent className="bg-white text-black dark:bg-white dark:text-black" />} />
+                      <Area
+                        type="monotone"
+                        dataKey="earnings"
+                        stroke="hsl(var(--chart-2))"
+                        fill="hsl(var(--chart-2))"
+                        fillOpacity={0.3}
+                      />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </ChartContainer>
               </CardContent>
             </Card>
           </TabsContent>
