@@ -8,11 +8,17 @@ import { Cloud, CloudOff, RefreshCw, CheckCircle, AlertCircle, WifiOff } from "l
 import { dataStore, type SyncStatus } from "@/lib/data-store"
 
 export function SyncStatusIndicator() {
-  const [syncStatus, setSyncStatus] = useState<SyncStatus>(dataStore.getSyncStatus())
+  // Initialize with a default value that is consistent for SSR
+  const [syncStatus, setSyncStatus] = useState<SyncStatus>({ status: "idle", lastSync: null, pendingChanges: 0 })
   const [isOnline, setIsOnline] = useState(true)
 
   useEffect(() => {
-    const unsubscribe = dataStore.subscribeSyncStatus(setSyncStatus)
+    const currentDataStore = dataStore.instance; // Access the client-side instance
+
+    // Initial sync status load
+    setSyncStatus(currentDataStore.getSyncStatus());
+
+    const unsubscribe = currentDataStore.subscribeSyncStatus(setSyncStatus)
 
     const handleOnline = () => setIsOnline(true)
     const handleOffline = () => setIsOnline(false)
@@ -98,7 +104,7 @@ export function SyncStatusIndicator() {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => dataStore.forceSync()}
+            onClick={() => dataStore.instance.forceSync()}
             disabled={syncStatus.status === "syncing"}
           >
             <RefreshCw className={`w-3 h-3 ${syncStatus.status === "syncing" ? "animate-spin" : ""}`} />
