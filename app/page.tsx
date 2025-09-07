@@ -17,13 +17,14 @@ import {
   getRiskDistribution,
 } from "@/lib/mock-data"
 import type { Partner } from "@/lib/mock-data"
-import { getDataStoreInstance } from "@/lib/data-store" // Corrected import
+import { dataStore } from "@/lib/data-store" // Corrected import to use the directly exported singleton
 
 const NovaPage = () => {
   const [partners, setPartners] = useState<Partner[]>([])
 
   useEffect(() => {
-    const currentDataStore = getDataStoreInstance(); // Get the instance correctly
+    // Access the client-side dataStore instance
+    const currentDataStore = dataStore.instance; // Use dataStore.instance
 
     const storedPartners = currentDataStore.getPartners()
     if (storedPartners.length === 0) {
@@ -184,13 +185,9 @@ const NovaPage = () => {
                     <span className="text-sm font-medium">Poor (&lt;600)</span>
                     <div className="flex items-center gap-2">
                       <div
-                        className="w-24 h-2 bg-muted rounded-full overflow-hidden"
-                      >
-                        <div
-                          className="h-full bg-destructive rounded-full"
-                          style={{ width: `${partners.length > 0 ? (scoreData.poor / partners.length) * 100 : 0}%` }}
-                        ></div>
-                      </div>
+                        className="h-full bg-destructive rounded-full"
+                        style={{ width: `${partners.length > 0 ? (scoreData.poor / partners.length) * 100 : 0}%` }}
+                      ></div>
                       <span className="text-sm text-muted-foreground w-8">{scoreData.poor}</span>
                     </div>
                   </div>

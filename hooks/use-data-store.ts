@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { getDataStoreInstance, type SyncStatus } from "@/lib/data-store"
+import { dataStore, type SyncStatus } from "@/lib/data-store" // Corrected import
 import type { Partner, Review, FairnessMetric } from "@/lib/mock-data"
 
 export const useDataStore = () => {
@@ -12,30 +12,30 @@ export const useDataStore = () => {
   const [syncStatus, setSyncStatus] = useState<SyncStatus>({ status: "idle", lastSync: null, pendingChanges: 0 })
 
   // Use useRef to hold the DataStore instance, ensuring it's only created once on the client
-  const dataStoreRef = useRef<ReturnType<typeof getDataStoreInstance> | null>(null);
+  const dataStoreRef = useRef<typeof dataStore.instance | null>(null);
 
   useEffect(() => {
     // Ensure this code only runs on the client
     if (typeof window !== "undefined") {
-      dataStoreRef.current = getDataStoreInstance();
-      const dataStore = dataStoreRef.current;
+      dataStoreRef.current = dataStore.instance; // Use dataStore.instance
+      const currentDataStore = dataStoreRef.current;
 
-      dataStore.loadFromLocalStorage();
+      currentDataStore.loadFromLocalStorage();
 
       // Initial data load
-      setPartners(dataStore.getPartners());
-      setReviews(dataStore.getReviews());
-      setFairnessMetrics(dataStore.getFairnessMetrics());
-      setSyncStatus(dataStore.getSyncStatus());
+      setPartners(currentDataStore.getPartners());
+      setReviews(currentDataStore.getReviews());
+      setFairnessMetrics(currentDataStore.getFairnessMetrics());
+      setSyncStatus(currentDataStore.getSyncStatus());
 
       // Subscribe to data changes
-      const unsubscribeData = dataStore.subscribe(() => {
-        setPartners(dataStore.getPartners());
-        setReviews(dataStore.getReviews());
-        setFairnessMetrics(dataStore.getFairnessMetrics());
+      const unsubscribeData = currentDataStore.subscribe(() => {
+        setPartners(currentDataStore.getPartners());
+        setReviews(currentStore.getReviews());
+        setFairnessMetrics(currentDataStore.getFairnessMetrics());
       });
 
-      const unsubscribeSync = dataStore.subscribeSyncStatus(setSyncStatus);
+      const unsubscribeSync = currentDataStore.subscribeSyncStatus(setSyncStatus);
 
       return () => {
         unsubscribeData();

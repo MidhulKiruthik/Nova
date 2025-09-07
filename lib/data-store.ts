@@ -261,35 +261,36 @@ class DataStore {
   }
 }
 
-let dataStoreInstance: DataStore | null = null
+// Create a single instance of DataStore for the client
+const clientDataStoreInstance = new DataStore();
 
+// Export a singleton object that handles server-side dummy data and client-side real data
+export const dataStore = {
+  instance: typeof window === "undefined"
+    ? ({
+        getPartners: () => [],
+        getReviews: () => [],
+        getFairnessMetrics: () => [],
+        getSyncStatus: () => ({ status: 'offline', lastSync: null, pendingChanges: 0 }),
+        addPartner: () => {},
+        updatePartner: () => {},
+        deletePartner: () => {},
+        setPartners: () => {},
+        setReviews: () => {},
+        setFairnessMetrics: () => {},
+        forceSync: async () => {},
+        clearAllData: () => {},
+        getChangeHistory: () => [],
+        initializeWithMockData: () => {},
+        loadFromLocalStorage: () => {},
+        subscribe: () => () => {},
+        subscribeSyncStatus: () => () => {},
+      } as DataStore) // Cast to DataStore to satisfy type checker
+    : clientDataStoreInstance,
+};
+
+// Keep getDataStoreInstance for backward compatibility if other files still use it,
+// but it will now return the singleton instance.
 export function getDataStoreInstance(): DataStore {
-  if (typeof window === "undefined") {
-    // On the server, return a dummy object that won't cause errors
-    // This is crucial for SSR to avoid accessing browser APIs
-    return {
-      getPartners: () => [],
-      getReviews: () => [],
-      getFairnessMetrics: () => [],
-      getSyncStatus: () => ({ status: 'offline', lastSync: null, pendingChanges: 0 }),
-      addPartner: () => {},
-      updatePartner: () => {},
-      deletePartner: () => {},
-      setPartners: () => {},
-      setReviews: () => {},
-      setFairnessMetrics: () => {},
-      forceSync: async () => {},
-      clearAllData: () => {},
-      getChangeHistory: () => [],
-      initializeWithMockData: () => {},
-      loadFromLocalStorage: () => {},
-      subscribe: () => () => {},
-      subscribeSyncStatus: () => () => {},
-    } as DataStore; // Cast to DataStore to satisfy type checker
-  }
-
-  if (!dataStoreInstance) {
-    dataStoreInstance = new DataStore();
-  }
-  return dataStoreInstance;
+  return dataStore.instance;
 }
