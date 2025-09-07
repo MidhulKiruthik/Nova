@@ -31,7 +31,7 @@ export const useDataStore = () => {
       // Subscribe to data changes
       const unsubscribeData = currentDataStore.subscribe(() => {
         setPartners(currentDataStore.getPartners());
-        setReviews(currentStore.getReviews());
+        setReviews(currentDataStore.getReviews()); // Corrected: currentStore -> currentDataStore
         setFairnessMetrics(currentDataStore.getFairnessMetrics());
       });
 
