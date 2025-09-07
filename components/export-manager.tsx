@@ -19,6 +19,7 @@ import {
   downloadExcelFile,
   type ExportOptions,
 } from "@/lib/excel-utils"
+import { toast } from "sonner" // Import sonner toast
 
 interface ExportManagerProps {
   partners: Partner[]
@@ -39,6 +40,7 @@ export function ExportManager({ partners, fairnessMetrics }: ExportManagerProps)
 
   const handleExport = async () => {
     setIsExporting(true)
+    toast.loading("Generating report...", { id: "export-report" })
 
     try {
       switch (exportType) {
@@ -58,9 +60,10 @@ export function ExportManager({ partners, fairnessMetrics }: ExportManagerProps)
           downloadReport(fairnessReport)
           break
       }
+      toast.success("Report generated and download started!", { id: "export-report" })
     } catch (error) {
       console.error("Export failed:", error)
-      alert("Export failed. Please try again.")
+      toast.error("Export failed. Please try again.", { id: "export-report" })
     } finally {
       setIsExporting(false)
     }

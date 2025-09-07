@@ -21,6 +21,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Plus, Edit, Trash2, Users } from "lucide-react"
 import type { Partner } from "@/lib/mock-data"
 import { useDataStore } from "@/hooks/use-data-store"
+import { toast } from "sonner" // Import sonner toast
 
 interface UserManagementProps {
   partners: Partner[]
@@ -50,6 +51,11 @@ export function UserManagement({ partners, onPartnersUpdate }: UserManagementPro
   })
 
   const handleAddPartner = () => {
+    if (!newPartner.name || !newPartner.email) {
+      toast.error("Name and Email are required to add a partner.")
+      return
+    }
+
     const partner: Partner = {
       id: `p${Date.now()}`,
       name: newPartner.name || "",
@@ -77,6 +83,7 @@ export function UserManagement({ partners, onPartnersUpdate }: UserManagementPro
     onPartnersUpdate([...partners, partner])
     setNewPartner({})
     setIsAddDialogOpen(false)
+    toast.success("Partner added successfully!")
   }
 
   const handleEditPartner = () => {
@@ -87,6 +94,7 @@ export function UserManagement({ partners, onPartnersUpdate }: UserManagementPro
     onPartnersUpdate(updatedPartners)
     setEditingPartner(null)
     setIsEditDialogOpen(false)
+    toast.success("Partner updated successfully!")
   }
 
   const handleDeletePartner = (partnerId: string) => {
@@ -94,6 +102,7 @@ export function UserManagement({ partners, onPartnersUpdate }: UserManagementPro
       deletePartner(partnerId)
       const updatedPartners = partners.filter((p) => p.id !== partnerId)
       onPartnersUpdate(updatedPartners)
+      toast.info("Partner deleted.")
     }
   }
 
@@ -104,9 +113,10 @@ export function UserManagement({ partners, onPartnersUpdate }: UserManagementPro
         onImportComplete={(importedPartners) => {
           setPartners(importedPartners)
           onPartnersUpdate(importedPartners)
+          toast.success(`${importedPartners.length} partners imported successfully!`)
         }}
         onImportError={(error) => {
-          alert(error)
+          toast.error(`Import failed: ${error}`)
         }}
       />
 

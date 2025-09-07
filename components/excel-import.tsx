@@ -1,7 +1,5 @@
 "use client"
 
-import type React from "react"
-
 import { useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -12,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Upload, FileSpreadsheet, CheckCircle, AlertCircle, Download } from "lucide-react"
 import type { Partner } from "@/lib/mock-data"
 import { readExcelFile, createExcelFile } from "@/lib/excel-utils"
+import { toast } from "sonner" // Import sonner toast
 
 interface ExcelImportProps {
   onImportComplete: (partners: Partner[]) => void
@@ -96,6 +95,7 @@ export function ExcelImport({ onImportComplete, onImportError }: ExcelImportProp
       await processFile(excelFile)
     } else {
       onImportError("Please drop a valid Excel file (.xlsx or .xls)")
+      toast.error("Please drop a valid Excel file (.xlsx or .xls)")
     }
   }
 
@@ -110,6 +110,7 @@ export function ExcelImport({ onImportComplete, onImportError }: ExcelImportProp
     setIsProcessing(true)
     setImportProgress(0)
     setImportStep("preview")
+    toast.loading("Processing Excel file...", { id: "excel-import" })
 
     try {
       // Simulate progress updates
@@ -124,9 +125,11 @@ export function ExcelImport({ onImportComplete, onImportError }: ExcelImportProp
       setPreviewData(partners)
       setValidation(validationResult)
       setImportProgress(100)
+      toast.success("File processed. Please review and confirm import.", { id: "excel-import" })
     } catch (error) {
       console.error("Import error:", error)
       onImportError("Failed to process Excel file. Please check the format.")
+      toast.error("Failed to process Excel file. Please check the format.", { id: "excel-import" })
       setImportStep("upload")
     } finally {
       setIsProcessing(false)
@@ -137,6 +140,8 @@ export function ExcelImport({ onImportComplete, onImportError }: ExcelImportProp
     if (validation?.isValid && previewData.length > 0) {
       onImportComplete(previewData)
       setImportStep("complete")
+    } else if (validation && !validation.isValid) {
+      toast.error("Cannot import due to validation errors. Please fix them or upload a different file.")
     }
   }
 
@@ -177,6 +182,7 @@ export function ExcelImport({ onImportComplete, onImportError }: ExcelImportProp
     link.click()
 
     URL.revokeObjectURL(link.href)
+    toast.info("Download started for Excel template.")
   }
 
   const resetImport = () => {
@@ -184,6 +190,7 @@ export function ExcelImport({ onImportComplete, onImportError }: ExcelImportProp
     setPreviewData([])
     setValidation(null)
     setImportProgress(0)
+    toast.info("Import process reset.")
   }
 
   return (
