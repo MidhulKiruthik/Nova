@@ -375,8 +375,7 @@ export function FairnessDashboard({ fairnessMetrics }: FairnessDashboardProps) {
                     />
                   </LineChart>
                 </ResponsiveContainer>
-              </ChartContent>
-            </ChartContainer>
+              </ChartContainer>
             ) : (
               <div className="h-[400px] flex items-center justify-center text-muted-foreground">
                 No trend data available
