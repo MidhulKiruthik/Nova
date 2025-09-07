@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { dataStore, type SyncStatus } from "@/lib/data-store" // Corrected import
+import { dataStore, type SyncStatus } from "@/lib/data-store"
 import type { Partner, Review, FairnessMetric } from "@/lib/mock-data"
 
 export const useDataStore = () => {
@@ -17,7 +17,7 @@ export const useDataStore = () => {
   useEffect(() => {
     // Ensure this code only runs on the client
     if (typeof window !== "undefined") {
-      dataStoreRef.current = dataStore.instance; // Use dataStore.instance
+      dataStoreRef.current = dataStore.instance;
       const currentDataStore = dataStoreRef.current;
 
       currentDataStore.loadFromLocalStorage();
@@ -31,7 +31,7 @@ export const useDataStore = () => {
       // Subscribe to data changes
       const unsubscribeData = currentDataStore.subscribe(() => {
         setPartners(currentDataStore.getPartners());
-        setReviews(currentDataStore.getReviews()); // Corrected: currentStore -> currentDataStore
+        setReviews(currentDataStore.getReviews());
         setFairnessMetrics(currentDataStore.getFairnessMetrics());
       });
 
@@ -77,5 +77,6 @@ export const useDataStore = () => {
     forceSync: () => safeDataStoreCall('forceSync'),
     clearAllData: () => safeDataStoreCall('clearAllData'),
     getChangeHistory: () => safeDataStoreCall('getChangeHistory') || [],
+    initializeWithMockData: (partners: Partner[], reviews: Review[], fairnessMetrics: FairnessMetric[]) => safeDataStoreCall('initializeWithMockData', partners, reviews, fairnessMetrics),
   };
 };
