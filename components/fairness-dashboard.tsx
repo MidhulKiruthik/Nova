@@ -39,13 +39,13 @@ export function FairnessDashboard({ fairnessMetrics }: FairnessDashboardProps) {
       let adjustedAverageScore = metric.averageScore
 
       if (timeRange === "1month") {
-        // Simulate slightly worse metrics for a shorter, more recent period
-        adjustedBias = metric.bias * 1.1 // Increase absolute bias
-        adjustedAverageScore = metric.averageScore * 0.98 // Slightly lower score
+        // Simulate more significant "worse" metrics for a shorter, more recent period
+        adjustedBias = metric.bias * 1.5 // Increase absolute bias more
+        adjustedAverageScore = metric.averageScore * 0.95 // More noticeably lower score
       } else if (timeRange === "6months") {
-        // Simulate slightly better metrics over a longer period (improvement)
-        adjustedBias = metric.bias * 0.9 // Decrease absolute bias
-        adjustedAverageScore = metric.averageScore * 1.02 // Slightly higher score
+        // Simulate more significant "better" metrics over a longer period (improvement)
+        adjustedBias = metric.bias * 0.5 // Decrease absolute bias more
+        adjustedAverageScore = metric.averageScore * 1.05 // More noticeably higher score
       }
       // For "3months", use original metric values
 
@@ -322,7 +322,7 @@ export function FairnessDashboard({ fairnessMetrics }: FairnessDashboardProps) {
             {isLoading ? (
               <div className="h-[400px] flex items-center justify-center text-muted-foreground">Loading chart...</div>
             ) : radarData.length > 0 && radarData.length >= 3 ? (
-              <ChartContainer config={chartConfig} className="h-[400px]">
+              <ChartContainer config={chartConfig} className="h-[400px]" key={`radar-${timeRange}`}>
                 <ResponsiveContainer width="100%" height="100%">
                   <RadarChart data={radarData} margin={{ top: 40, right: 40, bottom: 40, left: 40 }}>
                     <PolarGrid />
@@ -359,7 +359,7 @@ export function FairnessDashboard({ fairnessMetrics }: FairnessDashboardProps) {
             {isLoading ? (
               <div className="h-[400px] flex items-center justify-center text-muted-foreground">Loading chart...</div>
             ) : filteredBiasTrendData.length > 0 ? (
-              <ChartContainer config={chartConfig} className="h-[400px]">
+              <ChartContainer config={chartConfig} className="h-[400px]" key={`trend-${timeRange}`}>
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={filteredBiasTrendData} margin={{ top: 20, right: 30, bottom: 20, left: 30 }}>
                     <CartesianGrid strokeDasharray="3 3" />
@@ -424,7 +424,7 @@ export function FairnessDashboard({ fairnessMetrics }: FairnessDashboardProps) {
                   <div className="space-y-2">
                     <div className="flex justify-between items-center">
                       <span className="text-sm text-muted-foreground">Average Score</span>
-                      <span className="text-sm font-medium">{demo.averageScore}</span>
+                      <span className="text-sm font-medium">{demo.averageScore.toFixed(0)}</span>
                     </div>
                     <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
                       <div
