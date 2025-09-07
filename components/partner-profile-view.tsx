@@ -36,15 +36,57 @@ export function PartnerProfileView({ partner, onBack }: PartnerProfileViewProps)
   const avgEarnings = partner.earningsHistory.reduce((sum, val) => sum + val, 0) / partner.earningsHistory.length
   const avgForecast = partner.forecastedEarnings.reduce((sum, val) => sum + val, 0) / partner.forecastedEarnings.length
 
-  // Generate historical data for charts
-  const historicalScores = Array.from({ length: 12 }, (_, i) => ({
-    month: new Date(2024, i).toLocaleDateString("en-US", { month: "short" }),
-    score: partner.novaScore + Math.random() * 40 - 20,
-    earnings: avgEarnings + Math.random() * 1000 - 500,
-  }))
+  // Generate historical data for charts based on actual earnings history and nova score
+  const generateHistoricalData = () => {
+    const data = []
+    const currentYear = new Date().getFullYear()
+    const currentMonth = new Date().getMonth()
+
+    // Use partner's actual earnings history for the most recent months
+    for (let i = 0; i < partner.earningsHistory.length; i++) {
+      const monthIndex = (currentMonth - (partner.earningsHistory.length - 1 - i) + 12) % 12;
+      const year = currentYear - (currentMonth < (partner.earningsHistory.length - 1 - i) ? 1 : 0);
+      const monthName = new Date(year, monthIndex).toLocaleDateString("en-US", { month: "short" });
+      
+      // Simulate historical scores with some variation around the current novaScore
+      const scoreVariation = (Math.random() - 0.5) * 30; // +/- 15 points
+      const historicalScore = Math.max(300, Math.min(850, partner.novaScore + scoreVariation - (partner.earningsHistory.length - 1 - i) * 2)); // Slight downward trend for older data
+      
+      data.push({
+        month: monthName,
+        score: Math.round(historicalScore),
+        earnings: partner.earningsHistory[i],
+      });
+    }
+
+    // If less than 6 months of history, generate older data
+    if (partner.earningsHistory.length < 6) {
+      const missingMonths = 6 - partner.earningsHistory.length;
+      for (let i = 0; i < missingMonths; i++) {
+        const monthIndex = (currentMonth - (partner.earningsHistory.length + missingMonths - 1 - i) + 12) % 12;
+        const year = currentYear - (currentMonth < (partner.earningsHistory.length + missingMonths - 1 - i) ? 1 : 0);
+        const monthName = new Date(year, monthIndex).toLocaleDateString("en-US", { month: "short" });
+
+        const scoreVariation = (Math.random() - 0.5) * 30;
+        const historicalScore = Math.max(300, Math.min(850, partner.novaScore + scoreVariation - (partner.earningsHistory.length + missingMonths - 1 - i) * 2));
+        const historicalEarnings = Math.max(500, avgEarnings + (Math.random() - 0.5) * 800 - (partner.earningsHistory.length + missingMonths - 1 - i) * 100);
+
+        data.unshift({ // Add to the beginning for older data
+          month: monthName,
+          score: Math.round(historicalScore),
+          earnings: Math.round(historicalEarnings),
+        });
+      }
+    }
+    
+    return data;
+  };
+
+  const historicalScores = generateHistoricalData();
+
 
   const forecastData = partner.forecastedEarnings.map((earnings, index) => ({
-    month: new Date(2024, index + 1).toLocaleDateString("en-US", { month: "short" }),
+    month: new Date(new Date().getFullYear(), new Date().getMonth() + index + 1).toLocaleDateString("en-US", { month: "short" }),
     earnings: earnings,
     confidence: 85 + Math.random() * 10,
   }))
@@ -214,7 +256,7 @@ export function PartnerProfileView({ partner, onBack }: PartnerProfileViewProps)
                 </CardHeader>
                 <CardContent>
                   <ResponsiveContainer width="100%" height={300}>
-                    <RadarChart data={radarData}>
+                    <RadarChart data={radarData} key={partner.id}>
                       <PolarGrid />
                       <PolarAngleAxis dataKey="subject" />
                       <PolarRadiusAxis angle={90} domain={[0, 100]} />
@@ -294,7 +336,7 @@ export function PartnerProfileView({ partner, onBack }: PartnerProfileViewProps)
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={400}>
-                  <LineChart data={historicalScores}>
+                  <LineChart data={historicalScores} key={partner.id}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="month" />
                     <YAxis />
@@ -345,7 +387,7 @@ export function PartnerProfileView({ partner, onBack }: PartnerProfileViewProps)
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={400}>
-                  <AreaChart data={forecastData}>
+                  <AreaChart data={forecastData} key={partner.id}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="month" />
                     <YAxis />
