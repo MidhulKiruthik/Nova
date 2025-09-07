@@ -23,8 +23,8 @@ import {
   PolarRadiusAxis,
   Radar,
 } from "recharts"
-import { ChartContainer, ChartTooltipContent } from "@/components/ui/chart" // Import ChartContainer and ChartTooltipContent
-import type { Partner } from "@/lib/interfaces" // Updated import
+import { ChartContainer, ChartTooltipContent } from "@/components/ui/chart"
+import type { Partner } from "@/lib/interfaces"
 
 interface PartnerProfileViewProps {
   partner: Partner
@@ -37,21 +37,18 @@ export function PartnerProfileView({ partner, onBack }: PartnerProfileViewProps)
   const avgEarnings = partner.earningsHistory.reduce((sum, val) => sum + val, 0) / partner.earningsHistory.length
   const avgForecast = partner.forecastedEarnings.reduce((sum, val) => sum + val, 0) / partner.forecastedEarnings.length
 
-  // Generate historical data for charts based on actual earnings history and novaScore
   const generateHistoricalData = () => {
     const data = []
     const currentYear = new Date().getFullYear()
     const currentMonth = new Date().getMonth()
 
-    // Use partner's actual earnings history for the most recent months
     for (let i = 0; i < partner.earningsHistory.length; i++) {
       const monthIndex = (currentMonth - (partner.earningsHistory.length - 1 - i) + 12) % 12;
       const year = currentYear - (currentMonth < (partner.earningsHistory.length - 1 - i) ? 1 : 0);
       const monthName = new Date(year, monthIndex).toLocaleDateString("en-US", { month: "short" });
       
-      // Simulate historical scores with some variation around the current novaScore
-      const scoreVariation = (Math.random() - 0.5) * 30; // +/- 15 points
-      const historicalScore = Math.max(300, Math.min(850, partner.novaScore + scoreVariation - (partner.earningsHistory.length - 1 - i) * 2)); // Slight downward trend for older data
+      const scoreVariation = (Math.random() - 0.5) * 30;
+      const historicalScore = Math.max(300, Math.min(850, partner.novaScore + scoreVariation - (partner.earningsHistory.length - 1 - i) * 2));
       
       data.push({
         month: monthName,
@@ -60,7 +57,6 @@ export function PartnerProfileView({ partner, onBack }: PartnerProfileViewProps)
       });
     }
 
-    // If less than 6 months of history, generate older data
     if (partner.earningsHistory.length < 6) {
       const missingMonths = 6 - partner.earningsHistory.length;
       for (let i = 0; i < missingMonths; i++) {
@@ -72,7 +68,7 @@ export function PartnerProfileView({ partner, onBack }: PartnerProfileViewProps)
         const historicalScore = Math.max(300, Math.min(850, partner.novaScore + scoreVariation - (partner.earningsHistory.length + missingMonths - 1 - i) * 2));
         const historicalEarnings = Math.max(500, avgEarnings + (Math.random() - 0.5) * 800 - (partner.earningsHistory.length + missingMonths - 1 - i) * 100);
 
-        data.unshift({ // Add to the beginning for older data
+        data.unshift({
           month: monthName,
           score: Math.round(historicalScore),
           earnings: Math.round(historicalEarnings),
@@ -84,7 +80,6 @@ export function PartnerProfileView({ partner, onBack }: PartnerProfileViewProps)
   };
 
   const historicalScores = generateHistoricalData();
-
 
   const forecastData = partner.forecastedEarnings.map((earnings, index) => ({
     month: new Date(new Date().getFullYear(), new Date().getMonth() + index + 1).toLocaleDateString("en-US", { month: "short" }),
@@ -108,10 +103,9 @@ export function PartnerProfileView({ partner, onBack }: PartnerProfileViewProps)
     { subject: "Health Stability", A: Math.max(100 - partner.leavesTaken * 10, 0), fullMark: 100 },
   ]
 
-  // Helper to convert novaScore (0-1000) back to a sentiment-like scale (-1 to 1) for display
   const novaScoreToSentiment = (novaScore: number) => (novaScore / 1000) * 2 - 1;
 
-  const getSentimentBreakdown = (novaScore: number) => { // Changed from score
+  const getSentimentBreakdown = (novaScore: number) => {
     const sentiment = novaScoreToSentiment(novaScore);
     if (sentiment > 0.3) return { positive: 85, neutral: 12, negative: 3 }
     if (sentiment > 0) return { positive: 65, neutral: 25, negative: 10 }
@@ -119,7 +113,7 @@ export function PartnerProfileView({ partner, onBack }: PartnerProfileViewProps)
     return { positive: 15, neutral: 25, negative: 60 }
   }
 
-  const sentimentBreakdown = getSentimentBreakdown(partner.novaScore) // Changed from novaScore
+  const sentimentBreakdown = getSentimentBreakdown(partner.novaScore)
 
   const getRiskLevel = (score: number) => {
     if (score >= 800) return { level: "Low", color: "bg-green-500", textColor: "text-green-700" }
@@ -128,7 +122,7 @@ export function PartnerProfileView({ partner, onBack }: PartnerProfileViewProps)
     return { level: "Critical", color: "bg-red-500", textColor: "text-red-700" }
   }
 
-  const risk = getRiskLevel(partner.novaScore) // Changed from novaScore
+  const risk = getRiskLevel(partner.novaScore)
 
   const chartConfig = {
     score: {
@@ -147,7 +141,6 @@ export function PartnerProfileView({ partner, onBack }: PartnerProfileViewProps)
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
       <header className="border-b border-border bg-card">
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
@@ -157,7 +150,6 @@ export function PartnerProfileView({ partner, onBack }: PartnerProfileViewProps)
                 Back to Dashboard
               </Button>
               <div className="flex items-center gap-3">
-
                 <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
                   <span className="text-primary-foreground font-bold text-sm">
                     {partner.name
@@ -177,14 +169,13 @@ export function PartnerProfileView({ partner, onBack }: PartnerProfileViewProps)
                 {risk.level} Risk
               </Badge>
               <div className="text-right">
-                <div className="text-2xl font-bold text-foreground">{partner.novaScore}</div> {/* Changed from novaScore */}
-                <p className="text-xs text-muted-foreground">Nova Score</p> {/* Changed from Nova Score */}
+                <div className="text-2xl font-bold text-foreground">{partner.novaScore}</div>
+                <p className="text-xs text-muted-foreground">Nova Score</p>
               </div>
             </div>
           </div>
         </header>
 
-      {/* Main Content */}
       <main className="container mx-auto px-6 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="grid w-full grid-cols-4">
@@ -195,22 +186,21 @@ export function PartnerProfileView({ partner, onBack }: PartnerProfileViewProps)
           </TabsList>
 
           <TabsContent value="overview" className="space-y-6">
-            {/* Key Metrics */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <Card>
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">Nova Score</CardTitle> {/* Changed from Nova Score */}
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Nova Score</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-3xl font-bold text-foreground">{partner.novaScore}</div> {/* Changed from novaScore */}
+                  <div className="text-3xl font-bold text-foreground">{partner.novaScore}</div>
                   <div className="flex items-center gap-1 mt-1">
-                    {partner.novaScore > 750 ? ( // Changed from novaScore
+                    {partner.novaScore > 750 ? (
                       <TrendingUp className="w-4 h-4 text-green-500" />
                     ) : (
                       <TrendingDown className="w-4 h-4 text-red-500" />
                     )}
                     <span className="text-xs text-muted-foreground">
-                      {partner.novaScore > 750 ? "+12 this month" : "-8 this month"} {/* Changed from novaScore */}
+                      {partner.novaScore > 750 ? "+12 this month" : "-8 this month"}
                     </span>
                   </div>
                 </CardContent>
@@ -249,12 +239,11 @@ export function PartnerProfileView({ partner, onBack }: PartnerProfileViewProps)
               </Card>
             </div>
 
-            {/* Score Breakdown */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <Card>
                 <CardHeader>
                   <CardTitle>Score Components</CardTitle>
-                  <CardDescription>Detailed breakdown of Nova Score factors</CardDescription> {/* Changed from Nova Score */}
+                  <CardDescription>Detailed breakdown of Nova Score factors</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {performanceMetrics.map((metric, index) => (
@@ -296,7 +285,6 @@ export function PartnerProfileView({ partner, onBack }: PartnerProfileViewProps)
               </Card>
             </div>
 
-            {/* Risk Factors */}
             <Card>
               <CardHeader>
                 <CardTitle>Risk Assessment</CardTitle>
@@ -339,7 +327,7 @@ export function PartnerProfileView({ partner, onBack }: PartnerProfileViewProps)
                         <span className="text-sm">High trip volume</span>
                       </div>
                     )}
-                    {partner.novaScore > 750 && ( // Changed from novaScore
+                    {partner.novaScore > 750 && (
                       <div className="flex items-center gap-2 p-3 bg-purple-50 dark:bg-purple-950/20 rounded-lg">
                         <CheckCircle className="w-4 h-4 text-purple-500" />
                         <span className="text-sm">Strong credit profile</span>
@@ -355,7 +343,7 @@ export function PartnerProfileView({ partner, onBack }: PartnerProfileViewProps)
             <Card>
               <CardHeader>
                 <CardTitle>Historical Performance</CardTitle>
-                <CardDescription>Nova Score trends over the past 12 months</CardDescription> {/* Changed from Nova Score */}
+                <CardDescription>Nova Score trends over the past 12 months</CardDescription>
               </CardHeader>
               <CardContent>
                 <ChartContainer config={chartConfig} className="h-[400px]" key={`historical-chart-${partner.id}`}>
@@ -364,7 +352,7 @@ export function PartnerProfileView({ partner, onBack }: PartnerProfileViewProps)
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="month" />
                       <YAxis />
-                      <Tooltip content={<ChartTooltipContent className="bg-white text-black dark:bg-white dark:text-black" />} />
+                      <Tooltip content={<ChartTooltipContent />} /> {/* Removed className */}
                       <Line
                         type="monotone"
                         dataKey="score"
@@ -417,7 +405,7 @@ export function PartnerProfileView({ partner, onBack }: PartnerProfileViewProps)
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="month" />
                       <YAxis />
-                      <Tooltip content={<ChartTooltipContent className="bg-white text-black dark:bg-white dark:text-black" />} />
+                      <Tooltip content={<ChartTooltipContent />} /> {/* Removed className */}
                       <Area
                         type="monotone"
                         dataKey="earnings"
