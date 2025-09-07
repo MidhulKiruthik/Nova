@@ -130,20 +130,20 @@ export function PartnerProfileView({ partner, onBack }: PartnerProfileViewProps)
 
   const risk = getRiskLevel(partner.novaScore) // Changed from novaScore
 
-  const chartConfig = {
+    const chartConfig = {
     score: {
-      label: "Nova Score", // Changed from ML Score
-      color: "oklch(1 0 0)", // White
+      label: "Nova Score",
+      color: "oklch(1 0 0)",
     },
     earnings: {
       label: "Earnings",
-      color: "oklch(1 0 0)", // White
+      color: "oklch(1 0 0)",
     },
-    radar: { // For the radar chart
+    radar: {
       label: "Performance",
-      color: "oklch(1 0 0)", // White
-    }, // This was the missing brace!
-  };
+      color: "oklch(1 0 0)",
+    },
+  }; // closes chartConfig ONLY
 
   return (
     <div className="min-h-screen bg-background">
@@ -157,6 +157,7 @@ export function PartnerProfileView({ partner, onBack }: PartnerProfileViewProps)
                 Back to Dashboard
               </Button>
               <div className="flex items-center gap-3">
+
                 <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
                   <span className="text-primary-foreground font-bold text-sm">
                     {partner.name
