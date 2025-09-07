@@ -192,7 +192,7 @@ export function ForecastCharts() {
       label: "Forecast",
       color: "var(--chart-2)",
     },
-  
+  } // Added missing closing brace here
 
   return (
     <div className="space-y-6">
@@ -310,7 +310,8 @@ export function ForecastCharts() {
                   />
                 </AreaChart>
               </ResponsiveContainer>
-            </CardContent>
+            </ChartContainer>
+          </CardContent>
         </Card>
       </div>
 
