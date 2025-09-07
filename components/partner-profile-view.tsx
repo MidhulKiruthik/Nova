@@ -23,6 +23,7 @@ import {
   PolarRadiusAxis,
   Radar,
 } from "recharts"
+import { ChartTooltipContent } from "@/components/ui/chart" // Import ChartTooltipContent
 import type { Partner } from "@/lib/mock-data"
 
 interface PartnerProfileViewProps {
@@ -266,6 +267,7 @@ export function PartnerProfileView({ partner, onBack }: PartnerProfileViewProps)
                         stroke="hsl(var(--primary))"
                         fill="hsl(var(--primary))"
                         fillOpacity={0.3}
+                        strokeWidth={2} // Ensure stroke width is visible
                       />
                     </RadarChart>
                   </ResponsiveContainer>
@@ -340,13 +342,13 @@ export function PartnerProfileView({ partner, onBack }: PartnerProfileViewProps)
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="month" />
                     <YAxis />
-                    <Tooltip />
+                    <Tooltip content={<ChartTooltipContent className="bg-white text-black dark:bg-white dark:text-black" />} />
                     <Line
                       type="monotone"
                       dataKey="score"
                       stroke="hsl(var(--primary))"
                       strokeWidth={2}
-                      dot={{ fill: "hsl(var(--primary))" }}
+                      // Removed dot prop to show only lines
                     />
                   </LineChart>
                 </ResponsiveContainer>
@@ -391,7 +393,7 @@ export function PartnerProfileView({ partner, onBack }: PartnerProfileViewProps)
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="month" />
                     <YAxis />
-                    <Tooltip />
+                    <Tooltip content={<ChartTooltipContent className="bg-white text-black dark:bg-white dark:text-black" />} />
                     <Area
                       type="monotone"
                       dataKey="earnings"
