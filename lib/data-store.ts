@@ -261,4 +261,35 @@ class DataStore {
   }
 }
 
-export const dataStore = new DataStore()
+let dataStoreInstance: DataStore | null = null
+
+export function getDataStoreInstance(): DataStore {
+  if (typeof window === "undefined") {
+    // On the server, return a dummy object that won't cause errors
+    // This is crucial for SSR to avoid accessing browser APIs
+    return {
+      getPartners: () => [],
+      getReviews: () => [],
+      getFairnessMetrics: () => [],
+      getSyncStatus: () => ({ status: 'offline', lastSync: null, pendingChanges: 0 }),
+      addPartner: () => {},
+      updatePartner: () => {},
+      deletePartner: () => {},
+      setPartners: () => {},
+      setReviews: () => {},
+      setFairnessMetrics: () => {},
+      forceSync: async () => {},
+      clearAllData: () => {},
+      getChangeHistory: () => [],
+      initializeWithMockData: () => {},
+      loadFromLocalStorage: () => {},
+      subscribe: () => () => {},
+      subscribeSyncStatus: () => () => {},
+    } as DataStore; // Cast to DataStore to satisfy type checker
+  }
+
+  if (!dataStoreInstance) {
+    dataStoreInstance = new DataStore();
+  }
+  return dataStoreInstance;
+}
