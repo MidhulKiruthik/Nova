@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -23,21 +23,26 @@ import {
   CartesianGrid,
   ResponsiveContainer,
 } from "recharts"
-import type { Partner } from "@/lib/interfaces" // Updated import
+import type { Partner } from "@/lib/interfaces"
+import { useDataStore } from "@/hooks/use-data-store" // Import useDataStore
 
-interface ForecastChartsProps {
-  partners: Partner[]
-}
-
-export function ForecastCharts({ partners }: ForecastChartsProps) {
-  const [selectedPartner, setSelectedPartner] = useState<string>(partners[0]?.id || "")
+export function ForecastCharts() { // Removed partners prop
+  const { partners } = useDataStore(); // Fetch partners directly
+  const [selectedPartner, setSelectedPartner] = useState<string>("") // Initialize with empty string
   const [forecastPeriod, setForecastPeriod] = useState<"3months" | "6months" | "12months">("6months")
+
+  // Set initial selected partner once partners data is loaded
+  useEffect(() => {
+    if (partners.length > 0 && selectedPartner === "") {
+      setSelectedPartner(partners[0].id);
+    }
+  }, [partners, selectedPartner]);
 
   const validatePartners = (partners: Partner[]) => {
     return partners.filter(
       (partner) =>
         partner &&
-        typeof partner.novaScore === "number" && // Changed from mlScore
+        typeof partner.novaScore === "number" &&
         Array.isArray(partner.earningsHistory) &&
         Array.isArray(partner.forecastedEarnings),
     )
@@ -69,7 +74,7 @@ export function ForecastCharts({ partners }: ForecastChartsProps) {
       date.setMonth(date.getMonth() - i)
       const monthName = date.toLocaleDateString("en-US", { month: "short", year: "2-digit" })
 
-      const avgScore = validPartners.reduce((sum, p) => sum + p.novaScore, 0) / validPartners.length // Changed from mlScore
+      const avgScore = validPartners.reduce((sum, p) => sum + p.novaScore, 0) / validPartners.length
       const variation = (Math.random() - 0.5) * 40
       const historicalScore = Math.max(300, Math.min(850, avgScore + variation))
 
@@ -81,7 +86,7 @@ export function ForecastCharts({ partners }: ForecastChartsProps) {
 
       data.push({
         month: monthName,
-        novaScore: Math.round(historicalScore), // Changed from mlScore
+        novaScore: Math.round(historicalScore),
         earnings: Math.round(avgEarnings + (Math.random() - 0.5) * 500),
         riskScore: Math.round(100 - (historicalScore / 850) * 100),
         isHistorical: true,
@@ -89,7 +94,7 @@ export function ForecastCharts({ partners }: ForecastChartsProps) {
     }
 
     // Current month
-    const avgScore = validPartners.reduce((sum, p) => sum + p.novaScore, 0) / validPartners.length // Changed from mlScore
+    const avgScore = validPartners.reduce((sum, p) => sum + p.novaScore, 0) / validPartners.length
     const avgEarnings =
       validPartners.reduce((sum, p) => {
         const partnerAvg = p.earningsHistory.reduce((s, e) => s + e, 0) / p.earningsHistory.length
@@ -98,7 +103,7 @@ export function ForecastCharts({ partners }: ForecastChartsProps) {
 
     data.push({
       month: currentDate.toLocaleDateString("en-US", { month: "short", year: "2-digit" }),
-      novaScore: Math.round(avgScore), // Changed from mlScore
+      novaScore: Math.round(avgScore),
       earnings: Math.round(avgEarnings),
       riskScore: Math.round(100 - (avgScore / 850) * 100),
       isHistorical: false,
@@ -118,7 +123,7 @@ export function ForecastCharts({ partners }: ForecastChartsProps) {
 
       data.push({
         month: monthName,
-        novaScore: Math.round(forecastScore), // Changed from mlScore
+        novaScore: Math.round(forecastScore),
         earnings: forecastEarnings,
         riskScore: Math.round(100 - (forecastScore / 850) * 100),
         isHistorical: false,
@@ -147,7 +152,7 @@ export function ForecastCharts({ partners }: ForecastChartsProps) {
         month: date.toLocaleDateString("en-US", { month: "short" }),
         actual: earnings,
         forecast: null,
-        novaScore: partner.novaScore + (Math.random() - 0.5) * 50, // Changed from mlScore
+        novaScore: partner.novaScore + (Math.random() - 0.5) * 50,
       })
     })
 
@@ -159,7 +164,7 @@ export function ForecastCharts({ partners }: ForecastChartsProps) {
         month: date.toLocaleDateString("en-US", { month: "short" }),
         actual: null,
         forecast: earnings,
-        novaScore: partner.novaScore + index * 5 + (Math.random() - 0.5) * 30, // Changed from mlScore
+        novaScore: partner.novaScore + index * 5 + (Math.random() - 0.5) * 30,
       })
     })
 
@@ -177,25 +182,25 @@ export function ForecastCharts({ partners }: ForecastChartsProps) {
   ]
 
   const chartConfig = {
-    novaScore: { // Changed from mlScore
-      label: "Nova Score", // Changed from ML Score
-      color: "var(--chart-1)", // Corrected: Removed hsl()
+    novaScore: {
+      label: "Nova Score",
+      color: "var(--chart-1)",
     },
     earnings: {
       label: "Earnings",
-      color: "var(--chart-2)", // Corrected: Removed hsl()
+      color: "var(--chart-2)",
     },
     riskScore: {
       label: "Risk Score",
-      color: "var(--chart-3)", // Corrected: Removed hsl()
+      color: "var(--chart-3)",
     },
     actual: {
       label: "Actual",
-      color: "var(--chart-1)", // Corrected: Removed hsl()
+      color: "var(--chart-1)",
     },
     forecast: {
       label: "Forecast",
-      color: "var(--chart-2)", // Corrected: Removed hsl()
+      color: "var(--chart-2)",
     },
   }
 
@@ -206,8 +211,8 @@ export function ForecastCharts({ partners }: ForecastChartsProps) {
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle>Nova Score Forecast Charts</CardTitle> {/* Changed from ML Score */}
-              <CardDescription>Predictive analytics for Nova scores, earnings, and risk assessments</CardDescription> {/* Changed from ML Score */}
+              <CardTitle>Nova Score Forecast Charts</CardTitle>
+              <CardDescription>Predictive analytics for Nova scores, earnings, and risk assessments</CardDescription>
             </div>
             <div className="flex items-center gap-2">
               <Button
@@ -240,8 +245,8 @@ export function ForecastCharts({ partners }: ForecastChartsProps) {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
-            <CardTitle>Nova Score Trend Forecast</CardTitle> {/* Changed from ML Score */}
-            <CardDescription>Historical performance and predicted Nova score evolution</CardDescription> {/* Changed from ML Score */}
+            <CardTitle>Nova Score Trend Forecast</CardTitle>
+            <CardDescription>Historical performance and predicted Nova score evolution</CardDescription>
           </CardHeader>
           <CardContent>
             <ChartContainer config={chartConfig} className="h-[300px]">
@@ -253,7 +258,7 @@ export function ForecastCharts({ partners }: ForecastChartsProps) {
                   <ChartTooltip content={<ChartTooltipContent />} />
                   <Line
                     type="monotone"
-                    dataKey="novaScore" // Use novaScore as key
+                    dataKey="novaScore"
                     stroke="var(--color-novaScore)"
                     strokeWidth={2}
                     dot={(props) => {
@@ -335,7 +340,7 @@ export function ForecastCharts({ partners }: ForecastChartsProps) {
             >
               {validPartners.map((partner) => (
                 <option key={partner.id} value={partner.id}>
-                  {partner.name} (Score: {partner.novaScore}) {/* Changed from mlScore */}
+                  {partner.name} (Score: {partner.novaScore})
                 </option>
               ))}
             </select>
@@ -378,8 +383,8 @@ export function ForecastCharts({ partners }: ForecastChartsProps) {
                     <h4 className="font-medium text-foreground mb-2">Current Metrics</h4>
                     <div className="space-y-2">
                       <div className="flex justify-between">
-                        <span className="text-sm text-muted-foreground">Nova Score</span> {/* Changed from ML Score */}
-                        <Badge variant="default">{selectedPartnerData.novaScore}</Badge> {/* Changed from novaScore */}
+                        <span className="text-sm text-muted-foreground">Nova Score</span>
+                        <Badge variant="default">{selectedPartnerData.novaScore}</Badge>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-sm text-muted-foreground">Risk Level</span>
@@ -444,7 +449,8 @@ export function ForecastCharts({ partners }: ForecastChartsProps) {
                   <Bar dataKey="forecast" fill="var(--color-chart-2)" name="Forecast" />
                 </BarChart>
               </ResponsiveContainer>
-            </CardContent>
+            </ChartContainer>
+          </CardContent>
         </Card>
 
         <Card>
