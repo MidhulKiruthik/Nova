@@ -137,7 +137,6 @@ export function PartnerProfileView({ partner, onBack }: PartnerProfileViewProps)
       label: "Performance",
       color: "oklch(1 0 0)",
     },
-  };
 
   return (
     <div className="min-h-screen bg-background">
