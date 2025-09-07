@@ -24,14 +24,13 @@ import {
   ResponsiveContainer,
 } from "recharts"
 import type { Partner } from "@/lib/interfaces"
-import { useDataStore } from "@/hooks/use-data-store" // Import useDataStore
+import { useDataStore } from "@/hooks/use-data-store"
 
-export function ForecastCharts() { // Removed partners prop
-  const { partners } = useDataStore(); // Fetch partners directly
-  const [selectedPartner, setSelectedPartner] = useState<string>("") // Initialize with empty string
+export function ForecastCharts() {
+  const { partners } = useDataStore();
+  const [selectedPartner, setSelectedPartner] = useState<string>("")
   const [forecastPeriod, setForecastPeriod] = useState<"3months" | "6months" | "12months">("6months")
 
-  // Set initial selected partner once partners data is loaded
   useEffect(() => {
     if (partners.length > 0 && selectedPartner === "") {
       setSelectedPartner(partners[0].id);
@@ -60,7 +59,6 @@ export function ForecastCharts() { // Removed partners prop
     )
   }
 
-  // Generate historical and forecast data
   const generateForecastData = () => {
     const months = forecastPeriod === "3months" ? 3 : forecastPeriod === "6months" ? 6 : 12
     const historicalMonths = 6
@@ -68,7 +66,6 @@ export function ForecastCharts() { // Removed partners prop
     const data = []
     const currentDate = new Date()
 
-    // Historical data
     for (let i = historicalMonths; i > 0; i--) {
       const date = new Date(currentDate)
       date.setMonth(date.getMonth() - i)
@@ -93,7 +90,6 @@ export function ForecastCharts() { // Removed partners prop
       })
     }
 
-    // Current month
     const avgScore = validPartners.reduce((sum, p) => sum + p.novaScore, 0) / validPartners.length
     const avgEarnings =
       validPartners.reduce((sum, p) => {
@@ -110,14 +106,12 @@ export function ForecastCharts() { // Removed partners prop
       isCurrent: true,
     })
 
-    // Forecast data
     for (let i = 1; i <= months; i++) {
       const date = new Date(currentDate)
       date.setMonth(date.getMonth() + i)
       const monthName = date.toLocaleDateString("en-US", { month: "short", year: "2-digit" })
 
-      // Trend-based forecasting with some randomness
-      const trendFactor = 1 + i * 0.02 // Slight upward trend
+      const trendFactor = 1 + i * 0.02
       const forecastScore = Math.max(300, Math.min(850, avgScore * trendFactor + (Math.random() - 0.5) * 30))
       const forecastEarnings = Math.round(avgEarnings * trendFactor + (Math.random() - 0.5) * 400)
 
@@ -136,7 +130,6 @@ export function ForecastCharts() { // Removed partners prop
 
   const forecastData = generateForecastData()
 
-  // Individual partner forecast
   const generatePartnerForecast = (partnerId: string) => {
     const partner = validPartners.find((p) => p.id === partnerId)
     if (!partner) return []
@@ -144,7 +137,6 @@ export function ForecastCharts() { // Removed partners prop
     const data = []
     const currentDate = new Date()
 
-    // Historical earnings
     partner.earningsHistory.forEach((earnings, index) => {
       const date = new Date(currentDate)
       date.setMonth(date.getMonth() - (partner.earningsHistory.length - index))
@@ -156,7 +148,6 @@ export function ForecastCharts() { // Removed partners prop
       })
     })
 
-    // Forecast
     partner.forecastedEarnings.forEach((earnings, index) => {
       const date = new Date(currentDate)
       date.setMonth(date.getMonth() + index + 1)
@@ -174,7 +165,6 @@ export function ForecastCharts() { // Removed partners prop
   const partnerForecastData = generatePartnerForecast(selectedPartner)
   const selectedPartnerData = validPartners.find((p) => p.id === selectedPartner)
 
-  // Risk distribution forecast
   const riskForecastData = [
     { name: "Low Risk", current: 45, forecast: 52, color: "#10b981" },
     { name: "Medium Risk", current: 35, forecast: 32, color: "#f59e0b" },
@@ -262,7 +252,6 @@ export function ForecastCharts() { // Removed partners prop
                     stroke="var(--color-novaScore)"
                     strokeWidth={2}
                     dot={(props) => {
-                      // Validate props to prevent null cx/cy errors
                       if (!props || typeof props.cx !== "number" || typeof props.cy !== "number" || !props.payload) {
                         return null
                       }

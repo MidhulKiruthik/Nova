@@ -10,23 +10,22 @@ import { SentimentHeatmap } from "@/components/sentiment-heatmap";
 import { UserManagement } from "@/components/user-management";
 import { SyncStatusIndicator } from "@/components/sync-status-indicator";
 import { useDataStore } from "@/hooks/use-data-store";
-import { mockPartners } from "@/lib/mock-partners"; // Updated import
-import { mockReviews } from "@/lib/mock-reviews"; // Updated import
-import { mockFairnessMetrics } from "@/lib/mock-fairness-data"; // Updated import
+import { mockPartners } from "@/lib/mock-partners";
+import { mockReviews } from "@/lib/mock-reviews";
+import { mockFairnessMetrics } from "@/lib/mock-fairness-data";
 import { Home, Users, BarChart, Shield, TrendingUp, MessageSquare, Settings } from "lucide-react";
 import Image from "next/image";
 
 export default function Page() {
-  const { partners, fairnessMetrics, initializeWithMockData, setPartners, reviews } = useDataStore(); // Added reviews to destructuring
+  const { partners, fairnessMetrics, initializeWithMockData, setPartners, reviews } = useDataStore();
   const [selectedPartner, setSelectedPartner] = useState<typeof partners[0] | null>(null);
   const [activeView, setActiveView] = useState<string>("dashboard");
 
   useEffect(() => {
-    // Initialize data store with mock data if it's empty
     if (partners.length === 0) {
       initializeWithMockData(mockPartners, mockReviews, mockFairnessMetrics);
     }
-  }, [partners.length, initializeWithMockData, mockPartners, mockReviews, mockFairnessMetrics]); // Added mock data to dependencies
+  }, [partners.length, initializeWithMockData, mockPartners, mockReviews, mockFairnessMetrics]);
 
   const handlePartnerSelect = (partner: typeof partners[0]) => {
     setSelectedPartner(partner);
@@ -113,7 +112,6 @@ export default function Page() {
           {activeView === "dashboard" && (
             <div className="space-y-6">
               <h2 className="text-2xl font-bold">Dashboard Overview</h2>
-              {/* Placeholder for dashboard content */}
               <p className="text-muted-foreground">Welcome to your Nova+ Dashboard. Select a view from the sidebar.</p>
               <PartnerDataTable partners={partners} />
             </div>
@@ -133,7 +131,7 @@ export default function Page() {
           {activeView === "forecast" && (
             <div className="space-y-6">
               <h2 className="text-2xl font-bold">Forecast & Predictions</h2>
-              <ForecastCharts partners={partners} />
+              <ForecastCharts />
             </div>
           )}
           {activeView === "sentiment" && (
