@@ -253,8 +253,8 @@ export function ForecastCharts({ partners }: ForecastChartsProps) {
                   <ChartTooltip content={<ChartTooltipContent />} />
                   <Line
                     type="monotone"
-                    dataKey="novaScore" // Changed from mlScore
-                    stroke="var(--color-chart-1)"
+                    dataKey="novaScore" // Use novaScore as key
+                    stroke="var(--color-novaScore)"
                     strokeWidth={2}
                     dot={(props) => {
                       // Validate props to prevent null cx/cy errors
@@ -310,8 +310,8 @@ export function ForecastCharts({ partners }: ForecastChartsProps) {
                   <Area
                     type="monotone"
                     dataKey="earnings"
-                    stroke="var(--color-chart-2)"
-                    fill="var(--color-chart-2)"
+                    stroke="var(--color-earnings)"
+                    fill="var(--color-earnings)"
                     fillOpacity={0.3}
                   />
                 </AreaChart>
@@ -444,8 +444,7 @@ export function ForecastCharts({ partners }: ForecastChartsProps) {
                   <Bar dataKey="forecast" fill="var(--color-chart-2)" name="Forecast" />
                 </BarChart>
               </ResponsiveContainer>
-            </ChartContainer>
-          </CardContent>
+            </CardContent>
         </Card>
 
         <Card>
@@ -461,7 +460,7 @@ export function ForecastCharts({ partners }: ForecastChartsProps) {
                   <h4 className="font-medium text-foreground">Positive Trend</h4>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  Overall Nova scores expected to increase by 5.2% over the next 6 months {/* Changed from ML Score */}
+                  Overall Nova scores expected to increase by 5.2% over the next 6 months
                 </p>
               </div>
               <div className="p-4 border border-border rounded-lg">
