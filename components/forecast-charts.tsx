@@ -192,7 +192,7 @@ export function ForecastCharts() {
       label: "Forecast",
       color: "var(--chart-2)",
     },
-  }
+  
 
   return (
     <div className="space-y-6">
