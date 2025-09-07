@@ -5,15 +5,14 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { Cloud, CloudOff, RefreshCw, CheckCircle, AlertCircle, WifiOff } from "lucide-react"
-import { dataStore, type SyncStatus } from "@/lib/data-store"
+import { getDataStoreInstance, type SyncStatus } from "@/lib/data-store" // Corrected import
 
 export function SyncStatusIndicator() {
-  // Initialize with a default value that is consistent for SSR
   const [syncStatus, setSyncStatus] = useState<SyncStatus>({ status: "idle", lastSync: null, pendingChanges: 0 })
   const [isOnline, setIsOnline] = useState(true)
 
   useEffect(() => {
-    const currentDataStore = dataStore.instance; // Access the client-side instance
+    const currentDataStore = getDataStoreInstance(); // Get the instance correctly
 
     // Initial sync status load
     setSyncStatus(currentDataStore.getSyncStatus());
@@ -104,7 +103,7 @@ export function SyncStatusIndicator() {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => dataStore.instance.forceSync()}
+            onClick={() => currentDataStore.forceSync()} // Use currentDataStore
             disabled={syncStatus.status === "syncing"}
           >
             <RefreshCw className={`w-3 h-3 ${syncStatus.status === "syncing" ? "animate-spin" : ""}`} />
