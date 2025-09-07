@@ -142,7 +142,7 @@ export function PartnerProfileView({ partner, onBack }: PartnerProfileViewProps)
     radar: { // For the radar chart
       label: "Performance",
       color: "oklch(1 0 0)", // White
-    }
+    }, // This was the missing brace!
   };
 
   return (
