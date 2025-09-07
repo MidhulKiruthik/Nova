@@ -1,4 +1,5 @@
-import type { Partner, Review, FairnessMetric } from "./mock-data"
+import type { Partner, Review, FairnessMetric } from "./interfaces"
+import { calculateNovaScore } from "./nova-score-model"
 
 export interface SyncStatus {
   status: "idle" | "syncing" | "error" | "offline"
@@ -166,7 +167,11 @@ class DataStore {
   }
 
   setPartners(partners: Partner[]) {
-    this.partners = partners
+    // When setting partners, recalculate Nova Score for each
+    this.partners = partners.map(p => ({
+      ...p,
+      novaScore: calculateNovaScore(p, this.reviews)
+    }))
     this.recordChange({
       type: "bulk_import",
       timestamp: new Date(),
@@ -180,7 +185,11 @@ class DataStore {
   }
 
   addPartner(partner: Partner) {
-    this.partners.push(partner)
+    const newPartnerWithScore = {
+      ...partner,
+      novaScore: calculateNovaScore(partner, this.reviews)
+    }
+    this.partners.push(newPartnerWithScore)
     this.recordChange({
       type: "partner_added",
       timestamp: new Date(),
@@ -193,7 +202,11 @@ class DataStore {
     const index = this.partners.findIndex((p) => p.id === id)
     if (index !== -1) {
       const oldPartner = this.partners[index]
-      this.partners[index] = { ...this.partners[index], ...updates }
+      const updatedPartner = { ...this.partners[index], ...updates }
+      // Recalculate Nova Score if relevant fields are updated
+      updatedPartner.novaScore = calculateNovaScore(updatedPartner, this.reviews)
+
+      this.partners[index] = updatedPartner
       this.recordChange({
         type: "partner_updated",
         timestamp: new Date(),
@@ -216,6 +229,11 @@ class DataStore {
 
   setReviews(reviews: Review[]) {
     this.reviews = reviews
+    // Recalculate Nova Scores for all partners if reviews change
+    this.partners = this.partners.map(p => ({
+      ...p,
+      novaScore: calculateNovaScore(p, this.reviews)
+    }))
     this.notify()
   }
 
@@ -233,10 +251,13 @@ class DataStore {
   }
 
   initializeWithMockData(partners: Partner[], reviews: Review[], fairnessMetrics: FairnessMetric[]) {
-    this.partners = partners
-    this.reviews = reviews
-    this.fairnessMetrics = fairnessMetrics
-    this.notify()
+    this.reviews = reviews; // Set reviews first
+    this.partners = partners.map(p => ({ // Then calculate scores for partners
+      ...p,
+      novaScore: calculateNovaScore(p, this.reviews)
+    }));
+    this.fairnessMetrics = fairnessMetrics;
+    this.notify();
   }
 
   getChangeHistory(): DataChangeEvent[] {

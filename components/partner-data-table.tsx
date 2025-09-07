@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { ArrowUpDown, ArrowUp, ArrowDown, Search, Filter } from "lucide-react"
-import type { Partner } from "@/lib/mock-data"
+import type { Partner } from "@/lib/interfaces" // Updated import
 
 interface PartnerDataTableProps {
   partners: Partner[]
@@ -18,7 +18,7 @@ type SortField = keyof Partner | "none"
 type SortDirection = "asc" | "desc" | "none"
 
 export function PartnerDataTable({ partners, onPartnerSelect }: PartnerDataTableProps) {
-  const [sortField, setSortField] = useState<SortField>("mlScore") // Changed from novaScore
+  const [sortField, setSortField] = useState<SortField>("novaScore") // Changed from mlScore
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc")
   const [searchTerm, setSearchTerm] = useState("")
   const [riskFilter, setRiskFilter] = useState<"all" | "low" | "medium" | "high">("all")
@@ -125,11 +125,11 @@ export function PartnerDataTable({ partners, onPartnerSelect }: PartnerDataTable
     return `${(value * 100).toFixed(1)}%`
   }
 
-  // Helper to convert mlScore (0-1000) back to a sentiment-like scale (-1 to 1) for display
-  const mlScoreToSentiment = (mlScore: number) => (mlScore / 1000) * 2 - 1;
+  // Helper to convert novaScore (0-1000) back to a sentiment-like scale (-1 to 1) for display
+  const novaScoreToSentiment = (novaScore: number) => (novaScore / 1000) * 2 - 1;
 
-  const getSentimentColor = (mlScore: number) => {
-    const sentiment = mlScoreToSentiment(mlScore);
+  const getSentimentColor = (novaScore: number) => {
+    const sentiment = novaScoreToSentiment(novaScore);
     if (sentiment > 0.3) return "text-chart-2"
     if (sentiment < -0.3) return "text-destructive"
     return "text-muted-foreground"
@@ -162,7 +162,7 @@ export function PartnerDataTable({ partners, onPartnerSelect }: PartnerDataTable
           <div>
             <CardTitle>Partner Data Table</CardTitle>
             <CardDescription>
-              Comprehensive view of all gig economy partners with ML scores and performance metrics
+              Comprehensive view of all gig economy partners with Nova scores and performance metrics
             </CardDescription>
           </div>
           <Badge variant="outline" className="ml-4">
@@ -230,10 +230,10 @@ export function PartnerDataTable({ partners, onPartnerSelect }: PartnerDataTable
                     variant="ghost"
                     size="sm"
                     className="h-8 p-0 font-medium"
-                    onClick={() => handleSort("mlScore")} // Changed from novaScore
+                    onClick={() => handleSort("novaScore")} // Changed from mlScore
                   >
-                    ML Score
-                    {getSortIcon("mlScore")}
+                    Nova Score
+                    {getSortIcon("novaScore")}
                   </Button>
                 </TableHead>
                 <TableHead>
@@ -241,10 +241,10 @@ export function PartnerDataTable({ partners, onPartnerSelect }: PartnerDataTable
                     variant="ghost"
                     size="sm"
                     className="h-8 p-0 font-medium"
-                    onClick={() => handleSort("mlScore")} // Changed from sentimentScore
+                    onClick={() => handleSort("novaScore")} // Changed from mlScore
                   >
                     Sentiment
-                    {getSortIcon("mlScore")}
+                    {getSortIcon("novaScore")}
                   </Button>
                 </TableHead>
                 <TableHead>
@@ -266,17 +266,6 @@ export function PartnerDataTable({ partners, onPartnerSelect }: PartnerDataTable
                     onClick={() => handleSort("onTimePickupRate")} // Changed from onTimeRate
                   >
                     On-Time Rate
-                    {getSortIcon("onTimePickupRate")}
-                  </Button>
-                </TableHead>
-                <TableHead>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-8 p-0 font-medium"
-                    onClick={() => handleSort("onTimePickupRate")}
-                  >
-                    On-Time Pickup Rate
                     {getSortIcon("onTimePickupRate")}
                   </Button>
                 </TableHead>
@@ -322,7 +311,7 @@ export function PartnerDataTable({ partners, onPartnerSelect }: PartnerDataTable
                   partner.earningsHistory.reduce((sum, val) => sum + val, 0) / partner.earningsHistory.length
                 const forecastTrend =
                   partner.forecastedEarnings[partner.forecastedEarnings.length - 1] - partner.forecastedEarnings[0]
-                const sentimentValue = mlScoreToSentiment(partner.mlScore); // Convert mlScore back to sentiment for display
+                const sentimentValue = novaScoreToSentiment(partner.novaScore); // Convert novaScore back to sentiment for display
 
                 return (
                   <TableRow
@@ -339,14 +328,14 @@ export function PartnerDataTable({ partners, onPartnerSelect }: PartnerDataTable
                     <TableCell>
                       <div
                         className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium font-mono"
-                        style={getScoreBadgeStyle(partner.mlScore)} // Changed from novaScore
+                        style={getScoreBadgeStyle(partner.novaScore)} // Changed from novaScore
                       >
-                        {partner.mlScore}
+                        {partner.novaScore}
                       </div>
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        <span className={`font-medium ${getSentimentColor(partner.mlScore)}`}>
+                        <span className={`font-medium ${getSentimentColor(partner.novaScore)}`}>
                           {sentimentValue > 0 ? "+" : ""}
                           {sentimentValue.toFixed(2)}
                         </span>
@@ -370,9 +359,6 @@ export function PartnerDataTable({ partners, onPartnerSelect }: PartnerDataTable
                     </TableCell>
                     <TableCell>
                       <span className="font-medium">{formatPercentage(partner.onTimePickupRate)}</span> {/* Changed from onTimeRate */}
-                    </TableCell>
-                    <TableCell>
-                      <span className="font-medium">{formatPercentage(partner.onTimePickupRate)}</span>
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">

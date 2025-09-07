@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react"
 import { dataStore, type SyncStatus } from "@/lib/data-store"
-import type { Partner, Review, FairnessMetric } from "@/lib/mock-data"
+import type { Partner, Review, FairnessMetric } from "@/lib/interfaces" // Updated import path
 
 export const useDataStore = () => {
   // Initialize with empty/default values for SSR consistency

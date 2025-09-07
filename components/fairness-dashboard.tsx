@@ -20,8 +20,8 @@ import {
   Line,
 } from "recharts"
 import { AlertTriangle, CheckCircle, TrendingUp, Users, Shield, Eye } from "lucide-react"
-import type { FairnessMetric } from "@/lib/mock-data"
-import { mockBiasTrendData } from "@/lib/mock-data"
+import type { FairnessMetric } from "@/lib/interfaces" // Updated import
+import { mockBiasTrendData } from "@/lib/mock-fairness-data" // Updated import
 
 interface FairnessDashboardProps {
   fairnessMetrics: FairnessMetric[]

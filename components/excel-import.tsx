@@ -8,7 +8,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Upload, FileSpreadsheet, CheckCircle, AlertCircle, Download } from "lucide-react"
-import type { Partner } from "@/lib/mock-data"
+import type { Partner } from "@/lib/interfaces" // Updated import
 import { readExcelFile, createExcelFile } from "@/lib/excel-utils"
 import { toast } from "sonner" // Import sonner toast
 
@@ -48,8 +48,8 @@ export function ExcelImport({ onImportComplete, onImportError }: ExcelImportProp
       if (!partner.email || !partner.email.includes("@")) {
         errors.push(`Row ${rowNum}: Valid email is required`)
       }
-      if (partner.mlScore < 0 || partner.mlScore > 1000) { // Changed from novaScore
-        errors.push(`Row ${rowNum}: ML Score must be between 0-1000`) // Changed from Nova Score
+      if (partner.novaScore < 0 || partner.novaScore > 1000) { // Changed from mlScore
+        errors.push(`Row ${rowNum}: Nova Score must be between 0-1000`) // Changed from ML Score
       }
 
       // Warning validations
@@ -68,8 +68,8 @@ export function ExcelImport({ onImportComplete, onImportError }: ExcelImportProp
         partner.name &&
         partner.email &&
         partner.email.includes("@") &&
-        partner.mlScore >= 0 && // Changed from novaScore
-        partner.mlScore <= 1000 // Changed from novaScore
+        partner.novaScore >= 0 && // Changed from mlScore
+        partner.novaScore <= 1000 // Changed from mlScore
       ) {
         validRecords++
       }
@@ -152,15 +152,13 @@ export function ExcelImport({ onImportComplete, onImportError }: ExcelImportProp
         name: "John Doe",
         email: "john.doe@example.com",
         phone: "+1-555-0123",
-        mlScore: 750, // Changed from novaScore
+        novaScore: 750, // Changed from mlScore
         earningsHistory: [2500, 2700, 2600, 2800, 2650, 2750],
         tripVolume: 120,
         onTimePickupRate: 0.92,
         leavesTaken: 3,
         medicalStability: "stable",
         vehicleCondition: 85,
-        // customerReviews: [], // Removed
-        // sentimentScore: 0.75, // Removed
         forecastedEarnings: [2800, 2900, 2750, 3000, 2850],
         riskLevel: "low",
         joinDate: "2023-01-15",
@@ -340,7 +338,7 @@ export function ExcelImport({ onImportComplete, onImportError }: ExcelImportProp
                         <tr>
                           <th className="text-left p-3 font-medium">Name</th>
                           <th className="text-left p-3 font-medium">Email</th>
-                          <th className="text-left p-3 font-medium">ML Score</th> {/* Changed from Nova Score */}
+                          <th className="text-left p-3 font-medium">Nova Score</th> {/* Changed from ML Score */}
                           <th className="text-left p-3 font-medium">Risk Level</th>
                           <th className="text-left p-3 font-medium">Status</th>
                         </tr>
@@ -350,7 +348,7 @@ export function ExcelImport({ onImportComplete, onImportError }: ExcelImportProp
                           <tr key={index} className="border-b">
                             <td className="p-3">{partner.name}</td>
                             <td className="p-3">{partner.email}</td>
-                            <td className="p-3">{partner.mlScore}</td> {/* Changed from novaScore */}
+                            <td className="p-3">{partner.novaScore}</td> {/* Changed from mlScore */}
                             <td className="p-3">
                               <Badge
                                 variant={

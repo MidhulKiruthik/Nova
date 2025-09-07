@@ -19,7 +19,7 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Plus, Edit, Trash2, Users } from "lucide-react"
-import type { Partner } from "@/lib/mock-data"
+import type { Partner } from "@/lib/interfaces" // Updated import
 import { useDataStore } from "@/hooks/use-data-store"
 import { toast } from "sonner" // Import sonner toast
 
@@ -37,13 +37,12 @@ export function UserManagement({ partners, onPartnersUpdate }: UserManagementPro
     name: "",
     email: "",
     phone: "",
-    mlScore: 0, // Changed from novaScore
+    novaScore: 0, // Changed from mlScore
     tripVolume: 0,
     onTimePickupRate: 0,
     leavesTaken: 0,
     medicalStability: "stable",
     vehicleCondition: 0,
-    // sentimentScore: 0, // Removed
     riskLevel: "medium",
     totalTrips: 0,
     avgRating: 0,
@@ -61,15 +60,13 @@ export function UserManagement({ partners, onPartnersUpdate }: UserManagementPro
       name: newPartner.name || "",
       email: newPartner.email || "",
       phone: newPartner.phone || "",
-      mlScore: newPartner.mlScore || 0, // Changed from novaScore
+      novaScore: newPartner.novaScore || 0, // Changed from mlScore
       earningsHistory: [0, 0, 0, 0, 0, 0],
       tripVolume: newPartner.tripVolume || 0,
       onTimePickupRate: newPartner.onTimePickupRate || 0,
       leavesTaken: newPartner.leavesTaken || 0,
       medicalStability: newPartner.medicalStability || "stable",
       vehicleCondition: newPartner.vehicleCondition || 0,
-      // customerReviews: [], // Removed
-      // sentimentScore: newPartner.sentimentScore || 0, // Removed
       forecastedEarnings: [0, 0, 0, 0, 0],
       riskLevel: newPartner.riskLevel || "medium",
       joinDate: new Date().toISOString().split("T")[0],
@@ -177,7 +174,7 @@ export function UserManagement({ partners, onPartnersUpdate }: UserManagementPro
                   <thead className="border-b bg-muted/50">
                     <tr>
                       <th className="text-left p-3 font-medium">Partner</th>
-                      <th className="text-left p-3 font-medium">ML Score</th> {/* Changed from Nova Score */}
+                      <th className="text-left p-3 font-medium">Nova Score</th> {/* Changed from ML Score */}
                       <th className="text-left p-3 font-medium">Risk Level</th>
                       <th className="text-left p-3 font-medium">Total Trips</th>
                       <th className="text-left p-3 font-medium">Actions</th>
@@ -195,14 +192,14 @@ export function UserManagement({ partners, onPartnersUpdate }: UserManagementPro
                         <td className="p-3">
                           <Badge
                             variant={
-                              partner.mlScore >= 700 // Changed from novaScore
+                              partner.novaScore >= 700 // Changed from novaScore
                                 ? "default"
-                                : partner.mlScore >= 600 // Changed from novaScore
+                                : partner.novaScore >= 600 // Changed from novaScore
                                   ? "secondary"
                                   : "destructive"
                             }
                           >
-                            {partner.mlScore} {/* Changed from novaScore */}
+                            {partner.novaScore} {/* Changed from novaScore */}
                           </Badge>
                         </td>
                         <td className="p-3">
@@ -271,13 +268,13 @@ export function UserManagement({ partners, onPartnersUpdate }: UserManagementPro
                       />
                     </div>
                     <div>
-                      <Label htmlFor="edit-mlScore">ML Score</Label> {/* Changed from novaScore */}
+                      <Label htmlFor="edit-novaScore">Nova Score</Label> {/* Changed from mlScore */}
                       <Input
-                        id="edit-mlScore"
+                        id="edit-novaScore"
                         type="number"
-                        value={editingPartner.mlScore} // Changed from novaScore
+                        value={editingPartner.novaScore} // Changed from novaScore
                         onChange={(e) =>
-                          setEditingPartner({ ...editingPartner, mlScore: Number.parseInt(e.target.value) || 0 }) // Changed from novaScore
+                          setEditingPartner({ ...editingPartner, novaScore: Number.parseInt(e.target.value) || 0 }) // Changed from novaScore
                         }
                       />
                     </div>
@@ -359,15 +356,15 @@ export function UserManagement({ partners, onPartnersUpdate }: UserManagementPro
                       />
                     </div>
                     <div>
-                      <Label htmlFor="mlScore">ML Score</Label> {/* Changed from novaScore */}
+                      <Label htmlFor="novaScore">Nova Score</Label> {/* Changed from mlScore */}
                       <Input
-                        id="mlScore"
+                        id="novaScore"
                         type="number"
-                        value={newPartner.mlScore || ""} // Changed from novaScore
+                        value={newPartner.novaScore || ""} // Changed from novaScore
                         onChange={(e) =>
-                          setNewPartner({ ...newPartner, mlScore: Number.parseInt(e.target.value) || 0 }) // Changed from novaScore
+                          setNewPartner({ ...newPartner, novaScore: Number.parseInt(e.target.value) || 0 }) // Changed from novaScore
                         }
-                        placeholder="Enter ML score"
+                        placeholder="Enter Nova score"
                       />
                     </div>
                   </div>

@@ -1,4 +1,4 @@
-import type { Partner, Review } from "./mock-data";
+import type { Partner, Review } from "./interfaces";
 
 /**
  * Simulates an ML model for sentiment analysis on review text.

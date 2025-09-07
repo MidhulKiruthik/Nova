@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
 import { Badge } from "@/components/ui/badge"
 import { Download, FileSpreadsheet, BarChart3, Shield, Users } from "lucide-react"
-import type { Partner, FairnessMetric } from "@/lib/mock-data"
+import type { Partner, FairnessMetric } from "@/lib/interfaces" // Updated import
 import {
   createAnalyticsReport,
   createDetailedReport,
@@ -93,7 +93,7 @@ export function ExportManager({ partners, fairnessMetrics }: ExportManagerProps)
 
     if (exportOptions.filterByScoreRange) {
       const { min, max } = exportOptions.filterByScoreRange
-      filtered = filtered.filter((p) => p.mlScore >= min && p.mlScore <= max) // Changed from novaScore
+      filtered = filtered.filter((p) => p.novaScore >= min && p.novaScore <= max) // Changed from mlScore
     }
 
     return filtered.length

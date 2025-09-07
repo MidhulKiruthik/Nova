@@ -10,12 +10,14 @@ import { SentimentHeatmap } from "@/components/sentiment-heatmap";
 import { UserManagement } from "@/components/user-management";
 import { SyncStatusIndicator } from "@/components/sync-status-indicator";
 import { useDataStore } from "@/hooks/use-data-store";
-import { mockPartners, mockReviews, mockFairnessMetrics } from "@/lib/mock-data";
+import { mockPartners } from "@/lib/mock-partners"; // Updated import
+import { mockReviews } from "@/lib/mock-reviews"; // Updated import
+import { mockFairnessMetrics } from "@/lib/mock-fairness-data"; // Updated import
 import { Home, Users, BarChart, Shield, TrendingUp, MessageSquare, Settings } from "lucide-react";
 import Image from "next/image";
 
 export default function Page() {
-  const { partners, fairnessMetrics, initializeWithMockData, setPartners } = useDataStore();
+  const { partners, fairnessMetrics, initializeWithMockData, setPartners, reviews } = useDataStore(); // Added reviews to destructuring
   const [selectedPartner, setSelectedPartner] = useState<typeof partners[0] | null>(null);
   const [activeView, setActiveView] = useState<string>("dashboard");
 
@@ -24,7 +26,7 @@ export default function Page() {
     if (partners.length === 0) {
       initializeWithMockData(mockPartners, mockReviews, mockFairnessMetrics);
     }
-  }, [partners.length, initializeWithMockData]);
+  }, [partners.length, initializeWithMockData, mockPartners, mockReviews, mockFairnessMetrics]); // Added mock data to dependencies
 
   const handlePartnerSelect = (partner: typeof partners[0]) => {
     setSelectedPartner(partner);
@@ -113,7 +115,7 @@ export default function Page() {
               <h2 className="text-2xl font-bold">Dashboard Overview</h2>
               {/* Placeholder for dashboard content */}
               <p className="text-muted-foreground">Welcome to your Nova+ Dashboard. Select a view from the sidebar.</p>
-              <PartnerDataTable partners={partners} onPartnerSelect={handlePartnerSelect} />
+              <PartnerDataTable partners={partners} />
             </div>
           )}
           {activeView === "partners" && (
