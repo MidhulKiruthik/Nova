@@ -132,17 +132,17 @@ export function PartnerProfileView({ partner, onBack }: PartnerProfileViewProps)
 
   const chartConfig = {
     score: {
-      label: "Nova Score", // Changed from ML Score
-      color: "oklch(1 0 0)", // White
+      label: "Nova Score",
+      color: "var(--chart-1)", // Use theme-aware color
     },
     earnings: {
       label: "Earnings",
-      color: "oklch(1 0 0)", // White
+      color: "var(--chart-2)", // Use theme-aware color
     },
     radar: { // For the radar chart
       label: "Performance",
-      color: "oklch(1 0 0)", // White
-    }, // This was the missing brace!
+      color: "var(--chart-3)", // Use theme-aware color
+    },
   };
 
   return (
@@ -363,7 +363,7 @@ export function PartnerProfileView({ partner, onBack }: PartnerProfileViewProps)
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="month" />
                       <YAxis />
-                      <Tooltip content={<ChartTooltipContent className="bg-white text-black dark:bg-white dark:text-black" />} />
+                      <Tooltip content={<ChartTooltipContent />} /> {/* Removed custom styling */}
                       <Line
                         type="monotone"
                         dataKey="score"
@@ -416,7 +416,7 @@ export function PartnerProfileView({ partner, onBack }: PartnerProfileViewProps)
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="month" />
                       <YAxis />
-                      <Tooltip content={<ChartTooltipContent className="bg-white text-black dark:bg-white dark:text-black" />} />
+                      <Tooltip content={<ChartTooltipContent />} /> {/* Removed custom styling */}
                       <Area
                         type="monotone"
                         dataKey="earnings"
