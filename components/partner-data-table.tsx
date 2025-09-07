@@ -73,68 +73,6 @@ export function PartnerDataTable({ partners, onPartnerSelect }: PartnerDataTable
     return filtered
   }, [partners, searchTerm, riskFilter, sortField, sortDirection])
 
-  const getRiskBadgeVariant = (risk: string) => {
-    switch (risk) {
-      case "low":
-        return "default" // Using default variant for better contrast
-      case "medium":
-        return "secondary" // Using secondary variant for better contrast
-      case "high":
-        return "destructive" // Using destructive variant for better contrast
-      default:
-        return "outline"
-    }
-  }
-
-  const getScoreBadgeVariant = (score: number) => {
-    if (score >= 800) return "default" // Using default variant for better contrast
-    if (score >= 700) return "secondary" // Using secondary variant for better contrast
-    if (score >= 600) return "outline" // Using outline variant for better contrast
-    return "destructive" // Using destructive variant for better contrast
-  }
-
-  const getRiskBadgeClasses = (risk: string) => {
-    switch (risk) {
-      case "low":
-        return "bg-emerald-600 text-white border-emerald-600 hover:bg-emerald-700"
-      case "medium":
-        return "bg-amber-600 text-white border-amber-600 hover:bg-amber-700"
-      case "high":
-        return "bg-red-600 text-white border-red-600 hover:bg-red-700"
-      default:
-        return "bg-gray-600 text-white border-gray-600 hover:bg-gray-700"
-    }
-  }
-
-  const getScoreBadgeClasses = (score: number) => {
-    if (score >= 800) return "bg-emerald-600 text-white border-emerald-600 hover:bg-emerald-700"
-    if (score >= 700) return "bg-blue-600 text-white border-blue-600 hover:bg-blue-700"
-    if (score >= 600) return "bg-amber-600 text-white border-amber-600 hover:bg-amber-700"
-    return "bg-red-600 text-white border-red-600 hover:bg-red-700"
-  }
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-      minimumFractionDigits: 0,
-    }).format(amount)
-  }
-
-  const formatPercentage = (value: number) => {
-    return `${(value * 100).toFixed(1)}%`
-  }
-
-  // Helper to convert novaScore (0-1000) back to a sentiment-like scale (-1 to 1) for display
-  const novaScoreToSentiment = (novaScore: number) => (novaScore / 1000) * 2 - 1;
-
-  const getSentimentColor = (novaScore: number) => {
-    const sentiment = novaScoreToSentiment(novaScore);
-    if (sentiment > 0.3) return "text-chart-2"
-    if (sentiment < -0.3) return "text-destructive"
-    return "text-muted-foreground"
-  }
-
   const getRiskBadgeStyle = (risk: string) => {
     switch (risk) {
       case "low":
@@ -153,6 +91,28 @@ export function PartnerDataTable({ partners, onPartnerSelect }: PartnerDataTable
     if (score >= 700) return { backgroundColor: "#1d4ed8", color: "#ffffff", border: "1px solid #1d4ed8" }
     if (score >= 600) return { backgroundColor: "#b45309", color: "#ffffff", border: "1px solid #b45309" }
     return { backgroundColor: "#b91c1c", color: "#ffffff", border: "1px solid #b91c1c" }
+  }
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      minimumFractionDigits: 0,
+    }).format(amount)
+  }
+
+  const formatPercentage = (value: number) => {
+    return `${(value * 100).toFixed(1)}%`
+  }
+
+  // Helper to convert novaScore (0-1000) to a sentiment-like scale (0-5) for display
+  const novaScoreToSentimentDisplay = (novaScore: number) => (novaScore / 1000) * 5;
+
+  const getSentimentColor = (novaScore: number) => {
+    const sentimentDisplay = novaScoreToSentimentDisplay(novaScore);
+    if (sentimentDisplay > 3.5) return "text-chart-2" // Positive
+    if (sentimentDisplay < 1.5) return "text-destructive" // Negative
+    return "text-muted-foreground" // Neutral
   }
 
   return (
@@ -311,7 +271,7 @@ export function PartnerDataTable({ partners, onPartnerSelect }: PartnerDataTable
                   partner.earningsHistory.reduce((sum, val) => sum + val, 0) / partner.earningsHistory.length
                 const forecastTrend =
                   partner.forecastedEarnings[partner.forecastedEarnings.length - 1] - partner.forecastedEarnings[0]
-                const sentimentValue = novaScoreToSentiment(partner.novaScore); // Convert novaScore back to sentiment for display
+                const sentimentDisplay = novaScoreToSentimentDisplay(partner.novaScore);
 
                 return (
                   <TableRow
@@ -336,19 +296,18 @@ export function PartnerDataTable({ partners, onPartnerSelect }: PartnerDataTable
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <span className={`font-medium ${getSentimentColor(partner.novaScore)}`}>
-                          {sentimentValue > 0 ? "+" : ""}
-                          {sentimentValue.toFixed(2)}
+                          {sentimentDisplay.toFixed(1)}/5
                         </span>
                         <div className="w-12 h-2 bg-muted rounded-full overflow-hidden">
                           <div
                             className={`h-full rounded-full ${
-                              sentimentValue > 0.3
+                              sentimentDisplay > 3.5
                                 ? "bg-chart-2"
-                                : sentimentValue < -0.3
+                                : sentimentDisplay < 1.5
                                   ? "bg-destructive"
                                   : "bg-muted-foreground"
                             }`}
-                            style={{ width: `${Math.abs(sentimentValue) * 100}%` }}
+                            style={{ width: `${(sentimentDisplay / 5) * 100}%` }}
                           />
                         </div>
                       </div>

@@ -65,21 +65,21 @@ export function SentimentHeatmap({ partners }: SentimentHeatmapProps) {
   const heatmapData = generateHeatmapData()
   const periods = generateTimePeriods()
 
-  // Helper to convert novaScore (0-1000) back to a sentiment-like scale (-1 to 1) for display
-  const novaScoreToSentiment = (novaScore: number) => (novaScore / 1000) * 2 - 1;
+  // Helper to convert novaScore (0-1000) to a sentiment-like scale (0-5) for display
+  const novaScoreToSentimentDisplay = (novaScore: number) => (novaScore / 1000) * 5;
 
   const getSentimentColor = (novaScore: number) => {
-    const sentiment = novaScoreToSentiment(novaScore);
-    if (sentiment > 0.5) return "bg-emerald-500"
-    if (sentiment > 0.2) return "bg-emerald-400"
-    if (sentiment > -0.1) return "bg-yellow-400"
-    if (sentiment > -0.4) return "bg-orange-500"
-    return "bg-red-500"
+    const sentimentDisplay = novaScoreToSentimentDisplay(novaScore);
+    if (sentimentDisplay > 3.5) return "bg-emerald-500" // Positive
+    if (sentimentDisplay > 2.5) return "bg-emerald-400" // Slightly positive
+    if (sentimentDisplay > 1.5) return "bg-yellow-400" // Neutral
+    if (sentimentDisplay > 0.5) return "bg-orange-500" // Slightly negative
+    return "bg-red-500" // Negative
   }
 
   const getSentimentIntensity = (novaScore: number) => {
-    const sentiment = novaScoreToSentiment(novaScore);
-    const intensity = Math.abs(sentiment)
+    const sentimentDisplay = novaScoreToSentimentDisplay(novaScore);
+    const intensity = Math.abs(sentimentDisplay - 2.5) / 2.5; // Normalize intensity from 0 (neutral) to 1 (extreme)
     if (intensity > 0.7) return "opacity-100"
     if (intensity > 0.4) return "opacity-80"
     if (intensity > 0.2) return "opacity-60"
@@ -87,11 +87,11 @@ export function SentimentHeatmap({ partners }: SentimentHeatmapProps) {
   }
 
   const getSentimentLabel = (novaScore: number) => {
-    const sentiment = novaScoreToSentiment(novaScore);
-    if (sentiment > 0.5) return "Excellent"
-    if (sentiment > 0.2) return "Good"
-    if (sentiment > -0.1) return "Neutral"
-    if (sentiment > -0.4) return "Poor"
+    const sentimentDisplay = novaScoreToSentimentDisplay(novaScore);
+    if (sentimentDisplay > 3.5) return "Excellent"
+    if (sentimentDisplay > 2.5) return "Good"
+    if (sentimentDisplay > 1.5) return "Neutral"
+    if (sentimentDisplay > 0.5) return "Poor"
     return "Critical"
   }
 
@@ -103,7 +103,7 @@ export function SentimentHeatmap({ partners }: SentimentHeatmapProps) {
   const avgSentimentByPeriod = periods.map((period) => {
     const periodData = heatmapData.filter((d) => d.period === period)
     const avgNovaScore = periodData.reduce((sum, d) => sum + d.novaScore, 0) / periodData.length
-    return { period, avg: novaScoreToSentiment(avgNovaScore) } // Convert back to sentiment for display
+    return { period, avg: novaScoreToSentimentDisplay(avgNovaScore) } // Convert back to sentiment for display
   })
 
   const partnerSummaries = partners
@@ -111,7 +111,7 @@ export function SentimentHeatmap({ partners }: SentimentHeatmapProps) {
       const partnerData = heatmapData.filter((d) => d.partnerId === partner.id)
       const avgNovaScore = partnerData.reduce((sum, d) => sum + d.novaScore, 0) / partnerData.length
       const totalTrips = partnerData.reduce((sum, d) => sum + d.tripCount, 0)
-      return { partner, avgSentiment: novaScoreToSentiment(avgNovaScore), totalTrips } // Convert back to sentiment for display
+      return { partner, avgSentiment: novaScoreToSentimentDisplay(avgNovaScore), totalTrips } // Convert back to sentiment for display
     })
     .sort((a, b) => b.avgSentiment - a.avgSentiment)
 
@@ -169,16 +169,16 @@ export function SentimentHeatmap({ partners }: SentimentHeatmapProps) {
                     const cellData = getPartnerData(partner.id, period)
                     if (!cellData) return <div key={period} className="p-3 bg-muted rounded-md" />
 
-                    const sentimentValue = novaScoreToSentiment(cellData.novaScore); // Convert novaScore back to sentiment for display
+                    const sentimentValue = novaScoreToSentimentDisplay(cellData.novaScore); // Convert novaScore back to sentiment for display
 
                     return (
                       <div
                         key={period}
                         className={`p-3 rounded-md border border-border cursor-pointer hover:scale-105 transition-transform ${getSentimentColor(cellData.novaScore)} ${getSentimentIntensity(cellData.novaScore)}`}
-                        title={`${partner.name} - ${period}\nSentiment: ${sentimentValue.toFixed(2)}\nTrips: ${cellData.tripCount}\nRating: ${cellData.avgRating.toFixed(1)}`}
+                        title={`${partner.name} - ${period}\nSentiment: ${sentimentValue.toFixed(1)}/5\nTrips: ${cellData.tripCount}\nRating: ${cellData.avgRating.toFixed(1)}`}
                       >
                         <div className="text-xs font-medium text-white text-center">
-                          {sentimentValue.toFixed(2)}
+                          {sentimentValue.toFixed(1)}/5
                         </div>
                         <div className="text-xs text-white/80 text-center">{cellData.tripCount} trips</div>
                       </div>
@@ -191,27 +191,27 @@ export function SentimentHeatmap({ partners }: SentimentHeatmapProps) {
 
           {/* Legend */}
           <div className="mt-6 p-4 bg-muted/50 rounded-lg">
-            <h4 className="text-sm font-medium text-foreground mb-3">Sentiment Scale</h4>
+            <h4 className="text-sm font-medium text-foreground mb-3">Sentiment Scale (0-5)</h4>
             <div className="flex items-center gap-4 flex-wrap">
               <div className="flex items-center gap-2">
                 <div className="w-4 h-4 bg-emerald-500 rounded"></div>
-                <span className="text-xs text-muted-foreground">Excellent (0.5+)</span>
+                <span className="text-xs text-muted-foreground">Excellent (3.5+)</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-4 h-4 bg-emerald-400 rounded"></div>
-                <span className="text-xs text-muted-foreground">Good (0.2 to 0.5)</span>
+                <span className="text-xs text-muted-foreground">Good (2.5 to 3.5)</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-4 h-4 bg-yellow-400 rounded"></div>
-                <span className="text-xs text-muted-foreground">Neutral (-0.1 to 0.2)</span>
+                <span className="text-xs text-muted-foreground">Neutral (1.5 to 2.5)</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-4 h-4 bg-orange-500 rounded"></div>
-                <span className="text-xs text-muted-foreground">Poor (-0.4 to -0.1)</span>
+                <span className="text-xs text-muted-foreground">Poor (0.5 to 1.5)</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-4 h-4 bg-red-500 rounded"></div>
-                <span className="text-xs text-muted-foreground">Critical (-0.4+)</span>
+                <span className="text-xs text-muted-foreground">Critical (0.5-)</span>
               </div>
             </div>
           </div>
@@ -234,10 +234,10 @@ export function SentimentHeatmap({ partners }: SentimentHeatmapProps) {
                     <div className="w-24 h-2 bg-muted rounded-full overflow-hidden">
                       <div
                         className={`h-full rounded-full ${getSentimentColor(data.avg)}`}
-                        style={{ width: `${Math.abs(data.avg) * 100}%` }}
+                        style={{ width: `${(data.avg / 5) * 100}%` }}
                       />
                     </div>
-                    <span className="text-sm text-muted-foreground w-12">{data.avg.toFixed(2)}</span>
+                    <span className="text-sm text-muted-foreground w-12">{data.avg.toFixed(1)}/5</span>
                     <Badge variant="outline" className="text-xs">
                       {getSentimentLabel(data.avg)}
                     </Badge>
@@ -265,8 +265,8 @@ export function SentimentHeatmap({ partners }: SentimentHeatmapProps) {
                   </div>
                   <div className="flex items-center gap-3">
                     <span className="text-sm text-muted-foreground">{summary.totalTrips} trips</span>
-                    <Badge variant={summary.avgSentiment > 0.3 ? "default" : "secondary"}>
-                      {summary.avgSentiment.toFixed(2)}
+                    <Badge variant={summary.avgSentiment > 3.5 ? "default" : "secondary"}>
+                      {summary.avgSentiment.toFixed(1)}/5
                     </Badge>
                   </div>
                 </div>

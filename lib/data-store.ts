@@ -228,7 +228,10 @@ class DataStore {
   }
 
   setReviews(reviews: Review[]) {
-    this.reviews = reviews
+    this.reviews = reviews.map(review => ({
+      ...review,
+      sentimentScore: review.sentimentScore ?? calculateNovaScore(review.comment) // Ensure sentimentScore is calculated
+    }));
     // Recalculate Nova Scores for all partners if reviews change
     this.partners = this.partners.map(p => ({
       ...p,
@@ -251,7 +254,10 @@ class DataStore {
   }
 
   initializeWithMockData(partners: Partner[], reviews: Review[], fairnessMetrics: FairnessMetric[]) {
-    this.reviews = reviews; // Set reviews first
+    this.reviews = reviews.map(review => ({ // Ensure sentimentScore is calculated for mock reviews
+      ...review,
+      sentimentScore: review.sentimentScore ?? calculateNovaScore(review.comment)
+    }));
     this.partners = partners.map(p => ({ // Then calculate scores for partners
       ...p,
       novaScore: calculateNovaScore(p, this.reviews)

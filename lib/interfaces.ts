@@ -27,6 +27,7 @@ export interface Review {
   sentiment: "positive" | "neutral" | "negative"
   date: string
   tripId: string
+  sentimentScore?: number // New field: 0-5 score based on sentiment analysis
 }
 
 export interface FairnessMetric {

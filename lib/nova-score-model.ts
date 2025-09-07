@@ -2,87 +2,128 @@ import type { Partner, Review } from "./interfaces";
 
 /**
  * Simulates an ML model for sentiment analysis on review text.
- * Returns a score between -1 (very negative) and 1 (very positive).
+ * Returns a score between 0 (very negative) and 5 (very positive).
  */
 export function analyzeReviewSentiment(text: string): number {
   const lowerText = text.toLowerCase();
-  let score = 0;
+  let rawScore = 0; // Raw score between -1 and 1
 
   // Positive keywords
-  if (lowerText.includes("excellent")) score += 0.8;
-  if (lowerText.includes("great")) score += 0.6;
-  if (lowerText.includes("good")) score += 0.4;
-  if (lowerText.includes("professional")) score += 0.7;
-  if (lowerText.includes("friendly")) score += 0.5;
-  if (lowerText.includes("on time")) score += 0.6;
-  if (lowerText.includes("clean")) score += 0.5;
-  if (lowerText.includes("smooth")) score += 0.4;
-  if (lowerText.includes("happy")) score += 0.5;
+  if (lowerText.includes("excellent")) rawScore += 0.8;
+  if (lowerText.includes("great")) rawScore += 0.6;
+  if (lowerText.includes("good")) rawScore += 0.4;
+  if (lowerText.includes("professional")) rawScore += 0.7;
+  if (lowerText.includes("friendly")) rawScore += 0.5;
+  if (lowerText.includes("on time")) rawScore += 0.6;
+  if (lowerText.includes("clean")) rawScore += 0.5;
+  if (lowerText.includes("smooth")) rawScore += 0.4;
+  if (lowerText.includes("happy")) rawScore += 0.5;
+  if (lowerText.includes("fantastic")) rawScore += 0.8;
+  if (lowerText.includes("best")) rawScore += 0.9;
+  if (lowerText.includes("safe")) rawScore += 0.6;
+  if (lowerText.includes("courteous")) rawScore += 0.5;
+  if (lowerText.includes("pleasant")) rawScore += 0.5;
+  if (lowerText.includes("reliable")) rawScore += 0.6;
+  if (lowerText.includes("efficient")) rawScore += 0.5;
+  if (lowerText.includes("punctual")) rawScore += 0.6;
+
 
   // Negative keywords
-  if (lowerText.includes("poor")) score -= 0.8;
-  if (lowerText.includes("bad")) score -= 0.6;
-  if (lowerText.includes("late")) score -= 0.7;
-  if (lowerText.includes("distracted")) score -= 0.6;
-  if (lowerText.includes("rude")) score -= 0.7;
-  if (lowerText.includes("unprofessional")) score -= 0.8;
-  if (lowerText.includes("dirty")) score -= 0.5;
-  if (lowerText.includes("long route")) score -= 0.5;
-  if (lowerText.includes("unhappy")) score -= 0.5;
-  if (lowerText.includes("cancel")) score -= 0.4;
+  if (lowerText.includes("poor")) rawScore -= 0.8;
+  if (lowerText.includes("bad")) rawScore -= 0.6;
+  if (lowerText.includes("late")) rawScore -= 0.7;
+  if (lowerText.includes("distracted")) rawScore -= 0.6;
+  if (lowerText.includes("rude")) rawScore -= 0.7;
+  if (lowerText.includes("unprofessional")) rawScore -= 0.8;
+  if (lowerText.includes("dirty")) rawScore -= 0.5;
+  if (lowerText.includes("long route")) rawScore -= 0.5;
+  if (lowerText.includes("unhappy")) rawScore -= 0.5;
+  if (lowerText.includes("cancel")) rawScore -= 0.9;
+  if (lowerText.includes("terrible")) rawScore -= 0.9;
+  if (lowerText.includes("unacceptable")) rawScore -= 0.8;
+  if (lowerText.includes("delays")) rawScore -= 0.7;
+  if (lowerText.includes("tired")) rawScore -= 0.3;
+
 
   // Neutral keywords (adjusts score slightly towards zero)
-  if (lowerText.includes("okay")) score += 0.1;
-  if (lowerText.includes("fine")) score += 0.1;
-  if (lowerText.includes("average")) score += 0; // No change
+  if (lowerText.includes("okay")) rawScore += 0.1;
+  if (lowerText.includes("fine")) rawScore += 0.1;
+  if (lowerText.includes("average")) rawScore += 0; // No change
 
-  // Normalize score to be between -1 and 1
-  return Math.max(-1, Math.min(1, score / 2)); // Divide by 2 to keep it within a reasonable range
+  // Normalize rawScore to be between -1 and 1
+  const normalizedRawScore = Math.max(-1, Math.min(1, rawScore / 2));
+
+  // Map normalizedRawScore (-1 to 1) to sentimentScore (0 to 5)
+  return parseFloat(((normalizedRawScore + 1) * 2.5).toFixed(1)); // e.g., -1 -> 0, 0 -> 2.5, 1 -> 5
 }
 
 /**
  * Calculates the Nova Score for a partner based on various responsibility metrics and review sentiment.
  * The Nova Score is scaled from 0 to 1000, similar to a credit score.
+ * This function now employs a multiple regression-like approach with weighted factors.
  */
 export function calculateNovaScore(partner: Partner, allReviews: Review[]): number {
-  let score = 500; // Base score
+  let score = 0; // Start with 0 and build up
 
-  // Filter reviews for this specific partner
+  // Filter reviews for this specific partner and calculate average sentiment score
   const partnerReviews = allReviews.filter(review => review.partnerId === partner.id);
+  const totalSentimentScore = partnerReviews.reduce((sum, review) => {
+    // If sentimentScore is not present, calculate it (e.g., for older mock data or new reviews)
+    const score = review.sentimentScore ?? analyzeReviewSentiment(review.comment);
+    return sum + score;
+  }, 0);
+  const avgSentimentScore = partnerReviews.length > 0 ? totalSentimentScore / partnerReviews.length : 2.5; // Default to neutral (2.5) if no reviews
 
-  // 1. Sentiment from Reviews (weighted heavily)
-  if (partnerReviews.length > 0) {
-    const totalSentiment = partnerReviews.reduce((sum, review) => {
-      // Use the existing sentiment from mock data, or analyze if comment is available
-      const sentimentValue = review.sentiment === "positive" ? 1 : review.sentiment === "negative" ? -1 : 0;
-      return sum + sentimentValue;
-    }, 0);
-    const avgSentiment = totalSentiment / partnerReviews.length;
-    score += avgSentiment * 150; // Adjust score based on average sentiment
-  }
+  // Map categorical risk level to a numerical value (higher is worse)
+  let numericRiskLevel = 0;
+  if (partner.riskLevel === "low") numericRiskLevel = 1;
+  else if (partner.riskLevel === "medium") numericRiskLevel = 2;
+  else if (partner.riskLevel === "high") numericRiskLevel = 3;
 
-  // 2. On-Time Pickup Rate (high importance)
-  score += (partner.onTimePickupRate - 0.8) * 200; // Penalize below 80%, reward above
+  // Calculate average monthly earnings
+  const avgMonthlyEarnings = partner.earningsHistory.length > 0
+    ? partner.earningsHistory.reduce((sum, e) => sum + e, 0) / partner.earningsHistory.length
+    : 0;
 
-  // 3. Cancellation Rate (high importance, negative impact)
-  score -= partner.cancellationRate * 300; // Higher cancellation rate means lower score
+  // --- Multiple Regression-like Weighted Sum ---
+  // These weights are illustrative and would typically be derived from an actual regression model.
+  // They are scaled to contribute to a final 0-1000 score.
 
-  // 4. Average Rating (moderate importance)
-  score += (partner.avgRating - 3) * 50; // Reward higher ratings, penalize lower
+  // 1. Sentiment Score (0-5 scale, higher is better) - Strong positive impact
+  score += (avgSentimentScore / 5) * 300; // Max 300 points
 
-  // 5. Vehicle Condition (moderate importance)
-  score += (partner.vehicleCondition - 50) * 2; // Reward good condition, penalize poor
+  // 2. On-Time Pickup Rate (0-1 scale, higher is better) - Strong positive impact
+  score += partner.onTimePickupRate * 250; // Max 250 points
 
-  // 6. Leaves Taken (negative impact)
-  score -= partner.leavesTaken * 10; // More leaves, lower score
+  // 3. Trip Volume (higher is better, but with diminishing returns) - Moderate positive impact
+  score += Math.min(partner.tripVolume / 200, 1) * 100; // Max 100 points, caps at 200 trips
 
-  // 7. Trip Volume (slight positive impact for active partners)
-  score += Math.min(partner.tripVolume / 10, 50); // Cap the impact of trip volume
+  // 4. Average Monthly Earnings (higher is better, with diminishing returns) - Moderate positive impact
+  score += Math.min(avgMonthlyEarnings / 3000, 1) * 150; // Max 150 points, caps at $3000 avg earnings
 
-  // 8. Medical Stability (categorical impact)
-  if (partner.medicalStability === "concerning") score -= 50;
-  if (partner.medicalStability === "moderate") score -= 20;
+  // 5. Risk Level (1-3 scale, lower is better) - Strong negative impact
+  score -= (numericRiskLevel / 3) * 200; // Max -200 points
 
-  // Clamp the score between 0 and 1000
-  return Math.max(0, Math.min(1000, Math.round(score)));
+  // 6. Cancellation Rate (0-1 scale, lower is better) - Significant negative impact
+  score -= partner.cancellationRate * 150; // Max -150 points
+
+  // 7. Vehicle Condition (0-100 scale, higher is better) - Moderate positive impact
+  score += (partner.vehicleCondition / 100) * 50; // Max 50 points
+
+  // 8. Leaves Taken (lower is better) - Minor negative impact
+  score -= Math.min(partner.leavesTaken / 10, 1) * 20; // Max -20 points, caps at 10 leaves
+
+  // 9. Average Rating (0-5 scale, higher is better) - Moderate positive impact
+  score += (partner.avgRating / 5) * 70; // Max 70 points
+
+  // Adjust base score to center around a reasonable value (e.g., 500) and clamp
+  // The sum of max positive contributions is 300+250+100+150+50+70 = 920
+  // The sum of max negative contributions is -200-150-20 = -370
+  // So raw score range is roughly -370 to 920. We need to scale this to 0-1000.
+  // A simple linear scaling: (score - min_raw) / (max_raw - min_raw) * 1000
+  const minRawScore = -370; // Approximate minimum possible score
+  const maxRawScore = 920;  // Approximate maximum possible score
+  const scaledScore = ((score - minRawScore) / (maxRawScore - minRawScore)) * 1000;
+
+  return Math.max(0, Math.min(1000, Math.round(scaledScore)));
 }

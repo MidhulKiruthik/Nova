@@ -1,4 +1,5 @@
 import type { Review } from "./interfaces"
+import { analyzeReviewSentiment } from "./nova-score-model"
 
 export const mockReviews: Review[] = [
   {
@@ -136,4 +137,7 @@ export const mockReviews: Review[] = [
     date: "2024-01-09",
     tripId: "t15",
   },
-]
+].map(review => ({
+  ...review,
+  sentimentScore: analyzeReviewSentiment(review.comment)
+}));
