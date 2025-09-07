@@ -129,12 +129,16 @@ export function PartnerProfileView({ partner, onBack }: PartnerProfileViewProps)
   const chartConfig = {
     score: {
       label: "Nova Score",
-      color: "hsl(var(--primary))",
+      color: "oklch(1 0 0)", // White
     },
     earnings: {
       label: "Earnings",
-      color: "hsl(var(--chart-2))",
+      color: "oklch(1 0 0)", // White
     },
+    radar: { // For the radar chart
+      label: "Performance",
+      color: "oklch(1 0 0)", // White
+    }
   };
 
   return (
@@ -267,21 +271,23 @@ export function PartnerProfileView({ partner, onBack }: PartnerProfileViewProps)
                   <CardDescription>Multi-dimensional performance analysis</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <ResponsiveContainer width="100%" height={300}>
-                    <RadarChart data={radarData} key={partner.id}>
-                      <PolarGrid />
-                      <PolarAngleAxis dataKey="subject" />
-                      <PolarRadiusAxis angle={90} domain={[0, 100]} />
-                      <Radar
-                        name="Performance"
-                        dataKey="A"
-                        stroke="hsl(var(--primary))"
-                        fill="hsl(var(--primary))"
-                        fillOpacity={0.3}
-                        strokeWidth={2} // Ensure stroke width is visible
-                      />
-                    </RadarChart>
-                  </ResponsiveContainer>
+                  <ChartContainer config={chartConfig} className="h-[300px]" key={`radar-chart-${partner.id}`}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <RadarChart data={radarData}>
+                        <PolarGrid />
+                        <PolarAngleAxis dataKey="subject" />
+                        <PolarRadiusAxis angle={90} domain={[0, 100]} />
+                        <Radar
+                          name="Performance"
+                          dataKey="A"
+                          stroke="var(--color-radar)"
+                          fill="var(--color-radar)"
+                          fillOpacity={0.3}
+                          strokeWidth={2}
+                        />
+                      </RadarChart>
+                    </ResponsiveContainer>
+                  </ChartContainer>
                 </CardContent>
               </Card>
             </div>
@@ -358,9 +364,9 @@ export function PartnerProfileView({ partner, onBack }: PartnerProfileViewProps)
                       <Line
                         type="monotone"
                         dataKey="score"
-                        stroke="hsl(var(--primary))"
+                        stroke="var(--color-score)"
                         strokeWidth={2}
-                        dot={false} // Removed dot prop to show only lines
+                        dot={false}
                       />
                     </LineChart>
                   </ResponsiveContainer>
@@ -411,8 +417,8 @@ export function PartnerProfileView({ partner, onBack }: PartnerProfileViewProps)
                       <Area
                         type="monotone"
                         dataKey="earnings"
-                        stroke="hsl(var(--chart-2))"
-                        fill="hsl(var(--chart-2))"
+                        stroke="var(--color-earnings)"
+                        fill="var(--color-earnings)"
                         fillOpacity={0.3}
                       />
                     </AreaChart>
