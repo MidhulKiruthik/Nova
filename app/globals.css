@@ -23,10 +23,10 @@
   --border: oklch(0.92 0.01 195); /* Light cyan border */
   --input: oklch(1 0 0); /* White input background */
   --ring: oklch(0.25 0.05 195 / 0.3); /* Cyan focus ring */
-  --chart-1: oklch(0.25 0.05 195); /* Cyan-800 for charts */
-  --chart-2: oklch(0.6 0.15 25); /* Orange-600 for charts */
-  --chart-3: oklch(0.55 0.2 25); /* Red for charts */
-  --chart-4: oklch(0.35 0.01 258); /* Dark gray for charts */
+  --chart-1: oklch(0.4 0.15 250); /* Deeper Blue for charts */
+  --chart-2: oklch(0.5 0.2 50); /* Vibrant Orange for charts */
+  --chart-3: oklch(0.4 0.2 20); /* Darker Red for charts */
+  --chart-4: oklch(0.2 0.05 280); /* Dark Purple for charts */
   --chart-5: oklch(0.65 0.15 35); /* Bright orange for charts */
   --radius: 0.5rem;
   --sidebar: oklch(1 0 0); /* White sidebar */
@@ -59,11 +59,12 @@
   --border: oklch(0.18 0.01 258); /* Dark border */
   --input: oklch(0.18 0.01 258); /* Dark input */
   --ring: oklch(0.4 0.08 195 / 0.3); /* Cyan focus ring */
-  --chart-1: oklch(0.5 0.15 264); /* Blue for dark charts */
-  --chart-2: oklch(0.7 0.17 162); /* Green for dark charts */
-  --chart-3: oklch(0.77 0.19 70); /* Yellow for dark charts */
-  --chart-4: oklch(0.63 0.27 304); /* Purple for dark charts */
+  --chart-1: oklch(0.7 0.2 260); /* Brighter Blue for dark charts */
+  --chart-2: oklch(0.8 0.2 150); /* Brighter Green for dark charts */
+  --chart-3: oklch(0.85 0.2 80); /* Brighter Yellow for dark charts */
+  --chart-4: oklch(0.7 0.3 300); /* Brighter Purple for dark charts */
   --chart-5: oklch(0.65 0.25 16); /* Orange for dark charts */
+  --radius: 0.5rem;
   --sidebar: oklch(0.12 0.01 258); /* Dark sidebar */
   --sidebar-foreground: oklch(0.95 0.01 195); /* Light sidebar text */
   --sidebar-primary: oklch(0.5 0.15 264); /* Blue sidebar primary */
