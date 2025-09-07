@@ -433,5 +433,5 @@ export function PartnerProfileView({ partner, onBack }: PartnerProfileViewProps)
         </Tabs>
       </main>
     </div>
-  )
+  );
 }
