@@ -127,15 +127,15 @@ export function PartnerProfileView({ partner, onBack }: PartnerProfileViewProps)
   const chartConfig = {
     score: {
       label: "Nova Score",
-      color: "oklch(1 0 0)",
+      color: "var(--chart-1)",
     },
     earnings: {
       label: "Earnings",
-      color: "oklch(1 0 0)",
+      color: "var(--chart-2)",
     },
     radar: {
       label: "Performance",
-      color: "oklch(1 0 0)",
+      color: "var(--chart-3)",
     },
   };
 
@@ -285,7 +285,7 @@ export function PartnerProfileView({ partner, onBack }: PartnerProfileViewProps)
               </Card>
             </div>
 
-            <Card> {/* This was the missing closing tag's parent */}
+            <Card>
               <CardHeader>
                 <CardTitle>Risk Assessment</CardTitle>
                 <CardDescription>Key risk factors and recommendations</CardDescription>
@@ -415,8 +415,7 @@ export function PartnerProfileView({ partner, onBack }: PartnerProfileViewProps)
                       />
                     </AreaChart>
                   </ResponsiveContainer>
-                </ChartContainer>
-              </CardContent>
+                </CardContent>
             </Card>
           </TabsContent>
         </Tabs>
