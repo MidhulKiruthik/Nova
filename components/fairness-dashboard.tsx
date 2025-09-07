@@ -136,31 +136,31 @@ export function FairnessDashboard({ fairnessMetrics }: FairnessDashboardProps) {
   const chartConfig = {
     fairnessScore: {
       label: "Fairness Score",
-      color: "hsl(var(--chart-2))",
+      color: "var(--chart-2)", // Corrected: Removed hsl()
     },
     bias: {
       label: "Bias Level",
-      color: "hsl(var(--chart-3))",
+      color: "var(--chart-3)", // Corrected: Removed hsl()
     },
     averageScore: {
       label: "Average Score",
-      color: "hsl(var(--chart-1))",
+      color: "var(--chart-1)", // Corrected: Removed hsl()
     },
     overall: {
       label: "Overall Bias",
-      color: "hsl(var(--chart-1))",
+      color: "var(--chart-1)", // Corrected: Removed hsl()
     },
     gender: {
       label: "Gender Bias",
-      color: "hsl(var(--chart-2))",
+      color: "var(--chart-2)", // Corrected: Removed hsl()
     },
     age: {
       label: "Age Bias",
-      color: "hsl(var(--chart-3))",
+      color: "var(--chart-3)", // Corrected: Removed hsl()
     },
     location: {
       label: "Location Bias",
-      color: "hsl(var(--chart-4))",
+      color: "var(--chart-4)", // Corrected: Removed hsl()
     },
     race: {
       label: "Racial Bias",

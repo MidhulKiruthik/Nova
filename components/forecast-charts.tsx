@@ -179,23 +179,23 @@ export function ForecastCharts({ partners }: ForecastChartsProps) {
   const chartConfig = {
     novaScore: {
       label: "Nova Score",
-      color: "hsl(var(--chart-1))",
+      color: "var(--chart-1)", // Corrected: Removed hsl()
     },
     earnings: {
       label: "Earnings",
-      color: "hsl(var(--chart-2))",
+      color: "var(--chart-2)", // Corrected: Removed hsl()
     },
     riskScore: {
       label: "Risk Score",
-      color: "hsl(var(--chart-3))",
+      color: "var(--chart-3)", // Corrected: Removed hsl()
     },
     actual: {
       label: "Actual",
-      color: "hsl(var(--chart-1))",
+      color: "var(--chart-1)", // Corrected: Removed hsl()
     },
     forecast: {
       label: "Forecast",
-      color: "hsl(var(--chart-2))",
+      color: "var(--chart-2)", // Corrected: Removed hsl()
     },
   }
 
