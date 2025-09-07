@@ -93,7 +93,7 @@ export function ExportManager({ partners, fairnessMetrics }: ExportManagerProps)
 
     if (exportOptions.filterByScoreRange) {
       const { min, max } = exportOptions.filterByScoreRange
-      filtered = filtered.filter((p) => p.novaScore >= min && p.novaScore <= max)
+      filtered = filtered.filter((p) => p.mlScore >= min && p.mlScore <= max) // Changed from novaScore
     }
 
     return filtered.length

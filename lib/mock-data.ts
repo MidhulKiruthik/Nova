@@ -3,15 +3,15 @@ export interface Partner {
   name: string
   email: string
   phone: string
-  novaScore: number
+  mlScore: number // Renamed from sentimentScore, scaled to 0-1000, replaces novaScore
   earningsHistory: number[]
   tripVolume: number
   onTimePickupRate: number // -1 to 1 scale
   leavesTaken: number
   medicalStability: "stable" | "moderate" | "concerning"
   vehicleCondition: number // 0-100 scale
-  customerReviews: Review[]
-  sentimentScore: number // -1 to 1 scale
+  // customerReviews: Review[] // Removed as per request
+  // sentimentScore: number // Replaced by mlScore
   forecastedEarnings: number[]
   riskLevel: "low" | "medium" | "high"
   joinDate: string
@@ -38,6 +38,9 @@ export interface FairnessMetric {
   bias: number // -1 to 1, where 0 is no bias
 }
 
+// Helper to scale sentimentScore (-1 to 1) to mlScore (0-1000)
+const scaleSentimentToMlScore = (sentiment: number) => Math.round(((sentiment + 1) / 2) * 1000);
+
 // Generate realistic mock data
 export const mockPartners: Partner[] = [
   {
@@ -45,15 +48,15 @@ export const mockPartners: Partner[] = [
     name: "Alex Rodriguez",
     email: "alex.rodriguez@email.com",
     phone: "+1-555-0101",
-    novaScore: 785,
+    mlScore: scaleSentimentToMlScore(0.78), // Derived from original sentimentScore
     earningsHistory: [2800, 3200, 2950, 3400, 3100, 2750],
     tripVolume: 156,
     onTimePickupRate: 0.92,
     leavesTaken: 2,
     medicalStability: "stable",
     vehicleCondition: 88,
-    customerReviews: [],
-    sentimentScore: 0.78,
+    // customerReviews: [],
+    // sentimentScore: 0.78,
     forecastedEarnings: [3200, 3350, 3100, 3450, 3300],
     riskLevel: "low",
     joinDate: "2023-01-15",
@@ -67,15 +70,15 @@ export const mockPartners: Partner[] = [
     name: "Maria Santos",
     email: "maria.santos@email.com",
     phone: "+1-555-0102",
-    novaScore: 692,
+    mlScore: scaleSentimentToMlScore(0.45),
     earningsHistory: [2100, 2400, 2200, 2600, 2300, 2150],
     tripVolume: 98,
     onTimePickupRate: 0.85,
     leavesTaken: 5,
     medicalStability: "moderate",
     vehicleCondition: 76,
-    customerReviews: [],
-    sentimentScore: 0.45,
+    // customerReviews: [],
+    // sentimentScore: 0.45,
     forecastedEarnings: [2300, 2450, 2200, 2500, 2400],
     riskLevel: "medium",
     joinDate: "2023-03-22",
@@ -89,15 +92,15 @@ export const mockPartners: Partner[] = [
     name: "James Chen",
     email: "james.chen@email.com",
     phone: "+1-555-0103",
-    novaScore: 834,
+    mlScore: scaleSentimentToMlScore(0.89),
     earningsHistory: [3500, 3800, 3650, 4000, 3750, 3600],
     tripVolume: 203,
     onTimePickupRate: 0.96,
     leavesTaken: 1,
     medicalStability: "stable",
     vehicleCondition: 94,
-    customerReviews: [],
-    sentimentScore: 0.89,
+    // customerReviews: [],
+    // sentimentScore: 0.89,
     forecastedEarnings: [3800, 3950, 3700, 4100, 3900],
     riskLevel: "low",
     joinDate: "2022-11-08",
@@ -111,15 +114,15 @@ export const mockPartners: Partner[] = [
     name: "Sarah Johnson",
     email: "sarah.johnson@email.com",
     phone: "+1-555-0104",
-    novaScore: 567,
+    mlScore: scaleSentimentToMlScore(0.12),
     earningsHistory: [1800, 1650, 1900, 1750, 1600, 1850],
     tripVolume: 67,
     onTimePickupRate: 0.73,
     leavesTaken: 8,
     medicalStability: "concerning",
     vehicleCondition: 62,
-    customerReviews: [],
-    sentimentScore: 0.12,
+    // customerReviews: [],
+    // sentimentScore: 0.12,
     forecastedEarnings: [1700, 1800, 1650, 1900, 1750],
     riskLevel: "high",
     joinDate: "2023-06-10",
@@ -133,15 +136,15 @@ export const mockPartners: Partner[] = [
     name: "David Kim",
     email: "david.kim@email.com",
     phone: "+1-555-0105",
-    novaScore: 721,
+    mlScore: scaleSentimentToMlScore(0.63),
     earningsHistory: [2600, 2850, 2700, 2950, 2800, 2650],
     tripVolume: 134,
     onTimePickupRate: 0.88,
     leavesTaken: 3,
     medicalStability: "stable",
     vehicleCondition: 81,
-    customerReviews: [],
-    sentimentScore: 0.63,
+    // customerReviews: [],
+    // sentimentScore: 0.63,
     forecastedEarnings: [2750, 2900, 2650, 3000, 2850],
     riskLevel: "low",
     joinDate: "2023-02-28",
@@ -155,15 +158,15 @@ export const mockPartners: Partner[] = [
     name: "Jennifer Williams",
     email: "jennifer.williams@email.com",
     phone: "+1-555-0106",
-    novaScore: 456,
+    mlScore: scaleSentimentToMlScore(-0.23),
     earningsHistory: [1200, 1100, 1350, 1250, 1150, 1300],
     tripVolume: 45,
     onTimePickupRate: 0.68,
     leavesTaken: 12,
     medicalStability: "concerning",
     vehicleCondition: 54,
-    customerReviews: [],
-    sentimentScore: -0.23,
+    // customerReviews: [],
+    // sentimentScore: -0.23,
     forecastedEarnings: [1200, 1300, 1150, 1400, 1250],
     riskLevel: "high",
     joinDate: "2023-08-15",
@@ -177,15 +180,15 @@ export const mockPartners: Partner[] = [
     name: "Michael Brown",
     email: "michael.brown@email.com",
     phone: "+1-555-0107",
-    novaScore: 798,
+    mlScore: scaleSentimentToMlScore(0.82),
     earningsHistory: [3100, 3400, 3250, 3600, 3350, 3200],
     tripVolume: 178,
     onTimePickupRate: 0.94,
     leavesTaken: 2,
     medicalStability: "stable",
     vehicleCondition: 91,
-    customerReviews: [],
-    sentimentScore: 0.82,
+    // customerReviews: [],
+    // sentimentScore: 0.82,
     forecastedEarnings: [3400, 3550, 3300, 3700, 3500],
     riskLevel: "low",
     joinDate: "2022-12-03",
@@ -199,15 +202,15 @@ export const mockPartners: Partner[] = [
     name: "Lisa Davis",
     email: "lisa.davis@email.com",
     phone: "+1-555-0108",
-    novaScore: 623,
+    mlScore: scaleSentimentToMlScore(0.28),
     earningsHistory: [1950, 2200, 2050, 2300, 2150, 2000],
     tripVolume: 89,
     onTimePickupRate: 0.79,
     leavesTaken: 6,
     medicalStability: "moderate",
     vehicleCondition: 69,
-    customerReviews: [],
-    sentimentScore: 0.28,
+    // customerReviews: [],
+    // sentimentScore: 0.28,
     forecastedEarnings: [2100, 2250, 2000, 2400, 2200],
     riskLevel: "medium",
     joinDate: "2023-04-18",
@@ -221,15 +224,15 @@ export const mockPartners: Partner[] = [
     name: "Robert Garcia",
     email: "robert.garcia@email.com",
     phone: "+1-555-0109",
-    novaScore: 743,
+    mlScore: scaleSentimentToMlScore(0.67),
     earningsHistory: [2750, 3000, 2850, 3150, 2950, 2800],
     tripVolume: 145,
     onTimePickupRate: 0.9,
     leavesTaken: 3,
     medicalStability: "stable",
     vehicleCondition: 84,
-    customerReviews: [],
-    sentimentScore: 0.67,
+    // customerReviews: [],
+    // sentimentScore: 0.67,
     forecastedEarnings: [2950, 3100, 2800, 3250, 3050],
     riskLevel: "low",
     joinDate: "2023-01-30",
@@ -243,15 +246,15 @@ export const mockPartners: Partner[] = [
     name: "Amanda Wilson",
     email: "amanda.wilson@email.com",
     phone: "+1-555-0110",
-    novaScore: 512,
+    mlScore: scaleSentimentToMlScore(-0.08),
     earningsHistory: [1600, 1450, 1750, 1550, 1400, 1650],
     tripVolume: 56,
     onTimePickupRate: 0.71,
     leavesTaken: 9,
     medicalStability: "concerning",
     vehicleCondition: 58,
-    customerReviews: [],
-    sentimentScore: -0.08,
+    // customerReviews: [],
+    // sentimentScore: -0.08,
     forecastedEarnings: [1500, 1600, 1450, 1700, 1550],
     riskLevel: "high",
     joinDate: "2023-07-22",
@@ -265,15 +268,15 @@ export const mockPartners: Partner[] = [
     name: "Kevin Martinez",
     email: "kevin.martinez@email.com",
     phone: "+1-555-0111",
-    novaScore: 867,
+    mlScore: scaleSentimentToMlScore(0.94),
     earningsHistory: [3800, 4100, 3950, 4300, 4050, 3900],
     tripVolume: 234,
     onTimePickupRate: 0.98,
     leavesTaken: 1,
     medicalStability: "stable",
     vehicleCondition: 97,
-    customerReviews: [],
-    sentimentScore: 0.94,
+    // customerReviews: [],
+    // sentimentScore: 0.94,
     forecastedEarnings: [4100, 4250, 4000, 4400, 4200],
     riskLevel: "low",
     joinDate: "2022-09-12",
@@ -287,15 +290,15 @@ export const mockPartners: Partner[] = [
     name: "Nicole Taylor",
     email: "nicole.taylor@email.com",
     phone: "+1-555-0112",
-    novaScore: 678,
+    mlScore: scaleSentimentToMlScore(0.52),
     earningsHistory: [2300, 2550, 2400, 2700, 2500, 2350],
     tripVolume: 112,
     onTimePickupRate: 0.83,
     leavesTaken: 4,
     medicalStability: "stable",
     vehicleCondition: 78,
-    customerReviews: [],
-    sentimentScore: 0.52,
+    // customerReviews: [],
+    // sentimentScore: 0.52,
     forecastedEarnings: [2500, 2650, 2400, 2750, 2600],
     riskLevel: "medium",
     joinDate: "2023-02-14",
@@ -309,15 +312,15 @@ export const mockPartners: Partner[] = [
     name: "Christopher Lee",
     email: "christopher.lee@email.com",
     phone: "+1-555-0113",
-    novaScore: 389,
+    mlScore: scaleSentimentToMlScore(-0.41),
     earningsHistory: [1000, 900, 1150, 1050, 950, 1100],
     tripVolume: 32,
     onTimePickupRate: 0.62,
     leavesTaken: 15,
     medicalStability: "concerning",
     vehicleCondition: 47,
-    customerReviews: [],
-    sentimentScore: -0.41,
+    // customerReviews: [],
+    // sentimentScore: -0.41,
     forecastedEarnings: [1000, 1100, 950, 1200, 1050],
     riskLevel: "high",
     joinDate: "2023-09-08",
@@ -331,15 +334,15 @@ export const mockPartners: Partner[] = [
     name: "Rachel Anderson",
     email: "rachel.anderson@email.com",
     phone: "+1-555-0114",
-    novaScore: 756,
+    mlScore: scaleSentimentToMlScore(0.74),
     earningsHistory: [2900, 3200, 3050, 3350, 3150, 3000],
     tripVolume: 167,
     onTimePickupRate: 0.91,
     leavesTaken: 2,
     medicalStability: "stable",
     vehicleCondition: 86,
-    customerReviews: [],
-    sentimentScore: 0.74,
+    // customerReviews: [],
+    // sentimentScore: 0.74,
     forecastedEarnings: [3150, 3300, 3000, 3450, 3250],
     riskLevel: "low",
     joinDate: "2022-10-25",
@@ -353,15 +356,15 @@ export const mockPartners: Partner[] = [
     name: "Daniel Thomas",
     email: "daniel.thomas@email.com",
     phone: "+1-555-0115",
-    novaScore: 634,
+    mlScore: scaleSentimentToMlScore(0.35),
     earningsHistory: [2050, 2300, 2150, 2450, 2250, 2100],
     tripVolume: 95,
     onTimePickupRate: 0.81,
     leavesTaken: 5,
     medicalStability: "moderate",
     vehicleCondition: 72,
-    customerReviews: [],
-    sentimentScore: 0.35,
+    // customerReviews: [],
+    // sentimentScore: 0.35,
     forecastedEarnings: [2200, 2350, 2100, 2500, 2300],
     riskLevel: "medium",
     joinDate: "2023-05-03",
@@ -533,18 +536,19 @@ export const implementedFairnessActions = [
 
 // Utility functions for data processing
 export const calculateSentimentDistribution = (partners: Partner[]) => {
-  const positive = partners.filter((p) => p.sentimentScore > 0.3).length
-  const neutral = partners.filter((p) => p.sentimentScore >= -0.3 && p.sentimentScore <= 0.3).length
-  const negative = partners.filter((p) => p.sentimentScore < -0.3).length
+  // Assuming mlScore is scaled from sentiment, we can reverse it for distribution
+  const positive = partners.filter((p) => p.mlScore > 650).length // mlScore > 650 roughly corresponds to sentiment > 0.3
+  const neutral = partners.filter((p) => p.mlScore >= 350 && p.mlScore <= 650).length // mlScore between 350 and 650 roughly corresponds to sentiment between -0.3 and 0.3
+  const negative = partners.filter((p) => p.mlScore < 350).length // mlScore < 350 roughly corresponds to sentiment < -0.3
 
   return { positive, neutral, negative }
 }
 
 export const getScoreDistribution = (partners: Partner[]) => {
-  const excellent = partners.filter((p) => p.novaScore >= 800).length
-  const good = partners.filter((p) => p.novaScore >= 700 && p.novaScore < 800).length
-  const fair = partners.filter((p) => p.novaScore >= 600 && p.novaScore < 700).length
-  const poor = partners.filter((p) => p.novaScore < 600).length
+  const excellent = partners.filter((p) => p.mlScore >= 800).length
+  const good = partners.filter((p) => p.mlScore >= 700 && p.mlScore < 800).length
+  const fair = partners.filter((p) => p.mlScore >= 600 && p.mlScore < 700).length
+  const poor = partners.filter((p) => p.mlScore < 600).length
 
   return { excellent, good, fair, poor }
 }

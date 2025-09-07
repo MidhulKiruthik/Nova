@@ -327,7 +327,7 @@ export function FairnessDashboard({ fairnessMetrics }: FairnessDashboardProps) {
                   <RadarChart data={radarData} margin={{ top: 40, right: 40, bottom: 40, left: 40 }}>
                     <PolarGrid />
                     <PolarAngleAxis dataKey="demographic" tick={{ fontSize: 12 }} />
-                    <PolarRadiusAxis domain={[0, 100]} tick={false} axisLine={false} />
+                    <PolarRadiusAxis angle={90} domain={[0, 100]} tick={false} axisLine={false} />
                     <Radar
                       name="Fairness Score"
                       dataKey="fairnessScore"
@@ -375,7 +375,8 @@ export function FairnessDashboard({ fairnessMetrics }: FairnessDashboardProps) {
                     />
                   </LineChart>
                 </ResponsiveContainer>
-              </ChartContainer>
+              </ChartContent>
+            </ChartContainer>
             ) : (
               <div className="h-[400px] flex items-center justify-center text-muted-foreground">
                 No trend data available

@@ -6,13 +6,13 @@ export interface ExcelPartnerData {
   Name: string
   Email: string
   Phone: string
-  "Nova Score": number
+  "ML Score": number // Renamed from "Nova Score"
   "Trip Volume": number
   "On-Time Rate": number
   "Leaves Taken": number
   "Medical Stability": string
   "Vehicle Condition": number
-  "Sentiment Score": number
+  // "Sentiment Score": number // Removed
   "Risk Level": string
   "Join Date": string
   "Last Active": string
@@ -39,13 +39,13 @@ export const partnerToExcelRow = (partner: Partner): ExcelPartnerData => {
     Name: partner.name,
     Email: partner.email,
     Phone: partner.phone,
-    "Nova Score": partner.novaScore,
+    "ML Score": partner.mlScore, // Changed from novaScore
     "Trip Volume": partner.tripVolume,
     "On-Time Rate": partner.onTimePickupRate,
     "Leaves Taken": partner.leavesTaken,
     "Medical Stability": partner.medicalStability,
     "Vehicle Condition": partner.vehicleCondition,
-    "Sentiment Score": partner.sentimentScore,
+    // "Sentiment Score": partner.sentimentScore, // Removed
     "Risk Level": partner.riskLevel,
     "Join Date": partner.joinDate,
     "Last Active": partner.lastActive,
@@ -73,7 +73,7 @@ export const excelRowToPartner = (row: ExcelPartnerData): Partner => {
     name: row.Name || "",
     email: row.Email || "",
     phone: row.Phone || "",
-    novaScore: row["Nova Score"] || 0,
+    mlScore: row["ML Score"] || 0, // Changed from novaScore
     earningsHistory: [
       row["Earnings Jan"] || 0,
       row["Earnings Feb"] || 0,
@@ -87,8 +87,8 @@ export const excelRowToPartner = (row: ExcelPartnerData): Partner => {
     leavesTaken: row["Leaves Taken"] || 0,
     medicalStability: (row["Medical Stability"] as any) || "stable",
     vehicleCondition: row["Vehicle Condition"] || 0,
-    customerReviews: [],
-    sentimentScore: row["Sentiment Score"] || 0,
+    // customerReviews: [], // Removed
+    // sentimentScore: row["Sentiment Score"] || 0, // Removed
     forecastedEarnings: [
       row["Forecast Jan"] || 0,
       row["Forecast Feb"] || 0,
@@ -184,7 +184,7 @@ export const filterPartnersForExport = (partners: Partner[], options: ExportOpti
 
   if (options.filterByScoreRange) {
     const { min, max } = options.filterByScoreRange
-    filtered = filtered.filter((p) => p.novaScore >= min && p.novaScore <= max)
+    filtered = filtered.filter((p) => p.mlScore >= min && p.mlScore <= max) // Changed from novaScore
   }
 
   return filtered
@@ -197,8 +197,8 @@ export const createAnalyticsReport = (partners: Partner[], fairnessMetrics: Fair
   const summaryData = [
     {
       "Total Partners": filteredPartners.length,
-      "Average Nova Score": Math.round(
-        filteredPartners.reduce((sum, p) => sum + p.novaScore, 0) / filteredPartners.length,
+      "Average ML Score": Math.round( // Changed from Nova Score
+        filteredPartners.reduce((sum, p) => sum + p.mlScore, 0) / filteredPartners.length, // Changed from novaScore
       ),
       "High Risk Partners": filteredPartners.filter((p) => p.riskLevel === "high").length,
       "Medium Risk Partners": filteredPartners.filter((p) => p.riskLevel === "medium").length,
@@ -217,47 +217,47 @@ export const createAnalyticsReport = (partners: Partner[], fairnessMetrics: Fair
   const scoreDistribution = [
     {
       "Score Range": "800+",
-      Count: filteredPartners.filter((p) => p.novaScore >= 800).length,
+      Count: filteredPartners.filter((p) => p.mlScore >= 800).length, // Changed from novaScore
       Percentage:
-        ((filteredPartners.filter((p) => p.novaScore >= 800).length / filteredPartners.length) * 100).toFixed(1) + "%",
+        ((filteredPartners.filter((p) => p.mlScore >= 800).length / filteredPartners.length) * 100).toFixed(1) + "%", // Changed from novaScore
     },
     {
       "Score Range": "700-799",
-      Count: filteredPartners.filter((p) => p.novaScore >= 700 && p.novaScore < 800).length,
+      Count: filteredPartners.filter((p) => p.mlScore >= 700 && p.mlScore < 800).length, // Changed from novaScore
       Percentage:
         (
-          (filteredPartners.filter((p) => p.novaScore >= 700 && p.novaScore < 800).length / filteredPartners.length) *
+          (filteredPartners.filter((p) => p.mlScore >= 700 && p.mlScore < 800).length / filteredPartners.length) * // Changed from novaScore
           100
         ).toFixed(1) + "%",
     },
     {
       "Score Range": "600-699",
-      Count: filteredPartners.filter((p) => p.novaScore >= 600 && p.novaScore < 700).length,
+      Count: filteredPartners.filter((p) => p.mlScore >= 600 && p.mlScore < 700).length, // Changed from novaScore
       Percentage:
         (
-          (filteredPartners.filter((p) => p.novaScore >= 600 && p.novaScore < 700).length / filteredPartners.length) *
+          (filteredPartners.filter((p) => p.mlScore >= 600 && p.mlScore < 700).length / filteredPartners.length) * // Changed from novaScore
           100
         ).toFixed(1) + "%",
     },
     {
       "Score Range": "Below 600",
-      Count: filteredPartners.filter((p) => p.novaScore < 600).length,
+      Count: filteredPartners.filter((p) => p.mlScore < 600).length, // Changed from novaScore
       Percentage:
-        ((filteredPartners.filter((p) => p.novaScore < 600).length / filteredPartners.length) * 100).toFixed(1) + "%",
+        ((filteredPartners.filter((p) => p.mlScore < 600).length / filteredPartners.length) * 100).toFixed(1) + "%", // Changed from novaScore
     },
   ]
 
   // Performance metrics
   const performanceMetrics = filteredPartners.map((partner) => ({
     "Partner Name": partner.name,
-    "Nova Score": partner.novaScore,
+    "ML Score": partner.mlScore, // Changed from Nova Score
     "Risk Level": partner.riskLevel,
     "Total Trips": partner.totalTrips,
     "Average Rating": partner.avgRating,
     "On-Time Rate": partner.onTimePickupRate,
     "Cancellation Rate": partner.cancellationRate,
     "Vehicle Condition": partner.vehicleCondition,
-    "Sentiment Score": partner.sentimentScore,
+    // "Sentiment Score": partner.sentimentScore, // Removed
     "Monthly Earnings Avg": Math.round(
       partner.earningsHistory.reduce((sum, e) => sum + e, 0) / partner.earningsHistory.length,
     ),
@@ -318,7 +318,7 @@ export const createDetailedReport = (partners: Partner[], options: ExportOptions
     ? filteredPartners.map((partner) => ({
         "Partner ID": partner.id,
         "Partner Name": partner.name,
-        "Current Nova Score": partner.novaScore,
+        "Current ML Score": partner.mlScore, // Changed from Nova Score
         "Forecast Jan": partner.forecastedEarnings[0] || 0,
         "Forecast Feb": partner.forecastedEarnings[1] || 0,
         "Forecast Mar": partner.forecastedEarnings[2] || 0,
@@ -363,7 +363,7 @@ export const createFairnessReport = (partners: Partner[], fairnessMetrics: Fairn
   // Bias analysis by demographic
   const biasAnalysis = fairnessMetrics.map((metric) => ({
     "Demographic Group": metric.demographic,
-    "Average Nova Score": metric.averageScore,
+    "Average ML Score": metric.averageScore, // Changed from Nova Score
     "Sample Size": metric.count,
     "Bias Score": metric.bias,
     "Bias Direction": metric.bias > 0 ? "Positive" : metric.bias < 0 ? "Negative" : "Neutral",
@@ -380,19 +380,19 @@ export const createFairnessReport = (partners: Partner[], fairnessMetrics: Fairn
   const demographicDistribution = [
     {
       "Age Group": "18-30",
-      "Partner Count": partners.filter((p) => p.novaScore < 700).length,
+      "Partner Count": partners.filter((p) => p.mlScore < 700).length, // Changed from novaScore
       "Avg Score": 682,
       "Risk Distribution": "Mixed",
     },
     {
       "Age Group": "31-45",
-      "Partner Count": partners.filter((p) => p.novaScore >= 700 && p.novaScore < 800).length,
+      "Partner Count": partners.filter((p) => p.mlScore >= 700 && p.mlScore < 800).length, // Changed from novaScore
       "Avg Score": 724,
       "Risk Distribution": "Mostly Low-Medium",
     },
     {
       "Age Group": "46+",
-      "Partner Count": partners.filter((p) => p.novaScore >= 800).length,
+      "Partner Count": partners.filter((p) => p.mlScore >= 800).length, // Changed from novaScore
       "Avg Score": 698,
       "Risk Distribution": "Low Risk Dominant",
     },
