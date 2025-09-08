@@ -20,18 +20,30 @@ export interface DataChangeEvent {
  * Returns the normalized category string or null if it doesn't fit.
  */
 const normalizeAgeGroup = (rawAgeGroup: string): string | null => {
-  const lowerCaseGroup = rawAgeGroup.toLowerCase().replace(/\s/g, ''); // Remove spaces for easier matching
+  const lowerCaseGroup = rawAgeGroup.toLowerCase().replace(/[^a-z0-9-]/g, ''); // Remove non-alphanumeric except hyphen
 
-  if (lowerCaseGroup.includes('18-30') || lowerCaseGroup.includes('18-24') || lowerCaseGroup.includes('25-30') || lowerCaseGroup.includes('youngadult')) {
+  if (
+    lowerCaseGroup.match(/^(1[8-9]|2[0-9]|30)-?/) || // Matches 18-30, 18-24, 25-30, or single ages like 19, 25
+    lowerCaseGroup.includes('youngadult') ||
+    lowerCaseGroup.includes('youth')
+  ) {
     return "18-30";
   }
-  if (lowerCaseGroup.includes('31-45') || lowerCaseGroup.includes('30-40') || lowerCaseGroup.includes('middleage')) {
+  if (
+    lowerCaseGroup.match(/^(3[1-9]|4[0-5])-?/) || // Matches 31-45, 30-40, or single ages like 35, 40
+    lowerCaseGroup.includes('middleage') ||
+    lowerCaseGroup.includes('adult')
+  ) {
     return "31-45";
   }
-  if (lowerCaseGroup.includes('46-70') || lowerCaseGroup.includes('45-60') || lowerCaseGroup.includes('senior') || lowerCaseGroup.includes('elderly')) {
+  if (
+    lowerCaseGroup.match(/^(4[6-9]|[5-6][0-9]|70)-?/) || // Matches 46-70, 45-60, 60+, or single ages like 50, 65, 70
+    lowerCaseGroup.includes('senior') ||
+    lowerCaseGroup.includes('elderly') ||
+    lowerCaseGroup.includes('olderadult')
+  ) {
     return "46-70";
   }
-  // If it doesn't match any of the target groups, return null so it's not included in the radar chart
   return null;
 };
 
