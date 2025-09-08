@@ -242,17 +242,7 @@ export function FairnessDashboard({ fairnessMetrics }: FairnessDashboardProps) {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Bias Trend Analysis</CardTitle>
-            <CardDescription>Historical bias levels and improvement over time</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[400px] flex items-center justify-center text-muted-foreground">
-              No historical bias trend data available from Excel.
-            </div>
-          </CardContent>
-        </Card>
+        {/* Removed Bias Trend Analysis Card */}
       </div>
 
       {/* Demographic Analysis */}
