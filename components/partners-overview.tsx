@@ -35,7 +35,7 @@ export function PartnersOverview({ onPartnerSelect }: PartnersOverviewProps) {
                 Comprehensive view of all gig economy partners with Nova scores and performance metrics
               </CardDescription>
             </div>
-            <AddPartnerDialog onPartnerAdded={handleAddPartner} />
+            {/* Removed AddPartnerDialog */}
           </div>
         </CardHeader>
         <CardContent>
