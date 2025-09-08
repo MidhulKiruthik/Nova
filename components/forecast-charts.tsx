@@ -217,13 +217,11 @@ export function ForecastCharts() {
       expectedGrowth = ((lastForecastedEarning - lastHistoricalEarning) / lastHistoricalEarning) * 100;
     }
 
-    const currentRisk = getRiskLevel(selectedPartnerData.novaScore);
-    // Simulate a slight improvement or stability for risk trend
-    let riskTrend = "Stable";
-    if (selectedPartnerData.novaScore > 700) { // If current score is already good/medium
+    let riskTrend = "Stable"; // Default
+    if (expectedGrowth > 0) {
       riskTrend = "Improving";
-    } else if (selectedPartnerData.novaScore < 650) { // If current score is low
-      riskTrend = "Worsening";
+    } else if (expectedGrowth < 0) {
+      riskTrend = "Not Improving";
     }
 
     // Confidence based on Nova Score (higher score, higher confidence)
