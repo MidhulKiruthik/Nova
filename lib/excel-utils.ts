@@ -81,6 +81,14 @@ export const excelRowToPartner = (row: ExcelPartnerData): Partner => {
   const parseNumber = (value: any) => (typeof value === 'number' ? value : Number(value) || 0);
   const parseString = (value: any) => (typeof value === 'string' ? value.trim() : String(value || '')).trim();
 
+  const parsedSentiment = row.Sentiment !== undefined ? parseNumber(row.Sentiment) : undefined;
+
+  // Debugging logs
+  console.log(`Processing partner: ${row.Name} (ID: ${row.ID})`);
+  console.log(`Raw Sentiment from Excel:`, row.Sentiment, `(Type: ${typeof row.Sentiment})`);
+  console.log(`Parsed overallSentimentScore:`, parsedSentiment, `(Type: ${typeof parsedSentiment})`);
+
+
   return {
     id: parseString(row.ID) || `p${Date.now()}`,
     name: parseString(row.Name),
@@ -119,7 +127,7 @@ export const excelRowToPartner = (row: ExcelPartnerData): Partner => {
     gender: parseString(row.Gender),
     ethnicity: parseString(row.Ethnicity),
     rawReviewsText: parseString(row.Reviews),
-    overallSentimentScore: row.Sentiment !== undefined ? parseNumber(row.Sentiment) : undefined, // New: Read sentiment
+    overallSentimentScore: parsedSentiment, // New: Read sentiment
   }
 }
 

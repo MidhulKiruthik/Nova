@@ -79,13 +79,13 @@ export function mapScoreToCategoricalSentiment(score: number): "positive" | "neu
 export function calculateNovaScore(partner: Partner): number {
   let score = 0; // Start with 0 and build up
 
-  // Calculate average sentiment score from rawReviewsText
-  // Assuming rawReviewsText might contain multiple reviews separated by a delimiter (e.g., ';')
-  const reviewComments = partner.rawReviewsText ? partner.rawReviewsText.split(';').map(s => s.trim()).filter(Boolean) : [];
-  const totalSentimentScore = reviewComments.reduce((sum, comment) => {
-    return sum + analyzeReviewSentiment(comment);
-  }, 0);
-  const avgSentimentScore = reviewComments.length > 0 ? totalSentimentScore / reviewComments.length : 2.5; // Default to neutral (2.5) if no reviews
+  // Determine the sentiment score to use: prioritize overallSentimentScore from Excel
+  const sentimentToUse = partner.overallSentimentScore !== undefined
+    ? partner.overallSentimentScore
+    : (partner.rawReviewsText
+        ? partner.rawReviewsText.split(';').map(s => s.trim()).filter(Boolean).reduce((sum, comment) => sum + analyzeReviewSentiment(comment), 0) /
+          partner.rawReviewsText.split(';').map(s => s.trim()).filter(Boolean).length
+        : 2.5); // Default to neutral (2.5) if no reviews and no overallSentimentScore
 
   // Map categorical risk level to a numerical value (higher is worse)
   let numericRiskLevel = 0;
@@ -103,7 +103,7 @@ export function calculateNovaScore(partner: Partner): number {
   // They are scaled to contribute to a final 0-1000 score.
 
   // 1. Sentiment Score (0-5 scale, higher is better) - Strong positive impact
-  score += (avgSentimentScore / 5) * 300; // Max 300 points
+  score += (sentimentToUse / 5) * 300; // Max 300 points
 
   // 2. On-Time Pickup Rate (0-1 scale, higher is better) - Strong positive impact
   score += partner.onTimePickupRate * 250; // Max 250 points
