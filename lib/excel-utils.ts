@@ -74,45 +74,48 @@ export const partnerToExcelRow = (partner: Partner): ExcelPartnerData => {
   }
 }
 
-// Convert Excel row to Partner object
+// Convert Excel row to Partner object with robust type parsing
 export const excelRowToPartner = (row: ExcelPartnerData): Partner => {
+  const parseNumber = (value: any) => (typeof value === 'number' ? value : Number(value) || 0);
+  const parseString = (value: any) => (typeof value === 'string' ? value.trim() : String(value || '')).trim();
+
   return {
-    id: row.ID || `p${Date.now()}`,
-    name: row.Name || "",
-    email: row.Email || "",
-    phone: row.Phone || "",
-    novaScore: row["Nova Score"] || 0,
+    id: parseString(row.ID) || `p${Date.now()}`,
+    name: parseString(row.Name),
+    email: parseString(row.Email),
+    phone: parseString(row.Phone),
+    novaScore: parseNumber(row["Nova Score"]),
     earningsHistory: [
-      row["Earnings Jan"] || 0,
-      row["Earnings Feb"] || 0,
-      row["Earnings Mar"] || 0,
-      row["Earnings Apr"] || 0,
-      row["Earnings May"] || 0,
-      row["Earnings Jun"] || 0,
+      parseNumber(row["Earnings Jan"]),
+      parseNumber(row["Earnings Feb"]),
+      parseNumber(row["Earnings Mar"]),
+      parseNumber(row["Earnings Apr"]),
+      parseNumber(row["Earnings May"]),
+      parseNumber(row["Earnings Jun"]),
     ],
-    tripVolume: row["Trip Volume"] || 0,
-    onTimePickupRate: row["On-Time Rate"] || 0,
-    leavesTaken: row["Leaves Taken"] || 0,
-    medicalStability: (row["Medical Stability"] as any) || "stable",
-    vehicleCondition: row["Vehicle Condition"] || 0,
+    tripVolume: parseNumber(row["Trip Volume"]),
+    onTimePickupRate: parseNumber(row["On-Time Rate"]),
+    leavesTaken: parseNumber(row["Leaves Taken"]),
+    medicalStability: (parseString(row["Medical Stability"]) as any) || "stable",
+    vehicleCondition: parseNumber(row["Vehicle Condition"]),
     forecastedEarnings: [
-      row["Forecast Jan"] || 0,
-      row["Forecast Feb"] || 0,
-      row["Forecast Mar"] || 0,
-      row["Forecast Apr"] || 0,
-      row["Forecast May"] || 0,
+      parseNumber(row["Forecast Jan"]),
+      parseNumber(row["Forecast Feb"]),
+      parseNumber(row["Forecast Mar"]),
+      parseNumber(row["Forecast Apr"]),
+      parseNumber(row["Forecast May"]),
     ],
-    riskLevel: (row["Risk Level"] as any) || "medium",
-    joinDate: row["Join Date"] || new Date().toISOString().split("T")[0],
-    lastActive: row["Last Active"] || new Date().toISOString().split("T")[0],
-    totalTrips: row["Total Trips"] || 0,
-    avgRating: row["Avg Rating"] || 0,
-    cancellationRate: row["Cancellation Rate"] || 0,
-    ageGroup: row["Age Group"] || "",
-    areaType: row["Area Type"] || "",
-    gender: row["Gender"] || "",
-    ethnicity: row["Ethnicity"] || "",
-    rawReviewsText: row["Reviews"] || "",
+    riskLevel: (parseString(row["Risk Level"]) as any) || "medium",
+    joinDate: parseString(row["Join Date"]) || new Date().toISOString().split("T")[0],
+    lastActive: parseString(row["Last Active"]) || new Date().toISOString().split("T")[0],
+    totalTrips: parseNumber(row["Total Trips"]),
+    avgRating: parseNumber(row["Avg Rating"]),
+    cancellationRate: parseNumber(row["Cancellation Rate"]),
+    ageGroup: parseString(row["Age Group"]),
+    areaType: parseString(row["Area Type"]),
+    gender: parseString(row["Gender"]),
+    ethnicity: parseString(row["Ethnicity"]),
+    rawReviewsText: parseString(row["Reviews"]),
   }
 }
 
