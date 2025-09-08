@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import type { Partner, Review } from "@/lib/interfaces"
 import { useDataStore } from "@/hooks/use-data-store"
 import { analyzeReviewSentiment, mapScoreToCategoricalSentiment } from "@/lib/nova-score-model" // Import sentiment analysis and mapping
+import { calculateSentimentBreakdownForPartner } from "@/lib/sentiment-utils"; // Import the new utility function
 
 interface SentimentHeatmapProps {
   partner: Partner | null // Now accepts a single partner or null
@@ -100,34 +101,10 @@ export function SentimentHeatmap({ partner }: SentimentHeatmapProps) {
     }
   }
 
-  // Calculate sentiment breakdown for the selected partner
+  // Calculate sentiment breakdown for the selected partner using the new utility function
   const sentimentBreakdown = useMemo(() => {
-    if (reviewCells.length === 0) {
-      return { positive: 0, neutral: 100, negative: 0, total: 0 };
-    }
-
-    let positiveCount = 0;
-    let neutralCount = 0;
-    let negativeCount = 0;
-
-    reviewCells.forEach(cell => {
-      if (cell.categoricalSentiment === "positive") {
-        positiveCount++;
-      } else if (cell.categoricalSentiment === "negative") {
-        negativeCount++;
-      } else {
-        neutralCount++;
-      }
-    });
-
-    const total = reviewCells.length;
-    return {
-      positive: Math.round((positiveCount / total) * 100),
-      neutral: Math.round((neutralCount / total) * 100),
-      negative: Math.round((negativeCount / total) * 100),
-      total: total,
-    };
-  }, [reviewCells]);
+    return calculateSentimentBreakdownForPartner(partner, reviews);
+  }, [partner, reviews]);
 
   return (
     <div className="space-y-6">
@@ -203,15 +180,15 @@ export function SentimentHeatmap({ partner }: SentimentHeatmapProps) {
             <div className="grid grid-cols-3 gap-4 text-center">
               <div>
                 <div className="text-3xl font-bold text-green-600">{sentimentBreakdown.positive}%</div>
-                <p className="text-sm text-muted-foreground">Positive</p>
+                <p className="text-sm text-muted-foreground">Positive Reviews</p>
               </div>
               <div>
                 <div className="text-3xl font-bold text-yellow-600">{sentimentBreakdown.neutral}%</div>
-                <p className="text-sm text-muted-foreground">Neutral</p>
+                <p className="text-sm text-muted-foreground">Neutral Reviews</p>
               </div>
               <div>
                 <div className="text-3xl font-bold text-red-600">{sentimentBreakdown.negative}%</div>
-                <p className="text-sm text-muted-foreground">Negative</p>
+                <p className="text-sm text-muted-foreground">Negative Reviews</p>
               </div>
             </div>
             <p className="text-center text-sm text-muted-foreground mt-4">

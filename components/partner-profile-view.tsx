@@ -38,7 +38,7 @@ import {
 import { ChartContainer, ChartTooltipContent } from "@/components/ui/chart";
 import type { Partner, Review } from "@/lib/interfaces";
 import { useDataStore } from "@/hooks/use-data-store";
-import { analyzeReviewSentiment, mapScoreToCategoricalSentiment } from "@/lib/nova-score-model";
+import { calculateSentimentBreakdownForPartner } from "@/lib/sentiment-utils"; // Import the new utility function
 
 
 interface PartnerProfileViewProps {
@@ -97,45 +97,9 @@ export function PartnerProfileView({ partner, onBack }: PartnerProfileViewProps)
     { subject: "Health Stability", A: Math.max(100 - partner.leavesTaken * 10, 0), fullMark: 100 },
   ];
 
-  const getSentimentBreakdown = (partnerId: string) => {
-    const partnerReviews = reviews.filter(r => r.partnerId === partnerId);
-    if (partnerReviews.length === 0) {
-      // If no reviews in data store, use overallSentimentScore from partner if available
-      if (partner.overallSentimentScore !== undefined) {
-        const score = partner.overallSentimentScore;
-        const categorical = mapScoreToCategoricalSentiment(score);
-        if (categorical === "positive") return { positive: 100, neutral: 0, negative: 0 };
-        if (categorical === "negative") return { positive: 0, neutral: 0, negative: 100 };
-        return { positive: 0, neutral: 100, negative: 0 };
-      }
-      return { positive: 0, neutral: 100, negative: 0 }; // Default to neutral if no reviews and no overallSentimentScore
-    }
-
-    let positiveCount = 0;
-    let neutralCount = 0;
-    let negativeCount = 0;
-
-    partnerReviews.forEach(review => {
-      const sentimentScore = review.sentimentScore ?? analyzeReviewSentiment(review.comment);
-      const categoricalSentiment = mapScoreToCategoricalSentiment(sentimentScore);
-      if (categoricalSentiment === "positive") {
-        positiveCount++;
-      } else if (categoricalSentiment === "negative") {
-        negativeCount++;
-      } else {
-        neutralCount++;
-      }
-    });
-
-    const total = partnerReviews.length;
-    return {
-      positive: Math.round((positiveCount / total) * 100),
-      neutral: Math.round((neutralCount / total) * 100),
-      negative: Math.round((negativeCount / total) * 100),
-    };
-  };
-
-  const sentimentBreakdown = getSentimentBreakdown(partner.id);
+  const sentimentBreakdown = useMemo(() => {
+    return calculateSentimentBreakdownForPartner(partner, reviews);
+  }, [partner, reviews]);
 
   const getRiskLevel = (score: number) => {
     if (score >= 800) return { level: "Low", textColor: "text-green-700" };
