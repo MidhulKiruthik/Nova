@@ -172,16 +172,16 @@ export function ExcelImport({ onImportComplete, onImportError }: ExcelImportProp
         email: "john.doe@example.com",
         phone: "+1-555-0123",
         novaScore: 750,
-        earningsHistory: [2500, 2700, 2600, 2800, 2650, 2750],
+        earningsHistory: [2500, 2700, 2600, 2800, 2650, 2750, 2900, 3000], // 8 months
         tripVolume: 120,
         onTimePickupRate: 0.92,
         leavesTaken: 3,
         medicalStability: "stable",
         vehicleCondition: 85,
-        forecastedEarnings: [2800, 2900, 2750, 3000, 2850],
+        forecastedEarnings: [2800, 2900, 2750, 3000], // 4 months
         riskLevel: "low",
         joinDate: "2023-01-15",
-        lastActive: "2024-01-14",
+        lastActive: "2024-01-14", // Not in template, but required by interface
         totalTrips: 1200,
         avgRating: 4.7,
         cancellationRate: 0.04,
@@ -197,16 +197,16 @@ export function ExcelImport({ onImportComplete, onImportError }: ExcelImportProp
         email: "jane.smith@example.com",
         phone: "+1-555-0124",
         novaScore: 680,
-        earningsHistory: [2200, 2300, 2100, 2400, 2250, 2350],
+        earningsHistory: [2200, 2300, 2100, 2400, 2250, 2350, 2400, 2500], // 8 months
         tripVolume: 100,
         onTimePickupRate: 0.88,
         leavesTaken: 5,
         medicalStability: "moderate",
         vehicleCondition: 70,
-        forecastedEarnings: [2300, 2450, 2300, 2500, 2400],
+        forecastedEarnings: [2300, 2450, 2300, 2500], // 4 months
         riskLevel: "medium",
         joinDate: "2022-08-01",
-        lastActive: "2024-01-13",
+        lastActive: "2024-01-13", // Not in template, but required by interface
         totalTrips: 1050,
         avgRating: 4.2,
         cancellationRate: 0.07,

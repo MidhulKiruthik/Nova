@@ -4,13 +4,13 @@ export interface Partner {
   email: string
   phone: string
   novaScore: number // Represents the Nova Score (0-1000)
-  earningsHistory: number[]
+  earningsHistory: number[] // Now represents 8 months (Jan-Aug)
   tripVolume: number
   onTimePickupRate: number // 0-1 scale
   leavesTaken: number
   medicalStability: "stable" | "moderate" | "concerning"
   vehicleCondition: number // 0-100 scale
-  forecastedEarnings: number[]
+  forecastedEarnings: number[] // Now represents 4 months (Sep-Dec)
   riskLevel: "low" | "medium" | "high"
   joinDate: string
   lastActive: string

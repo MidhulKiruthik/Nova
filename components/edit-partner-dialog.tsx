@@ -29,7 +29,19 @@ export function EditPartnerDialog({ partner, isOpen, onOpenChange, onPartnerUpda
   const [editingPartner, setEditingPartner] = useState<Partner | null>(partner)
 
   useEffect(() => {
-    setEditingPartner(partner)
+    if (partner) {
+      // Ensure earningsHistory and forecastedEarnings match the new expected lengths
+      const updatedEarningsHistory = [...(partner.earningsHistory || [])];
+      while (updatedEarningsHistory.length < 8) updatedEarningsHistory.push(0);
+      const updatedForecastedEarnings = [...(partner.forecastedEarnings || [])];
+      while (updatedForecastedEarnings.length < 4) updatedForecastedEarnings.push(0);
+
+      setEditingPartner({
+        ...partner,
+        earningsHistory: updatedEarningsHistory,
+        forecastedEarnings: updatedForecastedEarnings,
+      });
+    }
   }, [partner])
 
   const handleEditPartner = () => {

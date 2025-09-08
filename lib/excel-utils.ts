@@ -3,18 +3,21 @@ import type { Partner, FairnessMetric } from "./interfaces" // Updated import
 
 export interface ExcelPartnerData {
   ID: string
+  Age: string // Renamed from Age Group for template
+  Gender: string
+  Ethnicity: string
+  "Area Type": string
   Name: string
-  Email: string
+  Email: string // Renamed from Mail
   Phone: string
   "Nova Score": number
   "Trip Volume": number
   "On-Time Rate": number
   "Leaves Taken": number
-  "Medical Stability": string
+  "Medical Stability": string // Renamed from Medical State
   "Vehicle Condition": number
   "Risk Level": string
   "Join Date": string
-  "Last Active": string
   "Total Trips": number
   "Avg Rating": number
   "Cancellation Rate": number
@@ -24,22 +27,23 @@ export interface ExcelPartnerData {
   "Earnings Apr": number
   "Earnings May": number
   "Earnings Jun": number
-  "Forecast Jan": number
-  "Forecast Feb": number
-  "Forecast Mar": number
-  "Forecast Apr": number
-  "Forecast May": number
-  "Age Group": string // New field
-  "Area Type": string // New field
-  "Gender": string // New field
-  "Ethnicity": string // New field
-  "Reviews": string // New field for raw review text
+  "Earnings Jul": number // New
+  "Earnings Aug": number // New
+  "Forecast Sep": number // New
+  "Forecast Oct": number // New
+  "Forecast Nov": number // New
+  "Forecast Dec": number // New
+  Reviews: string // Renamed from reviews
 }
 
 // Convert Partner object to Excel-friendly format
 export const partnerToExcelRow = (partner: Partner): ExcelPartnerData => {
   return {
     ID: partner.id,
+    Age: partner.ageGroup || "",
+    Gender: partner.gender || "",
+    Ethnicity: partner.ethnicity || "",
+    "Area Type": partner.areaType || "",
     Name: partner.name,
     Email: partner.email,
     Phone: partner.phone,
@@ -51,7 +55,6 @@ export const partnerToExcelRow = (partner: Partner): ExcelPartnerData => {
     "Vehicle Condition": partner.vehicleCondition,
     "Risk Level": partner.riskLevel,
     "Join Date": partner.joinDate,
-    "Last Active": partner.lastActive,
     "Total Trips": partner.totalTrips,
     "Avg Rating": partner.avgRating,
     "Cancellation Rate": partner.cancellationRate,
@@ -61,16 +64,13 @@ export const partnerToExcelRow = (partner: Partner): ExcelPartnerData => {
     "Earnings Apr": partner.earningsHistory[3] || 0,
     "Earnings May": partner.earningsHistory[4] || 0,
     "Earnings Jun": partner.earningsHistory[5] || 0,
-    "Forecast Jan": partner.forecastedEarnings[0] || 0,
-    "Forecast Feb": partner.forecastedEarnings[1] || 0,
-    "Forecast Mar": partner.forecastedEarnings[2] || 0,
-    "Forecast Apr": partner.forecastedEarnings[3] || 0,
-    "Forecast May": partner.forecastedEarnings[4] || 0,
-    "Age Group": partner.ageGroup || "",
-    "Area Type": partner.areaType || "",
-    "Gender": partner.gender || "",
-    "Ethnicity": partner.ethnicity || "",
-    "Reviews": partner.rawReviewsText || "",
+    "Earnings Jul": partner.earningsHistory[6] || 0, // New
+    "Earnings Aug": partner.earningsHistory[7] || 0, // New
+    "Forecast Sep": partner.forecastedEarnings[0] || 0, // Mapped to new forecast indices
+    "Forecast Oct": partner.forecastedEarnings[1] || 0,
+    "Forecast Nov": partner.forecastedEarnings[2] || 0,
+    "Forecast Dec": partner.forecastedEarnings[3] || 0,
+    Reviews: partner.rawReviewsText || "",
   }
 }
 
@@ -92,6 +92,8 @@ export const excelRowToPartner = (row: ExcelPartnerData): Partner => {
       parseNumber(row["Earnings Apr"]),
       parseNumber(row["Earnings May"]),
       parseNumber(row["Earnings Jun"]),
+      parseNumber(row["Earnings Jul"]), // New
+      parseNumber(row["Earnings Aug"]), // New
     ],
     tripVolume: parseNumber(row["Trip Volume"]),
     onTimePickupRate: parseNumber(row["On-Time Rate"]),
@@ -99,23 +101,22 @@ export const excelRowToPartner = (row: ExcelPartnerData): Partner => {
     medicalStability: (parseString(row["Medical Stability"]) as any) || "stable",
     vehicleCondition: parseNumber(row["Vehicle Condition"]),
     forecastedEarnings: [
-      parseNumber(row["Forecast Jan"]),
-      parseNumber(row["Forecast Feb"]),
-      parseNumber(row["Forecast Mar"]),
-      parseNumber(row["Forecast Apr"]),
-      parseNumber(row["Forecast May"]),
+      parseNumber(row["Forecast Sep"]), // Mapped to new forecast indices
+      parseNumber(row["Forecast Oct"]),
+      parseNumber(row["Forecast Nov"]),
+      parseNumber(row["Forecast Dec"]),
     ],
     riskLevel: (parseString(row["Risk Level"]) as any) || "medium",
     joinDate: parseString(row["Join Date"]) || new Date().toISOString().split("T")[0],
-    lastActive: parseString(row["Last Active"]) || new Date().toISOString().split("T")[0],
+    lastActive: new Date().toISOString().split("T")[0], // Last Active is not in the new template, so default to current date
     totalTrips: parseNumber(row["Total Trips"]),
     avgRating: parseNumber(row["Avg Rating"]),
     cancellationRate: parseNumber(row["Cancellation Rate"]),
-    ageGroup: parseString(row["Age Group"]),
+    ageGroup: parseString(row.Age), // Mapped from 'Age'
     areaType: parseString(row["Area Type"]),
-    gender: parseString(row["Gender"]),
-    ethnicity: parseString(row["Ethnicity"]),
-    rawReviewsText: parseString(row["Reviews"]),
+    gender: parseString(row.Gender),
+    ethnicity: parseString(row.Ethnicity),
+    rawReviewsText: parseString(row.Reviews),
   }
 }
 
@@ -320,6 +321,8 @@ export const createDetailedReport = (partners: Partner[], options: ExportOptions
         "Apr Earnings": partner.earningsHistory[3] || 0,
         "May Earnings": partner.earningsHistory[4] || 0,
         "Jun Earnings": partner.earningsHistory[5] || 0,
+        "Jul Earnings": partner.earningsHistory[6] || 0, // New
+        "Aug Earnings": partner.earningsHistory[7] || 0, // New
         "Total Earnings": partner.earningsHistory.reduce((sum, e) => sum + e, 0),
         "Average Monthly": Math.round(
           partner.earningsHistory.reduce((sum, e) => sum + e, 0) / partner.earningsHistory.length,
@@ -333,13 +336,12 @@ export const createDetailedReport = (partners: Partner[], options: ExportOptions
         "Partner ID": partner.id,
         "Partner Name": partner.name,
         "Current Nova Score": partner.novaScore,
-        "Forecast Jan": partner.forecastedEarnings[0] || 0,
-        "Forecast Feb": partner.forecastedEarnings[1] || 0,
-        "Forecast Mar": partner.forecastedEarnings[2] || 0,
-        "Forecast Apr": partner.forecastedEarnings[3] || 0,
-        "Forecast May": partner.forecastedEarnings[4] || 0,
+        "Forecast Sep": partner.forecastedEarnings[0] || 0, // Mapped to new forecast indices
+        "Forecast Oct": partner.forecastedEarnings[1] || 0,
+        "Forecast Nov": partner.forecastedEarnings[2] || 0,
+        "Forecast Dec": partner.forecastedEarnings[3] || 0,
         "Projected Total": partner.forecastedEarnings.reduce((sum, e) => sum + e, 0),
-        "Growth Trend": partner.forecastedEarnings[4] > partner.earningsHistory[5] ? "Positive" : "Negative",
+        "Growth Trend": partner.forecastedEarnings[3] > partner.earningsHistory[7] ? "Positive" : "Negative", // Compare Dec forecast with Aug earnings
       }))
     : []
 

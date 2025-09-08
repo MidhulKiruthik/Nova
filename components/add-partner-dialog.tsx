@@ -57,13 +57,13 @@ export function AddPartnerDialog({ onPartnerAdded }: AddPartnerDialogProps) {
       email: newPartner.email || "",
       phone: newPartner.phone || "",
       novaScore: newPartner.novaScore || 0,
-      earningsHistory: [0, 0, 0, 0, 0, 0], // Default empty earnings history
+      earningsHistory: [0, 0, 0, 0, 0, 0, 0, 0], // Default 8 months
       tripVolume: newPartner.tripVolume || 0,
       onTimePickupRate: newPartner.onTimePickupRate || 0,
       leavesTaken: newPartner.leavesTaken || 0,
       medicalStability: newPartner.medicalStability || "stable",
       vehicleCondition: newPartner.vehicleCondition || 0,
-      forecastedEarnings: [0, 0, 0, 0, 0], // Default empty forecasted earnings
+      forecastedEarnings: [0, 0, 0, 0], // Default 4 months
       riskLevel: newPartner.riskLevel || "medium",
       joinDate: new Date().toISOString().split("T")[0],
       lastActive: new Date().toISOString().split("T")[0],
