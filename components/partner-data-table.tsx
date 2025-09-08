@@ -52,7 +52,17 @@ export function PartnerDataTable({ partners, onPartnerSelect }: PartnerDataTable
         partner.ethnicity.toLowerCase().includes(searchTerm.toLowerCase()) ||
         partner.areaType.toLowerCase().includes(searchTerm.toLowerCase());
 
-      const matchesRisk = riskFilter === "all" || partner.riskLevel === riskFilter;
+      // Derive risk level for filtering based on Nova Score
+      let derivedRiskLevel: "low" | "medium" | "high";
+      if (partner.novaScore > 750) {
+        derivedRiskLevel = "low";
+      } else if (partner.novaScore >= 700 && partner.novaScore <= 750) {
+        derivedRiskLevel = "medium";
+      } else {
+        derivedRiskLevel = "high";
+      }
+
+      const matchesRisk = riskFilter === "all" || derivedRiskLevel === riskFilter;
       const matchesAgeGroup = ageGroupFilter === "all" || partner.ageGroup === ageGroupFilter;
       const matchesGender = genderFilter === "all" || partner.gender === genderFilter;
 
@@ -83,18 +93,16 @@ export function PartnerDataTable({ partners, onPartnerSelect }: PartnerDataTable
     return filtered
   }, [partners, searchTerm, riskFilter, ageGroupFilter, genderFilter, sortField, sortDirection])
 
-  const getRiskBadgeStyle = (risk: string) => {
-    switch (risk) {
-      case "low":
-        return { backgroundColor: "#047857", color: "#ffffff", border: "1px solid #047857" }
-      case "medium":
-        return { backgroundColor: "#b45309", color: "#ffffff", border: "1px solid #b45309" }
-      case "high":
-        return { backgroundColor: "#b91c1c", color: "#ffffff", border: "1px solid #b91c1c" }
-      default:
-        return { backgroundColor: "#374151", color: "#ffffff", border: "1px solid #374151" }
+  // Updated function to derive risk level and style based on Nova Score
+  const getRiskLevelAndStyle = (novaScore: number) => {
+    if (novaScore > 750) {
+      return { level: "Low", style: { backgroundColor: "#047857", color: "#ffffff", border: "1px solid #047857" } };
+    } else if (novaScore >= 700 && novaScore <= 750) {
+      return { level: "Medium", style: { backgroundColor: "#b45309", color: "#ffffff", border: "1px solid #b45309" } };
+    } else {
+      return { level: "High", style: { backgroundColor: "#b91c1c", color: "#ffffff", border: "1px solid #b91c1c" } };
     }
-  }
+  };
 
   const getScoreBadgeStyle = (score: number) => {
     if (score >= 800) return { backgroundColor: "#047857", color: "#ffffff", border: "1px solid #047857" }
@@ -327,6 +335,8 @@ export function PartnerDataTable({ partners, onPartnerSelect }: PartnerDataTable
                 const forecastTrend =
                   partner.forecastedEarnings[partner.forecastedEarnings.length - 1] - partner.forecastedEarnings[0]
                 const sentimentDisplay = getSentimentDisplayScore(partner);
+                const { level: derivedRiskLevel, style: derivedRiskStyle } = getRiskLevelAndStyle(partner.novaScore);
+
 
                 return (
                   <TableRow
@@ -398,9 +408,9 @@ export function PartnerDataTable({ partners, onPartnerSelect }: PartnerDataTable
                     <TableCell>
                       <div
                         className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
-                        style={getRiskBadgeStyle(partner.riskLevel)}
+                        style={derivedRiskStyle}
                       >
-                        {partner.riskLevel.toUpperCase()}
+                        {derivedRiskLevel.toUpperCase()}
                       </div>
                     </TableCell>
                     <TableCell>
