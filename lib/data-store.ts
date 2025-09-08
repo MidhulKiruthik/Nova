@@ -1,5 +1,5 @@
 import type { Partner, Review, FairnessMetric } from "./interfaces"
-import { calculateNovaScore, analyzeReviewSentiment } from "./nova-score-model"
+import { calculateNovaScore, analyzeReviewSentiment, mapScoreToCategoricalSentiment } from "./nova-score-model"
 
 export interface SyncStatus {
   status: "idle" | "syncing" | "error" | "offline"
@@ -176,15 +176,16 @@ class DataStore {
         // Assuming reviews are separated by a semicolon in the Excel cell
         const comments = partner.rawReviewsText.split(';').map(s => s.trim()).filter(Boolean);
         comments.forEach((comment, index) => {
+          const sentimentScore = analyzeReviewSentiment(comment);
           generatedReviews.push({
             id: `${partner.id}-r${index + 1}`,
             partnerId: partner.id,
             rating: partner.avgRating, // Use partner's avgRating as a proxy
             comment: comment,
-            sentiment: "neutral", // Will be updated by sentimentScore
+            sentimentScore: sentimentScore,
+            sentiment: mapScoreToCategoricalSentiment(sentimentScore), // Populate categorical sentiment
             date: new Date().toISOString().split('T')[0], // Current date or derive from partner joinDate
             tripId: `${partner.id}-t${index + 1}`,
-            sentimentScore: analyzeReviewSentiment(comment),
           });
         });
       }

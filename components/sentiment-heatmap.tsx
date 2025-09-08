@@ -4,9 +4,9 @@ import { useState, useMemo } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import type { Partner } from "@/lib/interfaces"
+import type { Partner, Review } from "@/lib/interfaces"
 import { useDataStore } from "@/hooks/use-data-store"
-import { analyzeReviewSentiment } from "@/lib/nova-score-model" // Import sentiment analysis
+import { analyzeReviewSentiment, mapScoreToCategoricalSentiment } from "@/lib/nova-score-model" // Import sentiment analysis and mapping
 
 interface SentimentHeatmapProps {
   partner: Partner | null // Now accepts a single partner or null
@@ -15,7 +15,8 @@ interface SentimentHeatmapProps {
 interface ReviewCellData {
   id: string
   comment: string
-  sentimentScore: number
+  sentimentScore: number // Numerical score (0-5) for coloring/intensity
+  categoricalSentiment: "positive" | "neutral" | "negative" // Categorical sentiment for labels
 }
 
 export function SentimentHeatmap({ partner }: SentimentHeatmapProps) {
@@ -36,23 +37,38 @@ export function SentimentHeatmap({ partner }: SentimentHeatmapProps) {
   const reviewCells = useMemo((): ReviewCellData[] => {
     const partnerReviews = reviews.filter(r => r.partnerId === partner.id);
     
-    // If there are no reviews in the data store for this partner,
-    // try to parse from rawReviewsText directly.
-    if (partnerReviews.length === 0 && partner.rawReviewsText) {
-      const comments = partner.rawReviewsText.split(';').map(s => s.trim()).filter(Boolean);
-      return comments.map((comment, index) => ({
-        id: `${partner.id}-raw-r${index}`,
-        comment: comment,
-        sentimentScore: analyzeReviewSentiment(comment), // Analyze sentiment on the fly
-      }));
+    const processReview = (review: Review): ReviewCellData => {
+      const numericalScore = review.sentimentScore ?? analyzeReviewSentiment(review.comment);
+      const categorical = review.sentiment ?? mapScoreToCategoricalSentiment(numericalScore);
+      return {
+        id: review.id,
+        comment: review.comment,
+        sentimentScore: numericalScore,
+        categoricalSentiment: categorical,
+      };
+    };
+
+    // If reviews exist in data store for this partner
+    if (partnerReviews.length > 0) {
+      return partnerReviews.map(processReview);
     }
 
-    // Otherwise, use the reviews from the data store
-    return partnerReviews.map((review, index) => ({
-      id: review.id,
-      comment: review.comment,
-      sentimentScore: review.sentimentScore ?? analyzeReviewSentiment(review.comment),
-    }));
+    // Fallback to rawReviewsText if no reviews in data store (e.g., after initial import)
+    if (partner.rawReviewsText) {
+      const comments = partner.rawReviewsText.split(';').map(s => s.trim()).filter(Boolean);
+      return comments.map((comment, index) => {
+        const numericalScore = analyzeReviewSentiment(comment);
+        const categorical = mapScoreToCategoricalSentiment(numericalScore);
+        return {
+          id: `${partner.id}-raw-r${index}`,
+          comment: comment,
+          sentimentScore: numericalScore,
+          categoricalSentiment: categorical,
+        };
+      });
+    }
+
+    return [];
   }, [partner, reviews]);
 
   const getSentimentColor = (sentimentScore: number) => {
@@ -71,12 +87,13 @@ export function SentimentHeatmap({ partner }: SentimentHeatmapProps) {
     return "opacity-40"
   }
 
-  const getSentimentLabel = (sentimentScore: number) => {
-    if (sentimentScore > 3.5) return "Excellent"
-    if (sentimentScore > 2.5) return "Good"
-    if (sentimentScore > 1.5) return "Neutral"
-    if (sentimentScore > 0.5) return "Poor"
-    return "Critical"
+  const getSentimentLabel = (categoricalSentiment: "positive" | "neutral" | "negative") => {
+    switch (categoricalSentiment) {
+      case "positive": return "Positive";
+      case "neutral": return "Neutral";
+      case "negative": return "Negative";
+      default: return "Unknown";
+    }
   }
 
   // Calculate sentiment breakdown for the selected partner
@@ -90,9 +107,9 @@ export function SentimentHeatmap({ partner }: SentimentHeatmapProps) {
     let negativeCount = 0;
 
     reviewCells.forEach(cell => {
-      if (cell.sentimentScore > 3.5) {
+      if (cell.categoricalSentiment === "positive") {
         positiveCount++;
-      } else if (cell.sentimentScore < 1.5) {
+      } else if (cell.categoricalSentiment === "negative") {
         negativeCount++;
       } else {
         neutralCount++;
@@ -128,12 +145,12 @@ export function SentimentHeatmap({ partner }: SentimentHeatmapProps) {
                   <div
                     key={cell.id}
                     className={`p-3 rounded-md border border-border cursor-pointer hover:scale-105 transition-transform flex flex-col justify-between ${getSentimentColor(cell.sentimentScore)} ${getSentimentIntensity(cell.sentimentScore)}`}
-                    title={`Sentiment: ${cell.sentimentScore.toFixed(1)}/5\nReview: ${cell.comment}`}
+                    title={`Sentiment: ${getSentimentLabel(cell.categoricalSentiment)} (${cell.sentimentScore.toFixed(1)}/5)\nReview: ${cell.comment}`}
                   >
                     <p className="text-xs text-white/90 line-clamp-3">{cell.comment}</p>
                     <div className="mt-2 text-right">
                       <span className="text-xs font-medium text-white">
-                        {cell.sentimentScore.toFixed(1)}/5
+                        {getSentimentLabel(cell.categoricalSentiment)}
                       </span>
                     </div>
                   </div>
@@ -210,7 +227,7 @@ export function SentimentHeatmap({ partner }: SentimentHeatmapProps) {
                 <div key={cell.id} className="p-3 border border-border rounded-lg">
                   <div className="flex items-center justify-between mb-2">
                     <Badge variant="outline" className={`text-xs ${getSentimentColor(cell.sentimentScore).replace('bg-', 'text-')}`}>
-                      {getSentimentLabel(cell.sentimentScore)} ({cell.sentimentScore.toFixed(1)}/5)
+                      {getSentimentLabel(cell.categoricalSentiment)} ({cell.sentimentScore.toFixed(1)}/5)
                     </Badge>
                   </div>
                   <p className="text-sm text-muted-foreground line-clamp-2">{cell.comment}</p>

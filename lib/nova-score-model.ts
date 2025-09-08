@@ -62,6 +62,15 @@ export function analyzeReviewSentiment(text: string): number {
 }
 
 /**
+ * Maps a numerical sentiment score (0-5) to a categorical sentiment label.
+ */
+export function mapScoreToCategoricalSentiment(score: number): "positive" | "neutral" | "negative" {
+  if (score > 3.5) return "positive";
+  if (score < 1.5) return "negative";
+  return "neutral";
+}
+
+/**
  * Calculates the Nova Score for a partner based on various responsibility metrics and review sentiment.
  * The Nova Score is scaled from 0 to 1000, similar to a credit score.
  * This function now employs a multiple regression-like approach with weighted factors.
