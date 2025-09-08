@@ -43,6 +43,7 @@ export function AddPartnerDialog({ onPartnerAdded }: AddPartnerDialogProps) {
     gender: "",
     ethnicity: "",
     rawReviewsText: "",
+    overallSentimentScore: undefined, // New: Initialize overallSentimentScore
   })
 
   const handleAddPartner = () => {
@@ -75,6 +76,7 @@ export function AddPartnerDialog({ onPartnerAdded }: AddPartnerDialogProps) {
       gender: newPartner.gender || "",
       ethnicity: newPartner.ethnicity || "",
       rawReviewsText: newPartner.rawReviewsText || "",
+      overallSentimentScore: newPartner.overallSentimentScore, // New: Include overallSentimentScore
     }
 
     onPartnerAdded(partner)
@@ -97,6 +99,7 @@ export function AddPartnerDialog({ onPartnerAdded }: AddPartnerDialogProps) {
       ethnicity: "",
       areaType: "",
       rawReviewsText: "",
+      overallSentimentScore: undefined, // New: Reset overallSentimentScore
     })
     setIsOpen(false)
     toast.success("Partner added successfully!")
@@ -311,6 +314,21 @@ export function AddPartnerDialog({ onPartnerAdded }: AddPartnerDialogProps) {
                   value={newPartner.rawReviewsText || ""}
                   onChange={(e) => setNewPartner({ ...newPartner, rawReviewsText: e.target.value })}
                   placeholder="e.g., Great service; Friendly driver"
+                />
+              </div>
+              <div className="col-span-2">
+                <Label htmlFor="overallSentimentScore">Overall Sentiment Score (0-5)</Label>
+                <Input
+                  id="overallSentimentScore"
+                  type="number"
+                  step="0.1"
+                  min="0"
+                  max="5"
+                  value={newPartner.overallSentimentScore || ""}
+                  onChange={(e) =>
+                    setNewPartner({ ...newPartner, overallSentimentScore: Number.parseFloat(e.target.value) || undefined })
+                  }
+                  placeholder="e.g., 4.2"
                 />
               </div>
             </div>

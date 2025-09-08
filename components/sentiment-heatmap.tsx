@@ -38,6 +38,7 @@ export function SentimentHeatmap({ partner }: SentimentHeatmapProps) {
     const partnerReviews = reviews.filter(r => r.partnerId === partner.id);
     
     const processReview = (review: Review): ReviewCellData => {
+      // Prioritize the sentimentScore from the Review object (which now comes from Excel if available)
       const numericalScore = review.sentimentScore ?? analyzeReviewSentiment(review.comment);
       const categorical = review.sentiment ?? mapScoreToCategoricalSentiment(numericalScore);
       return {
@@ -54,10 +55,13 @@ export function SentimentHeatmap({ partner }: SentimentHeatmapProps) {
     }
 
     // Fallback to rawReviewsText if no reviews in data store (e.g., after initial import)
+    // This block will now also use partner.overallSentimentScore if available
     if (partner.rawReviewsText) {
       const comments = partner.rawReviewsText.split(';').map(s => s.trim()).filter(Boolean);
       return comments.map((comment, index) => {
-        const numericalScore = analyzeReviewSentiment(comment);
+        const numericalScore = partner.overallSentimentScore !== undefined
+          ? partner.overallSentimentScore
+          : analyzeReviewSentiment(comment);
         const categorical = mapScoreToCategoricalSentiment(numericalScore);
         return {
           id: `${partner.id}-raw-r${index}`,

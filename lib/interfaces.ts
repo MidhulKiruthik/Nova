@@ -23,6 +23,7 @@ export interface Partner {
   gender: string
   ethnicity: string
   rawReviewsText: string // To hold the combined review text from Excel
+  overallSentimentScore?: number // New: Overall sentiment score from Excel
 }
 
 export interface Review {

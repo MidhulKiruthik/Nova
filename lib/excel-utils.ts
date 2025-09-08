@@ -34,6 +34,7 @@ export interface ExcelPartnerData {
   "Forecast Nov": number
   "Forecast Dec": number
   Reviews: string // Renamed from reviews
+  Sentiment?: number // New: Sentiment score from Excel
 }
 
 // Convert Partner object to Excel-friendly format
@@ -71,6 +72,7 @@ export const partnerToExcelRow = (partner: Partner): ExcelPartnerData => {
     "Forecast Nov": partner.forecastedEarnings[2] || 0,
     "Forecast Dec": partner.forecastedEarnings[3] || 0,
     Reviews: partner.rawReviewsText || "",
+    Sentiment: partner.overallSentimentScore, // New: Include overall sentiment score
   }
 }
 
@@ -117,6 +119,7 @@ export const excelRowToPartner = (row: ExcelPartnerData): Partner => {
     gender: parseString(row.Gender),
     ethnicity: parseString(row.Ethnicity),
     rawReviewsText: parseString(row.Reviews),
+    overallSentimentScore: row.Sentiment !== undefined ? parseNumber(row.Sentiment) : undefined, // New: Read sentiment
   }
 }
 
@@ -275,6 +278,7 @@ export const createAnalyticsReport = (partners: Partner[], fairnessMetrics: Fair
     "Monthly Earnings Avg": Math.round(
       partner.earningsHistory.reduce((sum, e) => sum + e, 0) / partner.earningsHistory.length,
     ),
+    "Overall Sentiment": partner.overallSentimentScore, // New: Include overall sentiment
   }))
 
   // Fairness analysis

@@ -257,6 +257,21 @@ export function EditPartnerDialog({ partner, isOpen, onOpenChange, onPartnerUpda
                     onChange={(e) => setEditingPartner({ ...editingPartner, rawReviewsText: e.target.value })}
                   />
                 </div>
+                <div className="col-span-2">
+                  <Label htmlFor="edit-overallSentimentScore">Overall Sentiment Score (0-5)</Label>
+                  <Input
+                    id="edit-overallSentimentScore"
+                    type="number"
+                    step="0.1"
+                    min="0"
+                    max="5"
+                    value={editingPartner.overallSentimentScore || ""}
+                    onChange={(e) =>
+                      setEditingPartner({ ...editingPartner, overallSentimentScore: Number.parseFloat(e.target.value) || undefined })
+                    }
+                    placeholder="e.g., 4.2"
+                  />
+                </div>
               </div>
             </TabsContent>
             <div className="flex justify-end gap-2 pt-4">

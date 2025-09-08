@@ -173,10 +173,13 @@ class DataStore {
     const generatedReviews: Review[] = [];
     partners.forEach(partner => {
       if (partner.rawReviewsText) {
-        // Assuming reviews are separated by a semicolon in the Excel cell
         const comments = partner.rawReviewsText.split(';').map(s => s.trim()).filter(Boolean);
         comments.forEach((comment, index) => {
-          const sentimentScore = analyzeReviewSentiment(comment);
+          // Prioritize overallSentimentScore from Excel if available, otherwise analyze comment
+          const sentimentScore = partner.overallSentimentScore !== undefined
+            ? partner.overallSentimentScore
+            : analyzeReviewSentiment(comment);
+          
           generatedReviews.push({
             id: `${partner.id}-r${index + 1}`,
             partnerId: partner.id,
@@ -235,11 +238,11 @@ class DataStore {
   }
 
   private _processPartnersAndDeriveMetrics(rawPartners: Partner[]) {
-    // 1. Generate Reviews
-    this.reviews = this._generateReviewsFromPartners(rawPartners);
-
-    // 2. Assign partners directly, Nova Score is now taken from the input data
+    // 1. Assign partners directly, Nova Score and overallSentimentScore are now taken from the input data
     this.partners = rawPartners;
+
+    // 2. Generate Reviews (which will now use overallSentimentScore if available)
+    this.reviews = this._generateReviewsFromPartners(this.partners);
 
     // 3. Calculate Fairness Metrics based on the partners (with their assigned Nova Scores)
     this.fairnessMetrics = this._calculateFairnessMetrics(this.partners);
@@ -262,7 +265,6 @@ class DataStore {
   }
 
   addPartner(partner: Partner) {
-    // Use the novaScore directly from the provided partner object
     this.partners.push(partner)
     // Re-process all data to update reviews and fairness metrics
     this._processPartnersAndDeriveMetrics(this.partners);
@@ -280,9 +282,6 @@ class DataStore {
       const oldPartner = this.partners[index]
       const updatedPartner = { ...this.partners[index], ...updates }
       
-      // Nova Score is now taken directly from the updates or existing partner object
-      // No recalculation here.
-
       this.partners[index] = updatedPartner
       // Re-process all data to update reviews and fairness metrics
       this._processPartnersAndDeriveMetrics(this.partners);
