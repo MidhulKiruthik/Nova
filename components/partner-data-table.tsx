@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { ArrowUpDown, ArrowUp, ArrowDown, Search, Filter } from "lucide-react"
 import type { Partner } from "@/lib/interfaces"
+import { dataStore } from "@/lib/data-store" // Import dataStore to access normalizeAgeGroup
 
 interface PartnerDataTableProps {
   partners: Partner[]
@@ -63,7 +64,11 @@ export function PartnerDataTable({ partners, onPartnerSelect }: PartnerDataTable
       }
 
       const matchesRisk = riskFilter === "all" || derivedRiskLevel === riskFilter;
-      const matchesAgeGroup = ageGroupFilter === "all" || partner.ageGroup === ageGroupFilter;
+      
+      // Use normalizeAgeGroup for consistent filtering
+      const normalizedPartnerAgeGroup = dataStore.instance._normalizeAgeGroup(partner.ageGroup);
+      const matchesAgeGroup = ageGroupFilter === "all" || normalizedPartnerAgeGroup === ageGroupFilter;
+      
       const matchesGender = genderFilter === "all" || partner.gender === genderFilter;
 
       return matchesSearch && matchesRisk && matchesAgeGroup && matchesGender;
@@ -136,11 +141,13 @@ export function PartnerDataTable({ partners, onPartnerSelect }: PartnerDataTable
     return "text-muted-foreground" // Neutral
   }
 
-  // Extract unique age groups and genders for filters
+  // Predefined age groups
+  const predefinedAgeGroups = ["18-30", "31-45", "46-70"];
+
+  // Use predefined age groups for the filter
   const uniqueAgeGroups = useMemo(() => {
-    const groups = new Set(partners.map(p => p.ageGroup).filter(Boolean));
-    return ["all", ...Array.from(groups).sort()];
-  }, [partners]);
+    return ["all", ...predefinedAgeGroups];
+  }, []);
 
   const uniqueGenders = useMemo(() => {
     const genders = new Set(partners.map(p => p.gender).filter(Boolean));

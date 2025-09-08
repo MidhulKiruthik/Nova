@@ -19,7 +19,7 @@ export interface DataChangeEvent {
  * Normalizes a raw age group string into one of the predefined categories for fairness analysis.
  * Returns the normalized category string or null if it doesn't fit.
  */
-const normalizeAgeGroup = (rawAgeGroup: string): string | null => {
+export const normalizeAgeGroup = (rawAgeGroup: string): string | null => {
   const lowerCaseGroup = rawAgeGroup.toLowerCase().replace(/[^a-z0-9-]/g, ''); // Remove non-alphanumeric except hyphen
 
   if (
@@ -386,6 +386,9 @@ class DataStore {
 
     this.notify()
   }
+
+  // Expose normalizeAgeGroup for external use
+  _normalizeAgeGroup = normalizeAgeGroup;
 }
 
 // Create a single instance of DataStore for the client
@@ -412,6 +415,7 @@ export const dataStore = {
         loadFromLocalStorage: () => {},
         subscribe: () => () => {},
         subscribeSyncStatus: () => () => {},
+        _normalizeAgeGroup: () => null, // Dummy implementation for server-side
       } as DataStore) // Cast to DataStore to satisfy type checker
     : clientDataStoreInstance,
 };
