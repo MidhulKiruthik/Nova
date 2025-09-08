@@ -196,6 +196,47 @@ export function ForecastCharts() {
 
   const riskForecastData = generateRiskForecastData();
 
+  // Helper to derive risk level based on Nova Score
+  const getRiskLevel = (novaScore: number) => {
+    if (novaScore > 750) return "Low";
+    if (novaScore >= 700 && novaScore <= 750) return "Medium";
+    return "High";
+  };
+
+  // Dynamic forecast summary calculations
+  const forecastSummary = selectedPartnerData ? (() => {
+    const lastHistoricalEarning = selectedPartnerData.earningsHistory.length > 0
+      ? selectedPartnerData.earningsHistory[selectedPartnerData.earningsHistory.length - 1]
+      : 0;
+    const lastForecastedEarning = selectedPartnerData.forecastedEarnings.length > 0
+      ? selectedPartnerData.forecastedEarnings[selectedPartnerData.forecastedEarnings.length - 1]
+      : 0;
+
+    let expectedGrowth = 0;
+    if (lastHistoricalEarning > 0) {
+      expectedGrowth = ((lastForecastedEarning - lastHistoricalEarning) / lastHistoricalEarning) * 100;
+    }
+
+    const currentRisk = getRiskLevel(selectedPartnerData.novaScore);
+    // Simulate a slight improvement or stability for risk trend
+    let riskTrend = "Stable";
+    if (selectedPartnerData.novaScore > 700) { // If current score is already good/medium
+      riskTrend = "Improving";
+    } else if (selectedPartnerData.novaScore < 650) { // If current score is low
+      riskTrend = "Worsening";
+    }
+
+    // Confidence based on Nova Score (higher score, higher confidence)
+    const confidence = Math.min(95, 70 + (selectedPartnerData.novaScore / 1000) * 25 + Math.random() * 5);
+
+    return {
+      expectedGrowth: expectedGrowth.toFixed(1),
+      riskTrend,
+      confidence: confidence.toFixed(0),
+    };
+  })() : null;
+
+
   const chartConfig = {
     novaScore: {
       label: "Nova Score",
@@ -393,7 +434,7 @@ export function ForecastCharts() {
               </ChartContainer>
             </div>
             <div className="space-y-4">
-              {selectedPartnerData && (
+              {selectedPartnerData && forecastSummary && (
                 <>
                   <div className="p-4 bg-muted/50 rounded-lg">
                     <h4 className="font-medium text-foreground mb-2">Current Metrics</h4>
@@ -413,11 +454,7 @@ export function ForecastCharts() {
                                 : "destructive"
                           }
                         >
-                          {selectedPartnerData.novaScore > 750
-                            ? "LOW"
-                            : selectedPartnerData.novaScore >= 700 && selectedPartnerData.novaScore <= 750
-                              ? "MEDIUM"
-                              : "HIGH"}
+                          {getRiskLevel(selectedPartnerData.novaScore).toUpperCase()}
                         </Badge>
                       </div>
                       <div className="flex justify-between">
@@ -431,15 +468,15 @@ export function ForecastCharts() {
                     <div className="space-y-2">
                       <div className="flex justify-between">
                         <span className="text-sm text-muted-foreground">Expected Growth</span>
-                        <span className="text-sm font-medium text-chart-2">+8.5%</span>
+                        <span className="text-sm font-medium text-chart-2">{forecastSummary.expectedGrowth}%</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-sm text-muted-foreground">Risk Trend</span>
-                        <span className="text-sm font-medium text-chart-2">Improving</span>
+                        <span className="text-sm font-medium text-chart-2">{forecastSummary.riskTrend}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-sm text-muted-foreground">Confidence</span>
-                        <span className="text-sm font-medium">87%</span>
+                        <span className="text-sm font-medium">{forecastSummary.confidence}%</span>
                       </div>
                     </div>
                   </div>
