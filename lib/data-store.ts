@@ -15,6 +15,26 @@ export interface DataChangeEvent {
   userId?: string
 }
 
+/**
+ * Normalizes a raw age group string into one of the predefined categories for fairness analysis.
+ * Returns the normalized category string or null if it doesn't fit.
+ */
+const normalizeAgeGroup = (rawAgeGroup: string): string | null => {
+  const lowerCaseGroup = rawAgeGroup.toLowerCase().replace(/\s/g, ''); // Remove spaces for easier matching
+
+  if (lowerCaseGroup.includes('18-30') || lowerCaseGroup.includes('18-24') || lowerCaseGroup.includes('25-30') || lowerCaseGroup.includes('youngadult')) {
+    return "18-30";
+  }
+  if (lowerCaseGroup.includes('31-45') || lowerCaseGroup.includes('30-40') || lowerCaseGroup.includes('middleage')) {
+    return "31-45";
+  }
+  if (lowerCaseGroup.includes('46-70') || lowerCaseGroup.includes('45-60') || lowerCaseGroup.includes('senior') || lowerCaseGroup.includes('elderly')) {
+    return "46-70";
+  }
+  // If it doesn't match any of the target groups, return null so it's not included in the radar chart
+  return null;
+};
+
 class DataStore {
   private partners: Partner[] = []
   private reviews: Review[] = [] // Dynamically generated from partner.rawReviewsText
@@ -208,8 +228,12 @@ class DataStore {
       const groups = new Map<string, { totalScore: number; count: number }>();
 
       partners.forEach(partner => {
-        const groupValue = partner[category];
-        if (groupValue) {
+        let groupValue = partner[category];
+        if (category === "ageGroup" && groupValue) {
+          groupValue = normalizeAgeGroup(groupValue); // Normalize age group here
+        }
+
+        if (groupValue) { // Only proceed if groupValue is not null (i.e., it matched a target age group or is not ageGroup)
           if (!groups.has(groupValue)) {
             groups.set(groupValue, { totalScore: 0, count: 0 });
           }
@@ -226,7 +250,7 @@ class DataStore {
         fairnessMetrics.push({
           demographic: `${category}: ${groupName}`,
           category: category === "ageGroup" ? "age" : category === "areaType" ? "area" : category as any,
-          group: groupName,
+          group: groupName, // This `groupName` is what needs to match "18-30", etc.
           averageScore: Math.round(averageScore),
           count: data.count,
           bias: parseFloat(bias.toFixed(3)),
