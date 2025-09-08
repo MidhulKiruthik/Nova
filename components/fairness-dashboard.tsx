@@ -57,24 +57,38 @@ export function FairnessDashboard({ fairnessMetrics }: FairnessDashboardProps) {
   const biasAlerts = validFairnessMetrics.filter((m) => Math.abs(m.bias) > 0.05)
   const criticalAlerts = validFairnessMetrics.filter((m) => Math.abs(m.bias) > 0.1)
 
-  const radarData = validFairnessMetrics
-    .map((metric) => {
-      const fairnessScore = Math.max(0, Math.min(100, Math.round((1 - Math.abs(metric.bias)) * 100)))
-      // const bias = Math.max(0, Math.min(100, Math.abs(metric.bias) * 100)) // Not directly used in radar, but kept for context
-      // const avgScore = Math.max(0, Math.min(850, metric.averageScore)) // Not directly used in radar, but kept for context
+  const radarData = useMemo(() => {
+    const ageMetrics = validFairnessMetrics.filter(metric => metric.category === "age");
 
-      return {
-        demographic: metric.group.length > 12 ? metric.group.substring(0, 12) + "..." : metric.group,
-        fairnessScore,
+    const aggregatedAgeData: { [key: string]: { totalBias: number; count: number } } = {
+      "18-30": { totalBias: 0, count: 0 },
+      "31-45": { totalBias: 0, count: 0 },
+      "46-70": { totalBias: 0, count: 0 },
+    };
+
+    ageMetrics.forEach(metric => {
+      if (aggregatedAgeData[metric.group]) { // Only aggregate for the specified groups
+        aggregatedAgeData[metric.group].totalBias += metric.bias;
+        aggregatedAgeData[metric.group].count += 1;
       }
-    })
-    .filter(
-      (item) =>
-        item.demographic &&
-        item.demographic.trim().length > 0 &&
-        !isNaN(item.fairnessScore) &&
-        isFinite(item.fairnessScore),
-    )
+    });
+
+    const result = Object.entries(aggregatedAgeData)
+      .map(([groupName, data]) => {
+        if (data.count === 0) {
+          return null; // Skip groups with no data
+        }
+        const averageBias = data.totalBias / data.count;
+        const fairnessScore = Math.max(0, Math.min(100, Math.round((1 - Math.abs(averageBias)) * 100)));
+        return {
+          demographic: groupName,
+          fairnessScore,
+        };
+      })
+      .filter(Boolean) as { demographic: string; fairnessScore: number }[]; // Filter out nulls and assert type
+
+    return result;
+  }, [validFairnessMetrics]);
 
   // Demographic comparison data based on valid metrics
   const demographicComparison = validFairnessMetrics.map((metric) => ({
@@ -213,8 +227,8 @@ export function FairnessDashboard({ fairnessMetrics }: FairnessDashboardProps) {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
-            <CardTitle>Fairness Radar</CardTitle>
-            <CardDescription>Fairness scores across all demographic groups</CardDescription>
+            <CardTitle>Fairness Radar (Age Groups)</CardTitle>
+            <CardDescription>Fairness scores across specific age demographic groups</CardDescription>
           </CardHeader>
           <CardContent>
             {isLoading ? (
@@ -241,8 +255,8 @@ export function FairnessDashboard({ fairnessMetrics }: FairnessDashboardProps) {
             ) : (
               <div className="h-[400px] flex items-center justify-center text-muted-foreground">
                 {radarData.length === 0
-                  ? "No fairness data available"
-                  : "Need at least 3 demographic groups for radar chart"}
+                  ? "No fairness data available for specified age groups"
+                  : "Need at least 3 specified age groups with data for radar chart"}
               </div>
             )}
           </CardContent>
