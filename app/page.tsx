@@ -15,12 +15,9 @@ import Image from "next/image";
 import type { Partner } from "@/lib/interfaces";
 
 export default function Page() {
-  const { partners, fairnessMetrics } = useDataStore(); // Removed initializeWithMockData
+  const { partners, fairnessMetrics } = useDataStore();
   const [selectedPartner, setSelectedPartner] = useState<Partner | null>(null);
   const [activeView, setActiveView] = useState<string>("partners"); // Default to partners view
-
-  // initializeWithMockData is now called internally by useDataStore's useEffect,
-  // so no explicit call is needed here.
 
   const handlePartnerSelect = (partner: Partner) => {
     setSelectedPartner(partner);
@@ -32,7 +29,7 @@ export default function Page() {
     setActiveView("partners");
   };
 
-  if (selectedPartner) {
+  if (selectedPartner && activeView === "partner-profile") { // Only show profile view if a partner is selected AND activeView is 'partner-profile'
     return <PartnerProfileView partner={selectedPartner} onBack={handleBackToPartners} />;
   }
 
@@ -112,7 +109,7 @@ export default function Page() {
           {activeView === "sentiment" && (
             <div className="space-y-6">
               <h2 className="text-2xl font-bold">Sentiment Heatmap</h2>
-              <SentimentHeatmap partners={partners} />
+              <SentimentHeatmap partner={selectedPartner} /> {/* Pass selectedPartner */}
             </div>
           )}
           {activeView === "data-management" && (
