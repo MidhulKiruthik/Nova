@@ -6,7 +6,7 @@ export interface ExcelPartnerData {
   Age: string // Renamed from Age Group for template
   Gender: string
   Ethnicity: string
-  "Area Type": string
+  AreaType: string // Changed from "Area Type" to "AreaType"
   Name: string
   Mail: string // Changed from Email to Mail
   Phone: string
@@ -43,7 +43,7 @@ export const partnerToExcelRow = (partner: Partner): ExcelPartnerData => {
     Age: partner.ageGroup || "",
     Gender: partner.gender || "",
     Ethnicity: partner.ethnicity || "",
-    "Area Type": partner.areaType || "",
+    AreaType: partner.areaType || "", // Mapped to AreaType
     Name: partner.name,
     Mail: partner.email, // Mapped to Mail
     Phone: partner.phone,
@@ -113,7 +113,7 @@ export const excelRowToPartner = (row: ExcelPartnerData): Partner => {
     avgRating: parseNumber(row["Avg Rating"]),
     cancellationRate: parseNumber(row["Cancellation Rate"]),
     ageGroup: parseString(row.Age), // Mapped from 'Age'
-    areaType: parseString(row["Area Type"]),
+    areaType: parseString(row.AreaType), // Mapped from 'AreaType'
     gender: parseString(row.Gender),
     ethnicity: parseString(row.Ethnicity),
     rawReviewsText: parseString(row.Reviews),
