@@ -1,6 +1,6 @@
 import type { Partner } from "./interfaces"
 
-export const rawPartnerData: Partner[] = [
+export const rawPartnerDataPart1: Partner[] = [
   {
     id: "p1",
     name: "Alex Rodriguez",
@@ -201,6 +201,9 @@ export const rawPartnerData: Partner[] = [
     avgRating: 3.8,
     cancellationRate: 0.14,
   },
+];
+
+export const rawPartnerDataPart2: Partner[] = [
   {
     id: "p11",
     name: "Kevin Martinez",
@@ -401,6 +404,9 @@ export const rawPartnerData: Partner[] = [
     avgRating: 3.7,
     cancellationRate: 0.15,
   },
+];
+
+export const rawPartnerDataPart3: Partner[] = [
   {
     id: "p21",
     name: "Noah Young",
