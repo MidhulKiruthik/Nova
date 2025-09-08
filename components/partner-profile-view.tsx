@@ -38,7 +38,7 @@ import {
 import { ChartContainer, ChartTooltipContent } from "@/components/ui/chart";
 import type { Partner, Review } from "@/lib/interfaces";
 import { useDataStore } from "@/hooks/use-data-store";
-import { calculateSentimentBreakdownForPartner } from "@/lib/sentiment-utils"; // Import the new utility function
+import { analyzeReviewSentiment, mapScoreToCategoricalSentiment } from "@/lib/nova-score-model"; // Import sentiment analysis and mapping
 
 
 interface PartnerProfileViewProps {
@@ -98,8 +98,48 @@ export function PartnerProfileView({ partner, onBack }: PartnerProfileViewProps)
   ];
 
   const sentimentBreakdown = useMemo(() => {
-    return calculateSentimentBreakdownForPartner(partner, reviews);
-  }, [partner, reviews]);
+    let effectiveSentimentScore: number;
+    let totalReviewsConsidered: number;
+
+    if (partner.overallSentimentScore !== undefined) {
+      effectiveSentimentScore = partner.overallSentimentScore;
+      totalReviewsConsidered = 1; // Treat as one aggregated sentiment source
+    } else if (partner.rawReviewsText && partner.rawReviewsText.trim() !== "") {
+      const comments = partner.rawReviewsText.split(';').map(s => s.trim()).filter(Boolean);
+      if (comments.length > 0) {
+        const totalSentiment = comments.reduce((sum, comment) => sum + analyzeReviewSentiment(comment), 0);
+        effectiveSentimentScore = totalSentiment / comments.length;
+        totalReviewsConsidered = comments.length;
+      } else {
+        effectiveSentimentScore = 2.5; // Default neutral
+        totalReviewsConsidered = 0;
+      }
+    } else {
+      effectiveSentimentScore = 2.5; // Default neutral
+      totalReviewsConsidered = 0;
+    }
+
+    if (totalReviewsConsidered === 0) {
+      return { positive: 0, neutral: 100, negative: 0, total: 0 };
+    }
+
+    // Simplified, deterministic percentages based on effective sentiment score
+    let positive = 0, neutral = 0, negative = 0;
+    if (effectiveSentimentScore > 3.5) {
+      positive = 70; neutral = 20; negative = 10;
+    } else if (effectiveSentimentScore < 1.5) {
+      positive = 10; neutral = 20; negative = 70;
+    } else {
+      positive = 30; neutral = 40; negative = 30;
+    }
+
+    return {
+      positive,
+      neutral,
+      negative,
+      total: totalReviewsConsidered,
+    };
+  }, [partner]);
 
   // New function to derive risk level based on Nova Score for display
   const getRiskLevelDisplay = (novaScore: number) => {

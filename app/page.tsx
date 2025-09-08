@@ -5,7 +5,6 @@ import { Sidebar, SidebarContent, SidebarHeader, SidebarTrigger, SidebarInset, S
 import { PartnerProfileView } from "@/components/partner-profile-view";
 import { FairnessDashboard } from "@/components/fairness-dashboard";
 import { ForecastCharts } from "@/components/forecast-charts";
-import { SentimentHeatmap } from "@/components/sentiment-heatmap";
 import { DataManagementPage } from "@/components/data-management-page";
 import { PartnersOverview } from "@/components/partners-overview";
 import { SyncStatusIndicator } from "@/components/sync-status-indicator";
@@ -13,6 +12,7 @@ import { useDataStore } from "@/hooks/use-data-store";
 import { Home, Users, BarChart, Shield, TrendingUp, MessageSquare, Settings, FileSpreadsheet } from "lucide-react";
 import Image from "next/image";
 import type { Partner } from "@/lib/interfaces";
+import { PartnerSentimentList } from "@/components/partner-sentiment-list"; // Import the new component
 
 export default function Page() {
   const { partners, fairnessMetrics } = useDataStore();
@@ -108,8 +108,8 @@ export default function Page() {
           )}
           {activeView === "sentiment" && (
             <div className="space-y-6">
-              <h2 className="text-2xl font-bold">Sentiment Heatmap</h2>
-              <SentimentHeatmap partner={selectedPartner} /> {/* Pass selectedPartner */}
+              <h2 className="text-2xl font-bold">Sentiment Overview</h2>
+              <PartnerSentimentList /> {/* Render the new component */}
             </div>
           )}
           {activeView === "data-management" && (
