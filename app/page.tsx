@@ -15,15 +15,12 @@ import Image from "next/image";
 import type { Partner } from "@/lib/interfaces";
 
 export default function Page() {
-  const { partners, fairnessMetrics, initializeWithMockData } = useDataStore();
+  const { partners, fairnessMetrics } = useDataStore(); // Removed initializeWithMockData
   const [selectedPartner, setSelectedPartner] = useState<Partner | null>(null);
   const [activeView, setActiveView] = useState<string>("partners"); // Default to partners view
 
-  useEffect(() => {
-    // Initialize data store. It will load from local storage or start empty.
-    // User will be prompted to import data via Data Management page if empty.
-    initializeWithMockData();
-  }, [initializeWithMockData]);
+  // initializeWithMockData is now called internally by useDataStore's useEffect,
+  // so no explicit call is needed here.
 
   const handlePartnerSelect = (partner: Partner) => {
     setSelectedPartner(partner);
