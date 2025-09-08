@@ -134,29 +134,25 @@ export function ForecastCharts() {
     if (!partner) return []
 
     const data = []
-    const currentDate = new Date()
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
-    // Historical earnings
-    partner.earningsHistory.forEach((earnings, index) => {
-      const date = new Date(currentDate)
-      date.setMonth(date.getMonth() - (partner.earningsHistory.length - 1 - index))
+    // Historical earnings (Jan-Aug)
+    partner.earningsHistory.slice(0, 8).forEach((earnings, index) => {
       data.push({
-        month: date.toLocaleDateString("en-US", { month: "short" }),
+        month: monthNames[index], // Explicitly map to month name
         actual: earnings,
         forecast: null,
-        novaScore: partner.novaScore + (Math.random() - 0.5) * 50, // Simulate historical score
+        novaScore: partner.novaScore + (Math.random() - 0.5) * 50, // Keep simulated historical score for now
       })
     })
 
-    // Forecasted earnings
-    partner.forecastedEarnings.forEach((earnings, index) => {
-      const date = new Date(currentDate)
-      date.setMonth(date.getMonth() + index + 1)
+    // Forecasted earnings (Sep-Dec)
+    partner.forecastedEarnings.slice(0, 4).forEach((earnings, index) => {
       data.push({
-        month: date.toLocaleDateString("en-US", { month: "short" }),
+        month: monthNames[8 + index], // Sep is index 8
         actual: null,
-        forecast: earnings,
-        novaScore: partner.novaScore + index * 5 + (Math.random() - 0.5) * 30, // Simulate forecasted score
+        forecast: earnings, // This is the Excel forecast value
+        novaScore: partner.novaScore + (Math.random() - 0.5) * 30, // Keep simulated forecasted score for now
       })
     })
 

@@ -59,39 +59,27 @@ export function PartnerProfileView({ partner, onBack }: PartnerProfileViewProps)
 
   const historicalScores = useMemo(() => {
     const data: { month: string; score: number; earnings: number }[] = [];
-    const currentYear = new Date().getFullYear();
-    const currentMonth = new Date().getMonth();
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
-    for (let i = 0; i < partner.earningsHistory.length; i++) {
-      const monthIndex = (currentMonth - (partner.earningsHistory.length - 1 - i) + 12) % 12;
-      const year = currentYear - (currentMonth < (partner.earningsHistory.length - 1 - i) ? 1 : 0);
-      const monthName = new Date(year, monthIndex).toLocaleDateString("en-US", { month: "short" });
+    // Use the 8 months from earningsHistory
+    partner.earningsHistory.slice(0, 8).forEach((earnings, index) => {
       const scoreVariation = (Math.random() - 0.5) * 30;
-      const historicalScore = Math.max(300, Math.min(850, partner.novaScore + scoreVariation - (partner.earningsHistory.length - 1 - i) * 2));
-      data.push({ month: monthName, score: Math.round(historicalScore), earnings: partner.earningsHistory[i] });
-    }
-
-    if (partner.earningsHistory.length < 6) {
-      const missingMonths = 6 - partner.earningsHistory.length;
-      for (let i = 0; i < missingMonths; i++) {
-        const monthIndex = (currentMonth - (partner.earningsHistory.length + missingMonths - 1 - i) + 12) % 12;
-        const year = currentYear - (currentMonth < (partner.earningsHistory.length + missingMonths - 1 - i) ? 1 : 0);
-        const monthName = new Date(year, monthIndex).toLocaleDateString("en-US", { month: "short" });
-        const scoreVariation = (Math.random() - 0.5) * 30;
-        const historicalScore = Math.max(300, Math.min(850, partner.novaScore + scoreVariation - (partner.earningsHistory.length + missingMonths - 1 - i) * 2));
-        const historicalEarnings = Math.max(500, avgEarnings + (Math.random() - 0.5) * 800 - (partner.earningsHistory.length + missingMonths - 1 - i) * 100);
-        data.unshift({ month: monthName, score: Math.round(historicalScore), earnings: Math.round(historicalEarnings) });
-      }
-    }
+      const historicalScore = Math.max(300, Math.min(850, partner.novaScore + scoreVariation - (7 - index) * 2)); // Adjust score simulation
+      data.push({ month: monthNames[index], score: Math.round(historicalScore), earnings: earnings });
+    });
 
     return data;
-  }, [partner.earningsHistory, partner.novaScore, avgEarnings]);
+  }, [partner.earningsHistory, partner.novaScore]);
 
-  const forecastData = useMemo(() => partner.forecastedEarnings.map((earnings, index) => ({
-    month: new Date(new Date().getFullYear(), new Date().getMonth() + index + 1).toLocaleDateString("en-US", { month: "short" }),
-    earnings,
-    confidence: 85 + Math.random() * 10,
-  })), [partner.forecastedEarnings]);
+  const forecastData = useMemo(() => {
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    
+    return partner.forecastedEarnings.slice(0, 4).map((earnings, index) => ({
+      month: monthNames[8 + index], // Sep is index 8
+      earnings,
+      confidence: 85 + Math.random() * 10, // Keep simulated confidence
+    }));
+  }, [partner.forecastedEarnings]);
 
   const performanceMetrics = [
     { metric: "Trip Volume", value: Math.min(partner.tripVolume / 10, 100) },
