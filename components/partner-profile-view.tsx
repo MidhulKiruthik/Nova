@@ -75,7 +75,7 @@ export function PartnerProfileView({ partner, onBack }: PartnerProfileViewProps)
     const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
     
     return partner.forecastedEarnings.slice(0, 4).map((earnings, index) => ({
-      month: `Forecast ${monthNames[8 + index]}`, // Prepend "Forecast" for these months
+      month: index === 0 ? "Forecast Sept" : `Forecast ${monthNames[8 + index]}`, // Prepend "Forecast" for these months
       earnings,
       confidence: 85 + Math.random() * 10, // Keep simulated confidence
     }));

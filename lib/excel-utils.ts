@@ -29,7 +29,7 @@ export interface ExcelPartnerData {
   "Earnings Jun": number
   "Earnings Jul": number // New
   "Earnings Aug": number // New
-  "Forecast Sep": number // New
+  "Forecast Sept": number // Changed from "Forecast Sep" to "Forecast Sept"
   "Forecast Oct": number
   "Forecast Nov": number
   "Forecast Dec": number
@@ -67,7 +67,7 @@ export const partnerToExcelRow = (partner: Partner): ExcelPartnerData => {
     "Earnings Jun": partner.earningsHistory[5] || 0,
     "Earnings Jul": partner.earningsHistory[6] || 0, // New
     "Earnings Aug": partner.earningsHistory[7] || 0, // New
-    "Forecast Sep": partner.forecastedEarnings[0] || 0, // Mapped to new forecast indices
+    "Forecast Sept": partner.forecastedEarnings[0] || 0, // Mapped to "Forecast Sept"
     "Forecast Oct": partner.forecastedEarnings[1] || 0,
     "Forecast Nov": partner.forecastedEarnings[2] || 0,
     "Forecast Dec": partner.forecastedEarnings[3] || 0,
@@ -112,7 +112,7 @@ export const excelRowToPartner = (row: ExcelPartnerData): Partner => {
     medicalStability: (parseString(row["Medical Stability"]) as any) || "stable",
     vehicleCondition: parseNumber(row["Vehicle Condition"]),
     forecastedEarnings: [
-      parseNumber(row["Forecast Sep"]), // Mapped to new forecast indices
+      parseNumber(row["Forecast Sept"]), // Mapped from "Forecast Sept"
       parseNumber(row["Forecast Oct"]),
       parseNumber(row["Forecast Nov"]),
       parseNumber(row["Forecast Dec"]),
@@ -349,7 +349,7 @@ export const createDetailedReport = (partners: Partner[], options: ExportOptions
         "Partner ID": partner.id,
         "Partner Name": partner.name,
         "Current Nova Score": partner.novaScore,
-        "Forecast Sep": partner.forecastedEarnings[0] || 0, // Mapped to new forecast indices
+        "Forecast Sept": partner.forecastedEarnings[0] || 0, // Mapped to "Forecast Sept"
         "Forecast Oct": partner.forecastedEarnings[1] || 0,
         "Forecast Nov": partner.forecastedEarnings[2] || 0,
         "Forecast Dec": partner.forecastedEarnings[3] || 0,
