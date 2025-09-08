@@ -34,7 +34,7 @@ export interface ExcelPartnerData {
   "Forecast Nov": number
   "Forecast Dec": number
   Reviews: string // Renamed from reviews
-  Sentiment?: number // New: Sentiment score from Excel
+  "sentiment"?: number // Corrected: Use lowercase "sentiment" as per user's Excel
 }
 
 // Convert Partner object to Excel-friendly format
@@ -72,7 +72,7 @@ export const partnerToExcelRow = (partner: Partner): ExcelPartnerData => {
     "Forecast Nov": partner.forecastedEarnings[2] || 0,
     "Forecast Dec": partner.forecastedEarnings[3] || 0,
     Reviews: partner.rawReviewsText || "",
-    Sentiment: partner.overallSentimentScore, // New: Include overall sentiment score
+    "sentiment": partner.overallSentimentScore, // Corrected: Use lowercase "sentiment" for writing
   }
 }
 
@@ -81,11 +81,12 @@ export const excelRowToPartner = (row: ExcelPartnerData): Partner => {
   const parseNumber = (value: any) => (typeof value === 'number' ? value : Number(value) || 0);
   const parseString = (value: any) => (typeof value === 'string' ? value.trim() : String(value || '')).trim();
 
-  const parsedSentiment = row.Sentiment !== undefined ? parseNumber(row.Sentiment) : undefined;
+  // Corrected: Read from "sentiment" (lowercase)
+  const parsedSentiment = row["sentiment"] !== undefined ? parseNumber(row["sentiment"]) : undefined;
 
   // Debugging logs
   console.log(`Processing partner: ${row.Name} (ID: ${row.ID})`);
-  console.log(`Raw Sentiment from Excel:`, row.Sentiment, `(Type: ${typeof row.Sentiment})`);
+  console.log(`Raw Sentiment from Excel:`, row["sentiment"], `(Type: ${typeof row["sentiment"]})`);
   console.log(`Parsed overallSentimentScore:`, parsedSentiment, `(Type: ${typeof parsedSentiment})`);
 
 
