@@ -58,36 +58,14 @@ export function FairnessDashboard({ fairnessMetrics }: FairnessDashboardProps) {
   const criticalAlerts = validFairnessMetrics.filter((m) => Math.abs(m.bias) > 0.1)
 
   const radarData = useMemo(() => {
-    const ageMetrics = validFairnessMetrics.filter(metric => metric.category === "age");
-
-    const aggregatedAgeData: { [key: string]: { totalBias: number; count: number } } = {
-      "18-30": { totalBias: 0, count: 0 },
-      "31-45": { totalBias: 0, count: 0 },
-      "46-70": { totalBias: 0, count: 0 },
-    };
-
-    ageMetrics.forEach(metric => {
-      if (aggregatedAgeData[metric.group]) { // Only aggregate for the specified groups
-        aggregatedAgeData[metric.group].totalBias += metric.bias;
-        aggregatedAgeData[metric.group].count += 1;
-      }
+    // Map all valid fairness metrics directly to radar chart data
+    return validFairnessMetrics.map(metric => {
+      const fairnessScore = Math.max(0, Math.min(100, Math.round((1 - Math.abs(metric.bias)) * 100)));
+      return {
+        demographic: metric.group, // Use the specific group name for the axis
+        fairnessScore,
+      };
     });
-
-    const result = Object.entries(aggregatedAgeData)
-      .map(([groupName, data]) => {
-        if (data.count === 0) {
-          return null; // Skip groups with no data
-        }
-        const averageBias = data.totalBias / data.count;
-        const fairnessScore = Math.max(0, Math.min(100, Math.round((1 - Math.abs(averageBias)) * 100)));
-        return {
-          demographic: groupName,
-          fairnessScore,
-        };
-      })
-      .filter(Boolean) as { demographic: string; fairnessScore: number }[]; // Filter out nulls and assert type
-
-    return result;
   }, [validFairnessMetrics]);
 
   // Demographic comparison data based on valid metrics
@@ -227,8 +205,8 @@ export function FairnessDashboard({ fairnessMetrics }: FairnessDashboardProps) {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
-            <CardTitle>Fairness Radar (Age Groups)</CardTitle>
-            <CardDescription>Fairness scores across specific age demographic groups</CardDescription>
+            <CardTitle>Fairness Radar (All Demographic Groups)</CardTitle>
+            <CardDescription>Fairness scores across all monitored demographic groups</CardDescription>
           </CardHeader>
           <CardContent>
             {isLoading ? (
@@ -255,8 +233,8 @@ export function FairnessDashboard({ fairnessMetrics }: FairnessDashboardProps) {
             ) : (
               <div className="h-[400px] flex items-center justify-center text-muted-foreground">
                 {radarData.length === 0
-                  ? "No fairness data available for specified age groups"
-                  : "Need at least 3 specified age groups with data for radar chart"}
+                  ? "No fairness data available for any demographic groups."
+                  : "Need at least 3 demographic groups with data for radar chart."}
               </div>
             )}
           </CardContent>
