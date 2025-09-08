@@ -3,8 +3,9 @@
 import { useState, useEffect, useMemo } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import {
+  Alert, AlertDescription, AlertTitle
+} from "@/components/ui/alert"
 import { ChartContainer } from "@/components/ui/chart"
 import {
   RadarChart,
@@ -20,42 +21,18 @@ import {
   Line,
 } from "recharts"
 import { AlertTriangle, CheckCircle, TrendingUp, Users, Shield, Eye } from "lucide-react"
-import type { FairnessMetric } from "@/lib/interfaces" // Updated import
-import { mockBiasTrendData } from "@/lib/mock-fairness-data" // Updated import
+import type { FairnessMetric } from "@/lib/interfaces"
+import { mockBiasTrendData } from "@/lib/mock-fairness-data"
 
 interface FairnessDashboardProps {
   fairnessMetrics: FairnessMetric[]
 }
 
 export function FairnessDashboard({ fairnessMetrics }: FairnessDashboardProps) {
-  const [selectedMetric, setSelectedMetric] = useState<"bias" | "score" | "count">("bias")
-  const [timeRange, setTimeRange] = useState<"1month" | "3months" | "6months">("3months")
   const [isLoading, setIsLoading] = useState(true)
 
-  // Simulate time-based adjustments for fairness metrics
-  const adjustedFairnessMetrics = useMemo(() => {
-    return fairnessMetrics.map((metric) => {
-      let adjustedBias = metric.bias
-      let adjustedAverageScore = metric.averageScore
-
-      if (timeRange === "1month") {
-        // Simulate more significant "worse" metrics for a shorter, more recent period
-        adjustedBias = metric.bias * 1.5 // Increase absolute bias more
-        adjustedAverageScore = metric.averageScore * 0.95 // More noticeably lower score
-      } else if (timeRange === "6months") {
-        // Simulate more significant "better" metrics over a longer period (improvement)
-        adjustedBias = metric.bias * 0.5 // Decrease absolute bias more
-        adjustedAverageScore = metric.averageScore * 1.05 // More noticeably higher score
-      }
-      // For "3months", use original metric values
-
-      return {
-        ...metric,
-        bias: adjustedBias,
-        averageScore: adjustedAverageScore,
-      }
-    })
-  }, [fairnessMetrics, timeRange])
+  // Use the original fairnessMetrics directly, no time-based adjustment
+  const adjustedFairnessMetrics = useMemo(() => fairnessMetrics, [fairnessMetrics]);
 
   const validAdjustedFairnessMetrics =
     adjustedFairnessMetrics?.filter(
@@ -113,11 +90,8 @@ export function FairnessDashboard({ fairnessMetrics }: FairnessDashboardProps) {
         isFinite(item.avgScore),
     )
 
-  // Filter mockBiasTrendData based on timeRange
-  const filteredBiasTrendData = useMemo(() => {
-    const numMonths = timeRange === "1month" ? 1 : timeRange === "3months" ? 3 : 6
-    return mockBiasTrendData.slice(-numMonths)
-  }, [timeRange])
+  // Use mockBiasTrendData directly without filtering
+  const filteredBiasTrendData = mockBiasTrendData;
 
   // Demographic comparison data based on adjusted metrics
   const demographicComparison = validAdjustedFairnessMetrics.map((metric) => ({
@@ -193,7 +167,7 @@ export function FairnessDashboard({ fairnessMetrics }: FairnessDashboardProps) {
 
   return (
     <div className="space-y-6">
-      {/* Header and Controls */}
+      {/* Header */}
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
@@ -204,29 +178,7 @@ export function FairnessDashboard({ fairnessMetrics }: FairnessDashboardProps) {
                 <CardDescription>Bias detection and fairness monitoring across demographic groups</CardDescription>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <Button
-                variant={timeRange === "1month" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setTimeRange("1month")}
-              >
-                1M
-              </Button>
-              <Button
-                variant={timeRange === "3months" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setTimeRange("3months")}
-              >
-                3M
-              </Button>
-              <Button
-                variant={timeRange === "6months" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setTimeRange("6months")}
-              >
-                6M
-              </Button>
-            </div>
+            {/* Removed time range buttons */}
           </div>
         </CardHeader>
       </Card>
@@ -322,7 +274,7 @@ export function FairnessDashboard({ fairnessMetrics }: FairnessDashboardProps) {
             {isLoading ? (
               <div className="h-[400px] flex items-center justify-center text-muted-foreground">Loading chart...</div>
             ) : radarData.length > 0 && radarData.length >= 3 ? (
-              <ChartContainer config={chartConfig} className="h-[400px]" key={`radar-${timeRange}`}>
+              <ChartContainer config={chartConfig} className="h-[400px]" key={`radar-static`}>
                 <ResponsiveContainer width="100%" height="100%">
                   <RadarChart data={radarData} margin={{ top: 40, right: 40, bottom: 40, left: 40 }}>
                     <PolarGrid />
@@ -359,7 +311,7 @@ export function FairnessDashboard({ fairnessMetrics }: FairnessDashboardProps) {
             {isLoading ? (
               <div className="h-[400px] flex items-center justify-center text-muted-foreground">Loading chart...</div>
             ) : filteredBiasTrendData.length > 0 ? (
-              <ChartContainer config={chartConfig} className="h-[400px]" key={`trend-${timeRange}`}>
+              <ChartContainer config={chartConfig} className="h-[400px]" key={`trend-static`}>
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={filteredBiasTrendData} margin={{ top: 20, right: 30, bottom: 20, left: 30 }}>
                     <CartesianGrid strokeDasharray="3 3" />
