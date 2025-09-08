@@ -1,14 +1,16 @@
 "use client"
 
-import { useMemo } from "react"
+import { useMemo, useState } from "react" // Import useState
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { useDataStore } from "@/hooks/use-data-store"
 import { analyzeReviewSentiment } from "@/lib/nova-score-model"
-import { MessageSquare } from "lucide-react"
+import { MessageSquare, Search } from "lucide-react" // Import Search icon
+import { Input } from "@/components/ui/input" // Import Input component
 
 export function PartnerSentimentList() {
   const { partners } = useDataStore()
+  const [searchTerm, setSearchTerm] = useState("") // State for search term
 
   const partnersWithSentiment = useMemo(() => {
     return partners.map(partner => {
@@ -39,8 +41,10 @@ export function PartnerSentimentList() {
         calculatedSentimentScore: parseFloat(sentimentScore.toFixed(1)),
         sentimentColorClass: getSentimentColorClass(sentimentScore),
       };
-    });
-  }, [partners]);
+    }).filter(partner =>
+      partner.name.toLowerCase().includes(searchTerm.toLowerCase()) // Filter by search term
+    );
+  }, [partners, searchTerm]); // Add searchTerm to dependencies
 
   if (partners.length === 0) {
     return (
@@ -62,20 +66,33 @@ export function PartnerSentimentList() {
         <CardDescription>
           Overall sentiment scores for all partners, derived from reviews.
         </CardDescription>
+        <div className="relative mt-4">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+          <Input
+            placeholder="Search partners by name..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10"
+          />
+        </div>
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {partnersWithSentiment.map(partner => (
-            <div key={partner.id} className="flex items-center justify-between p-4 border rounded-lg">
-              <div>
-                <p className="font-medium text-foreground">{partner.name}</p>
-                <p className="text-sm text-muted-foreground">{partner.email}</p>
+          {partnersWithSentiment.length > 0 ? (
+            partnersWithSentiment.map(partner => (
+              <div key={partner.id} className="flex items-center justify-between p-4 border rounded-lg">
+                <div>
+                  <p className="font-medium text-foreground">{partner.name}</p>
+                  <p className="text-sm text-muted-foreground">{partner.email}</p>
+                </div>
+                <Badge className={`text-lg font-bold px-3 py-1 ${partner.sentimentColorClass}`}>
+                  {partner.calculatedSentimentScore}
+                </Badge>
               </div>
-              <Badge className={`text-lg font-bold px-3 py-1 ${partner.sentimentColorClass}`}>
-                {partner.calculatedSentimentScore}
-              </Badge>
-            </div>
-          ))}
+            ))
+          ) : (
+            <p className="col-span-full text-center text-muted-foreground">No partners found matching your search.</p>
+          )}
         </div>
         <div className="mt-6 p-4 bg-muted/50 rounded-lg">
           <h4 className="text-sm font-medium text-foreground mb-3">Sentiment Score Legend (0-5)</h4>
@@ -93,7 +110,7 @@ export function PartnerSentimentList() {
               <span className="text-xs text-muted-foreground">Negative (&lt; 2.8)</span>
             </div>
           </div>
-        </div>
+        </div >
       </CardContent>
     </Card>
   );
