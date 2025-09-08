@@ -38,7 +38,7 @@ import {
 import { ChartContainer, ChartTooltipContent } from "@/components/ui/chart";
 import type { Partner, Review } from "@/lib/interfaces";
 import { useDataStore } from "@/hooks/use-data-store";
-import { analyzeReviewSentiment, mapScoreToCategoricalSentiment } from "@/lib/nova-score-model"; // Import sentiment analysis and mapping
+import { analyzeReviewSentiment, mapScoreToCategoricalSentiment } from "@/lib/nova-score-model";
 
 
 interface PartnerProfileViewProps {
@@ -47,24 +47,23 @@ interface PartnerProfileViewProps {
 }
 
 export function PartnerProfileView({ partner, onBack }: PartnerProfileViewProps) {
-  const { reviews } = useDataStore(); // Get reviews from data store
+  const { reviews } = useDataStore();
   const [activeTab, setActiveTab] = useState("overview");
 
   const avgEarnings = partner.earningsHistory.length > 0
     ? partner.earningsHistory.reduce((sum, val) => sum + val, 0) / partner.earningsHistory.length
-    : 0; // Default to 0 if array is empty
+    : 0;
   const avgForecast = partner.forecastedEarnings.length > 0
     ? partner.forecastedEarnings.reduce((sum, val) => sum + val, 0) / partner.forecastedEarnings.length
-    : 0; // Default to 0 if array is empty
+    : 0;
 
   const historicalScores = useMemo(() => {
     const data: { month: string; score: number; earnings: number }[] = [];
     const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
-    // Use the 8 months from earningsHistory
     partner.earningsHistory.slice(0, 8).forEach((earnings, index) => {
       const scoreVariation = (Math.random() - 0.5) * 30;
-      const historicalScore = Math.max(300, Math.min(850, partner.novaScore + scoreVariation - (7 - index) * 2)); // Adjust score simulation
+      const historicalScore = Math.max(300, Math.min(850, partner.novaScore + scoreVariation - (7 - index) * 2));
       data.push({ month: monthNames[index], score: Math.round(historicalScore), earnings: earnings });
     });
 
@@ -75,9 +74,9 @@ export function PartnerProfileView({ partner, onBack }: PartnerProfileViewProps)
     const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
     
     return partner.forecastedEarnings.slice(0, 4).map((earnings, index) => ({
-      month: index === 0 ? "Forecast Sept" : `Forecast ${monthNames[8 + index]}`, // Prepend "Forecast" for these months
+      month: index === 0 ? "Forecast Sept" : `Forecast ${monthNames[8 + index]}`,
       earnings,
-      confidence: 85 + Math.random() * 10, // Keep simulated confidence
+      confidence: 85 + Math.random() * 10,
     }));
   }, [partner.forecastedEarnings]);
 
@@ -103,7 +102,7 @@ export function PartnerProfileView({ partner, onBack }: PartnerProfileViewProps)
 
     if (partner.overallSentimentScore !== undefined) {
       effectiveSentimentScore = partner.overallSentimentScore;
-      totalReviewsConsidered = 1; // Treat as one aggregated sentiment source
+      totalReviewsConsidered = 1;
     } else if (partner.rawReviewsText && partner.rawReviewsText.trim() !== "") {
       const comments = partner.rawReviewsText.split(';').map(s => s.trim()).filter(Boolean);
       if (comments.length > 0) {
@@ -111,11 +110,11 @@ export function PartnerProfileView({ partner, onBack }: PartnerProfileViewProps)
         effectiveSentimentScore = totalSentiment / comments.length;
         totalReviewsConsidered = comments.length;
       } else {
-        effectiveSentimentScore = 2.5; // Default neutral
+        effectiveSentimentScore = 2.5;
         totalReviewsConsidered = 0;
       }
     } else {
-      effectiveSentimentScore = 2.5; // Default neutral
+      effectiveSentimentScore = 2.5;
       totalReviewsConsidered = 0;
     }
 
@@ -123,15 +122,40 @@ export function PartnerProfileView({ partner, onBack }: PartnerProfileViewProps)
       return { positive: 0, neutral: 100, negative: 0, total: 0 };
     }
 
-    // Simplified, deterministic percentages based on effective sentiment score
-    let positive = 0, neutral = 0, negative = 0;
-    if (effectiveSentimentScore > 3.5) {
-      positive = 70; neutral = 20; negative = 10;
-    } else if (effectiveSentimentScore < 1.5) {
-      positive = 10; neutral = 20; negative = 70;
+    // Dynamic percentages based on effective sentiment score (0-5 scale)
+    const score = effectiveSentimentScore;
+    const neutralPoint = 2.5;
+    const maxRange = 2.5; // Max distance from neutral point to either extreme (0 or 5)
+
+    let positive = 0;
+    let negative = 0;
+    let neutral = 0;
+
+    if (score > neutralPoint) {
+      positive = ((score - neutralPoint) / maxRange) * 100;
+      neutral = 100 - positive;
+    } else if (score < neutralPoint) {
+      negative = ((neutralPoint - score) / maxRange) * 100;
+      neutral = 100 - negative;
     } else {
-      positive = 30; neutral = 40; negative = 30;
+      neutral = 100;
     }
+
+    // Ensure percentages sum to 100 and are non-negative
+    positive = Math.round(Math.max(0, Math.min(100, positive)));
+    negative = Math.round(Math.max(0, Math.min(100, negative)));
+    neutral = Math.round(Math.max(0, Math.min(100, neutral)));
+
+    // Adjust to ensure sum is exactly 100 due to rounding
+    const sum = positive + neutral + negative;
+    if (sum !== 100) {
+      if (sum > 100) {
+        neutral -= (sum - 100);
+      } else {
+        neutral += (100 - sum);
+      }
+    }
+    neutral = Math.max(0, neutral); // Ensure neutral doesn't go below zero
 
     return {
       positive,
@@ -141,15 +165,14 @@ export function PartnerProfileView({ partner, onBack }: PartnerProfileViewProps)
     };
   }, [partner]);
 
-  // New function to derive risk level based on Nova Score for display
   const getRiskLevelDisplay = (novaScore: number) => {
     if (novaScore > 750) return { level: "Low", textColor: "text-green-700", variant: "default" as const };
     if (novaScore >= 700 && novaScore <= 750) return { level: "Medium", textColor: "text-yellow-700", variant: "secondary" as const };
     if (novaScore < 700) return { level: "High", textColor: "text-red-700", variant: "destructive" as const };
-    return { level: "Unknown", textColor: "text-gray-500", variant: "outline" as const }; // Fallback
+    return { level: "Unknown", textColor: "text-gray-500", variant: "outline" as const };
   };
 
-  const risk = getRiskLevelDisplay(partner.novaScore); // Use the new function
+  const risk = getRiskLevelDisplay(partner.novaScore);
 
   const chartConfig = {
     score: { label: "Nova Score", color: "#8884d8" },
@@ -159,7 +182,6 @@ export function PartnerProfileView({ partner, onBack }: PartnerProfileViewProps)
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
       <header className="border-b border-border bg-card">
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
@@ -193,7 +215,6 @@ export function PartnerProfileView({ partner, onBack }: PartnerProfileViewProps)
         </div>
       </header>
 
-      {/* Main Content */}
       <main className="container mx-auto px-6 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="grid w-full grid-cols-4">
@@ -203,7 +224,6 @@ export function PartnerProfileView({ partner, onBack }: PartnerProfileViewProps)
             <TabsTrigger value="forecast">Forecast</TabsTrigger>
           </TabsList>
 
-          {/* Overview Tab */}
           <TabsContent value="overview" className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <Card>
@@ -220,8 +240,8 @@ export function PartnerProfileView({ partner, onBack }: PartnerProfileViewProps)
                   <CardTitle className="text-sm font-medium text-muted-foreground">Risk Level</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <Badge variant={risk.variant}> {/* Use derived variant */}
-                    {risk.level} {/* Use derived level */}
+                  <Badge variant={risk.variant}>
+                    {risk.level}
                   </Badge>
                   <p className="text-xs text-muted-foreground mt-1">Current risk assessment</p>
                 </CardContent>
@@ -267,7 +287,6 @@ export function PartnerProfileView({ partner, onBack }: PartnerProfileViewProps)
             </Card>
           </TabsContent>
 
-          {/* Performance Tab */}
           <TabsContent value="performance" className="space-y-6">
             <Card>
               <CardHeader>
@@ -290,7 +309,6 @@ export function PartnerProfileView({ partner, onBack }: PartnerProfileViewProps)
             </Card>
           </TabsContent>
 
-          {/* Sentiment Tab */}
           <TabsContent value="sentiment" className="space-y-6">
             <Card>
               <CardHeader>
@@ -323,7 +341,6 @@ export function PartnerProfileView({ partner, onBack }: PartnerProfileViewProps)
             </Card>
           </TabsContent>
 
-          {/* Forecast Tab */}
           <TabsContent value="forecast" className="space-y-6">
             <Card>
               <CardHeader>
