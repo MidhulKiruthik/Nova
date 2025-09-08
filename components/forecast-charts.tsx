@@ -167,11 +167,22 @@ export function ForecastCharts() {
     const totalPartners = validPartners.length;
     if (totalPartners === 0) return [];
 
-    const currentLow = validPartners.filter(p => p.riskLevel === "low").length;
-    const currentMedium = validPartners.filter(p => p.riskLevel === "medium").length;
-    const currentHigh = validPartners.filter(p => p.riskLevel === "high").length;
+    let currentLow = 0;
+    let currentMedium = 0;
+    let currentHigh = 0;
+
+    validPartners.forEach(p => {
+      if (p.novaScore > 750) {
+        currentLow++;
+      } else if (p.novaScore >= 700 && p.novaScore <= 750) {
+        currentMedium++;
+      } else {
+        currentHigh++;
+      }
+    });
 
     // Simple forecast: assume a slight improvement in risk distribution
+    // Adjust forecast based on current derived counts
     const forecastLow = Math.min(totalPartners, currentLow + Math.floor(totalPartners * 0.05));
     const forecastHigh = Math.max(0, currentHigh - Math.floor(totalPartners * 0.03));
     const forecastMedium = totalPartners - forecastLow - forecastHigh;
@@ -395,14 +406,18 @@ export function ForecastCharts() {
                         <span className="text-sm text-muted-foreground">Risk Level</span>
                         <Badge
                           variant={
-                            selectedPartnerData.riskLevel === "low"
+                            selectedPartnerData.novaScore > 750
                               ? "default"
-                              : selectedPartnerData.riskLevel === "medium"
+                              : selectedPartnerData.novaScore >= 700 && selectedPartnerData.novaScore <= 750
                                 ? "secondary"
                                 : "destructive"
                           }
                         >
-                          {selectedPartnerData.riskLevel.toUpperCase()}
+                          {selectedPartnerData.novaScore > 750
+                            ? "LOW"
+                            : selectedPartnerData.novaScore >= 700 && selectedPartnerData.novaScore <= 750
+                              ? "MEDIUM"
+                              : "HIGH"}
                         </Badge>
                       </div>
                       <div className="flex justify-between">
