@@ -9,8 +9,8 @@ import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
 import { Badge } from "@/components/ui/badge"
-import { Download, FileSpreadsheet, BarChart3, Shield, Users } from "lucide-react"
-import type { Partner, FairnessMetric } from "@/lib/interfaces" // Updated import
+import { Download, FileSpreadsheet, Users } from "lucide-react"
+import type { Partner, FairnessMetric } from "@/lib/interfaces"
 import {
   createAnalyticsReport,
   createDetailedReport,
@@ -19,7 +19,7 @@ import {
   downloadExcelFile,
   type ExportOptions,
 } from "@/lib/excel-utils"
-import { toast } from "sonner" // Import sonner toast
+import { toast } from "sonner"
 
 interface ExportManagerProps {
   partners: Partner[]
@@ -27,7 +27,7 @@ interface ExportManagerProps {
 }
 
 export function ExportManager({ partners, fairnessMetrics }: ExportManagerProps) {
-  const [exportType, setExportType] = useState<"simple" | "detailed" | "analytics" | "fairness">("simple")
+  const [exportType, setExportType] = useState<"simple">("simple") // Only 'simple' option now
   const [exportOptions, setExportOptions] = useState<ExportOptions>({
     includeEarningsHistory: true,
     includeForecast: true,
@@ -43,23 +43,8 @@ export function ExportManager({ partners, fairnessMetrics }: ExportManagerProps)
     toast.loading("Generating report...", { id: "export-report" })
 
     try {
-      switch (exportType) {
-        case "simple":
-          downloadExcelFile(partners, `nova-partners-${new Date().toISOString().split("T")[0]}.xlsx`)
-          break
-        case "detailed":
-          const detailedReport = createDetailedReport(partners, exportOptions)
-          downloadReport(detailedReport)
-          break
-        case "analytics":
-          const analyticsReport = createAnalyticsReport(partners, fairnessMetrics)
-          downloadReport(analyticsReport)
-          break
-        case "fairness":
-          const fairnessReport = createFairnessReport(partners, fairnessMetrics)
-          downloadReport(fairnessReport)
-          break
-      }
+      // Only simple export logic remains
+      downloadExcelFile(partners, `nova-partners-${new Date().toISOString().split("T")[0]}.xlsx`)
       toast.success("Report generated and download started!", { id: "export-report" })
     } catch (error) {
       console.error("Export failed:", error)
@@ -70,18 +55,7 @@ export function ExportManager({ partners, fairnessMetrics }: ExportManagerProps)
   }
 
   const getExportDescription = () => {
-    switch (exportType) {
-      case "simple":
-        return "Basic partner data in a single Excel sheet"
-      case "detailed":
-        return "Comprehensive report with multiple sheets including earnings history and forecasts"
-      case "analytics":
-        return "Statistical analysis with performance metrics, score distributions, and trends"
-      case "fairness":
-        return "Bias analysis and compliance reporting for regulatory requirements"
-      default:
-        return ""
-    }
+    return "Basic partner data in a single Excel sheet"
   }
 
   const getFilteredCount = () => {
@@ -93,7 +67,7 @@ export function ExportManager({ partners, fairnessMetrics }: ExportManagerProps)
 
     if (exportOptions.filterByScoreRange) {
       const { min, max } = exportOptions.filterByScoreRange
-      filtered = filtered.filter((p) => p.novaScore >= min && p.novaScore <= max) // Changed from mlScore
+      filtered = filtered.filter((p) => p.novaScore >= min && p.novaScore <= max)
     }
 
     return filtered.length
@@ -109,55 +83,19 @@ export function ExportManager({ partners, fairnessMetrics }: ExportManagerProps)
         <CardDescription>Generate comprehensive Excel reports with customizable options</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* Export Type Selection */}
+        {/* Export Type Selection - now only one option */}
         <div className="space-y-3">
           <Label className="text-base font-medium">Report Type</Label>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="grid grid-cols-1 gap-3"> {/* Only one column needed */}
             <Button
-              variant={exportType === "simple" ? "default" : "outline"}
+              variant="default" // Always default as it's the only option
               className="h-auto p-4 flex flex-col items-center gap-2"
-              onClick={() => setExportType("simple")}
+              onClick={() => setExportType("simple")} // Still set, but effectively fixed
             >
               <Users className="w-5 h-5" />
               <div className="text-center">
                 <div className="font-medium">Simple Export</div>
                 <div className="text-xs text-muted-foreground">Basic partner data</div>
-              </div>
-            </Button>
-
-            <Button
-              variant={exportType === "detailed" ? "default" : "outline"}
-              className="h-auto p-4 flex flex-col items-center gap-2"
-              onClick={() => setExportType("detailed")}
-            >
-              <FileSpreadsheet className="w-5 h-5" />
-              <div className="text-center">
-                <div className="font-medium">Detailed Report</div>
-                <div className="text-xs text-muted-foreground">Multi-sheet analysis</div>
-              </div>
-            </Button>
-
-            <Button
-              variant={exportType === "analytics" ? "default" : "outline"}
-              className="h-auto p-4 flex flex-col items-center gap-2"
-              onClick={() => setExportType("analytics")}
-            >
-              <BarChart3 className="w-5 h-5" />
-              <div className="text-center">
-                <div className="font-medium">Analytics Report</div>
-                <div className="text-xs text-muted-foreground">Statistical insights</div>
-              </div>
-            </Button>
-
-            <Button
-              variant={exportType === "fairness" ? "default" : "outline"}
-              className="h-auto p-4 flex flex-col items-center gap-2"
-              onClick={() => setExportType("fairness")}
-            >
-              <Shield className="w-5 h-5" />
-              <div className="text-center">
-                <div className="font-medium">Fairness Report</div>
-                <div className="text-xs text-muted-foreground">Compliance analysis</div>
               </div>
             </Button>
           </div>
@@ -166,11 +104,9 @@ export function ExportManager({ partners, fairnessMetrics }: ExportManagerProps)
 
         <Separator />
 
-        {/* Export Options */}
-        {(exportType === "detailed" || exportType === "analytics") && (
-          <div className="space-y-4">
+        {/* Export Options - Removed as only simple export remains */}
+        {/* <div className="space-y-4">
             <Label className="text-base font-medium">Export Options</Label>
-
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-3">
                 <Label>Include Additional Data</Label>
@@ -197,7 +133,6 @@ export function ExportManager({ partners, fairnessMetrics }: ExportManagerProps)
                   </div>
                 </div>
               </div>
-
               <div className="space-y-3">
                 <Label>Filters</Label>
                 <div className="space-y-2">
@@ -222,7 +157,6 @@ export function ExportManager({ partners, fairnessMetrics }: ExportManagerProps)
                       </SelectContent>
                     </Select>
                   </div>
-
                   <div className="grid grid-cols-2 gap-2">
                     <div>
                       <Label htmlFor="min-score" className="text-sm">
@@ -270,8 +204,7 @@ export function ExportManager({ partners, fairnessMetrics }: ExportManagerProps)
                 </div>
               </div>
             </div>
-          </div>
-        )}
+          </div> */}
 
         <Separator />
 
