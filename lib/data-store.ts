@@ -1,6 +1,5 @@
 import type { Partner, Review, FairnessMetric } from "./interfaces"
 import { calculateNovaScore, analyzeReviewSentiment } from "./nova-score-model"
-import { mockPartners } from "./mock-partners" // Import mockPartners
 
 export interface SyncStatus {
   status: "idle" | "syncing" | "error" | "offline"
@@ -330,9 +329,9 @@ class DataStore {
     if (typeof window !== "undefined") {
       this.loadFromLocalStorage();
       if (this.partners.length === 0) {
-        // If no data in local storage, load mock data
-        console.log("No data found in local storage. Loading mock data.");
-        this._processPartnersAndDeriveMetrics(mockPartners); // Load mock data
+        // Optionally, you could load a minimal default set here if no local storage data
+        // For now, we'll rely on the user to import via DataManagementPage
+        console.log("No data found in local storage. Please import data via Data Management.");
       }
     }
     this.notify();
