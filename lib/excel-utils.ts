@@ -8,7 +8,7 @@ export interface ExcelPartnerData {
   Ethnicity: string
   "Area Type": string
   Name: string
-  Email: string // Renamed from Mail
+  Mail: string // Changed from Email to Mail
   Phone: string
   "Nova Score": number
   "Trip Volume": number
@@ -30,9 +30,9 @@ export interface ExcelPartnerData {
   "Earnings Jul": number // New
   "Earnings Aug": number // New
   "Forecast Sep": number // New
-  "Forecast Oct": number // New
-  "Forecast Nov": number // New
-  "Forecast Dec": number // New
+  "Forecast Oct": number
+  "Forecast Nov": number
+  "Forecast Dec": number
   Reviews: string // Renamed from reviews
 }
 
@@ -45,7 +45,7 @@ export const partnerToExcelRow = (partner: Partner): ExcelPartnerData => {
     Ethnicity: partner.ethnicity || "",
     "Area Type": partner.areaType || "",
     Name: partner.name,
-    Email: partner.email,
+    Mail: partner.email, // Mapped to Mail
     Phone: partner.phone,
     "Nova Score": partner.novaScore,
     "Trip Volume": partner.tripVolume,
@@ -82,7 +82,7 @@ export const excelRowToPartner = (row: ExcelPartnerData): Partner => {
   return {
     id: parseString(row.ID) || `p${Date.now()}`,
     name: parseString(row.Name),
-    email: parseString(row.Email),
+    email: parseString(row.Mail), // Mapped from Mail
     phone: parseString(row.Phone),
     novaScore: parseNumber(row["Nova Score"]),
     earningsHistory: [
