@@ -126,34 +126,34 @@ export function PartnerProfileView({ partner, onBack }: PartnerProfileViewProps)
     const score = effectiveSentimentScore;
     const neutralPoint = 2.5;
     const maxRange = 2.5; // Max distance from neutral point to either extreme (0 or 5)
+    const neutralReductionFactor = 1.5; // Factor > 1 to reduce neutral percentage
 
     let positive = 0;
     let negative = 0;
     let neutral = 0;
 
     if (score > neutralPoint) {
-      positive = ((score - neutralPoint) / maxRange) * 100;
+      positive = ((score - neutralPoint) / maxRange) * 100 * neutralReductionFactor;
+      positive = Math.min(100, positive); // Clamp to 100%
       neutral = 100 - positive;
     } else if (score < neutralPoint) {
-      negative = ((neutralPoint - score) / maxRange) * 100;
+      negative = ((neutralPoint - score) / maxRange) * 100 * neutralReductionFactor;
+      negative = Math.min(100, negative); // Clamp to 100%
       neutral = 100 - negative;
     } else {
       neutral = 100;
     }
 
     // Ensure percentages sum to 100 and are non-negative
-    positive = Math.round(Math.max(0, Math.min(100, positive)));
-    negative = Math.round(Math.max(0, Math.min(100, negative)));
-    neutral = Math.round(Math.max(0, Math.min(100, neutral)));
+    positive = Math.round(Math.max(0, positive));
+    negative = Math.round(Math.max(0, negative));
+    neutral = Math.round(Math.max(0, neutral));
 
     // Adjust to ensure sum is exactly 100 due to rounding
     const sum = positive + neutral + negative;
     if (sum !== 100) {
-      if (sum > 100) {
-        neutral -= (sum - 100);
-      } else {
-        neutral += (100 - sum);
-      }
+      // Distribute the difference to neutral to maintain sum of 100
+      neutral += (100 - sum);
     }
     neutral = Math.max(0, neutral); // Ensure neutral doesn't go below zero
 
