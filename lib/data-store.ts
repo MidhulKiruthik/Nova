@@ -238,14 +238,10 @@ class DataStore {
     // 1. Generate Reviews
     this.reviews = this._generateReviewsFromPartners(rawPartners);
 
-    // 2. Recalculate Nova Scores for all partners based on the generated reviews
-    // Note: calculateNovaScore now takes the partner object directly and uses its rawReviewsText
-    this.partners = rawPartners.map(p => ({
-      ...p,
-      novaScore: calculateNovaScore(p) // Nova score calculated using rawReviewsText
-    }));
+    // 2. Assign partners directly, Nova Score is now taken from the input data
+    this.partners = rawPartners;
 
-    // 3. Calculate Fairness Metrics based on the newly scored partners
+    // 3. Calculate Fairness Metrics based on the partners (with their assigned Nova Scores)
     this.fairnessMetrics = this._calculateFairnessMetrics(this.partners);
   }
 
@@ -266,11 +262,8 @@ class DataStore {
   }
 
   addPartner(partner: Partner) {
-    const newPartnerWithScore = {
-      ...partner,
-      novaScore: calculateNovaScore(partner) // Calculate score for new partner
-    }
-    this.partners.push(newPartnerWithScore)
+    // Use the novaScore directly from the provided partner object
+    this.partners.push(partner)
     // Re-process all data to update reviews and fairness metrics
     this._processPartnersAndDeriveMetrics(this.partners);
     this.recordChange({
@@ -287,8 +280,8 @@ class DataStore {
       const oldPartner = this.partners[index]
       const updatedPartner = { ...this.partners[index], ...updates }
       
-      // Recalculate Nova Score if relevant fields are updated
-      updatedPartner.novaScore = calculateNovaScore(updatedPartner)
+      // Nova Score is now taken directly from the updates or existing partner object
+      // No recalculation here.
 
       this.partners[index] = updatedPartner
       // Re-process all data to update reviews and fairness metrics
