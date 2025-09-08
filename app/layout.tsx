@@ -7,7 +7,7 @@ import { Toaster } from '@/components/ui/sonner' // Import Sonner Toaster
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'v0 App',
+  title: 'Nova-Plus',
   description: 'Created with v0',
   generator: 'v0.app',
 }
