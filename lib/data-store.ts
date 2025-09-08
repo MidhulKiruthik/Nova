@@ -1,5 +1,5 @@
 import type { Partner, Review, FairnessMetric } from "./interfaces"
-import { calculateNovaScore } from "./nova-score-model"
+import { calculateNovaScore, analyzeReviewSentiment } from "./nova-score-model"
 
 export interface SyncStatus {
   status: "idle" | "syncing" | "error" | "offline"
@@ -230,7 +230,7 @@ class DataStore {
   setReviews(reviews: Review[]) {
     this.reviews = reviews.map(review => ({
       ...review,
-      sentimentScore: review.sentimentScore ?? calculateNovaScore(review.comment) // Ensure sentimentScore is calculated
+      sentimentScore: review.sentimentScore ?? analyzeReviewSentiment(review.comment) // Ensure sentimentScore is calculated
     }));
     // Recalculate Nova Scores for all partners if reviews change
     this.partners = this.partners.map(p => ({
@@ -256,7 +256,7 @@ class DataStore {
   initializeWithMockData(partners: Partner[], reviews: Review[], fairnessMetrics: FairnessMetric[]) {
     this.reviews = reviews.map(review => ({ // Ensure sentimentScore is calculated for mock reviews
       ...review,
-      sentimentScore: review.sentimentScore ?? calculateNovaScore(review.comment)
+      sentimentScore: review.sentimentScore ?? analyzeReviewSentiment(review.comment)
     }));
     this.partners = partners.map(p => ({ // Then calculate scores for partners
       ...p,

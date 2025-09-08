@@ -2,47 +2,44 @@
 
 import { useEffect, useState } from "react";
 import { Sidebar, SidebarContent, SidebarHeader, SidebarTrigger, SidebarInset, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarProvider } from "@/components/ui/sidebar";
-import { PartnerDataTable } from "@/components/partner-data-table";
 import { PartnerProfileView } from "@/components/partner-profile-view";
 import { FairnessDashboard } from "@/components/fairness-dashboard";
 import { ForecastCharts } from "@/components/forecast-charts";
 import { SentimentHeatmap } from "@/components/sentiment-heatmap";
-import { UserManagement } from "@/components/user-management";
+import { DataManagementPage } from "@/components/data-management-page"; // New import
+import { PartnersOverview } from "@/components/partners-overview"; // New import
 import { SyncStatusIndicator } from "@/components/sync-status-indicator";
 import { useDataStore } from "@/hooks/use-data-store";
 import { mockPartners } from "@/lib/mock-partners";
 import { mockReviews } from "@/lib/mock-reviews";
 import { mockFairnessMetrics } from "@/lib/mock-fairness-data";
-import { Home, Users, BarChart, Shield, TrendingUp, MessageSquare, Settings } from "lucide-react";
+import { Home, Users, BarChart, Shield, TrendingUp, MessageSquare, Settings, FileSpreadsheet } from "lucide-react";
 import Image from "next/image";
+import type { Partner } from "@/lib/interfaces";
 
 export default function Page() {
-  const { partners, fairnessMetrics, initializeWithMockData, setPartners, reviews } = useDataStore();
-  const [selectedPartner, setSelectedPartner] = useState<typeof partners[0] | null>(null);
-  const [activeView, setActiveView] = useState<string>("dashboard");
+  const { partners, fairnessMetrics, initializeWithMockData } = useDataStore();
+  const [selectedPartner, setSelectedPartner] = useState<Partner | null>(null);
+  const [activeView, setActiveView] = useState<string>("partners"); // Default to partners view
 
   useEffect(() => {
     if (partners.length === 0) {
       initializeWithMockData(mockPartners, mockReviews, mockFairnessMetrics);
     }
-  }, [partners.length, initializeWithMockData, mockPartners, mockReviews, mockFairnessMetrics]);
+  }, [partners.length, initializeWithMockData]);
 
-  const handlePartnerSelect = (partner: typeof partners[0]) => {
+  const handlePartnerSelect = (partner: Partner) => {
     setSelectedPartner(partner);
     setActiveView("partner-profile");
   };
 
-  const handleBackToDashboard = () => {
+  const handleBackToPartners = () => {
     setSelectedPartner(null);
-    setActiveView("dashboard");
-  };
-
-  const handlePartnersUpdate = (updatedPartners: typeof partners) => {
-    setPartners(updatedPartners);
+    setActiveView("partners");
   };
 
   if (selectedPartner) {
-    return <PartnerProfileView partner={selectedPartner} onBack={handleBackToDashboard} />;
+    return <PartnerProfileView partner={selectedPartner} onBack={handleBackToPartners} />;
   }
 
   return (
@@ -56,12 +53,6 @@ export default function Page() {
         </SidebarHeader>
         <SidebarContent>
           <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton isActive={activeView === "dashboard"} onClick={() => setActiveView("dashboard")}>
-                <Home />
-                <span>Dashboard</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
             <SidebarMenuItem>
               <SidebarMenuButton isActive={activeView === "partners"} onClick={() => setActiveView("partners")}>
                 <Users />
@@ -87,9 +78,9 @@ export default function Page() {
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <SidebarMenuButton isActive={activeView === "management"} onClick={() => setActiveView("management")}>
-                <Settings />
-                <span>Management</span>
+              <SidebarMenuButton isActive={activeView === "data-management"} onClick={() => setActiveView("data-management")}>
+                <FileSpreadsheet />
+                <span>Data Management</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
@@ -103,24 +94,14 @@ export default function Page() {
           <div className="container mx-auto px-6 py-4 flex items-center justify-between">
             <SidebarTrigger />
             <h1 className="text-xl font-bold text-foreground">
-              {activeView.charAt(0).toUpperCase() + activeView.slice(1)}
+              {activeView.charAt(0).toUpperCase() + activeView.slice(1).replace(/-/g, ' ')}
             </h1>
             <div>{/* User profile or other header elements */}</div>
           </div>
         </header>
         <main className="container mx-auto px-6 py-8">
-          {activeView === "dashboard" && (
-            <div className="space-y-6">
-              <h2 className="text-2xl font-bold">Dashboard Overview</h2>
-              <p className="text-muted-foreground">Welcome to your Nova+ Dashboard. Select a view from the sidebar.</p>
-              <PartnerDataTable partners={partners} />
-            </div>
-          )}
           {activeView === "partners" && (
-            <div className="space-y-6">
-              <h2 className="text-2xl font-bold">All Partners</h2>
-              <PartnerDataTable partners={partners} onPartnerSelect={handlePartnerSelect} />
-            </div>
+            <PartnersOverview onPartnerSelect={handlePartnerSelect} />
           )}
           {activeView === "fairness" && (
             <div className="space-y-6">
@@ -140,11 +121,8 @@ export default function Page() {
               <SentimentHeatmap partners={partners} />
             </div>
           )}
-          {activeView === "management" && (
-            <div className="space-y-6">
-              <h2 className="text-2xl font-bold">User Management</h2>
-              <UserManagement partners={partners} onPartnersUpdate={handlePartnersUpdate} />
-            </div>
+          {activeView === "data-management" && (
+            <DataManagementPage />
           )}
         </main>
       </SidebarInset>
