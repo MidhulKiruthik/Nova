@@ -101,14 +101,15 @@ export function PartnerProfileView({ partner, onBack }: PartnerProfileViewProps)
     return calculateSentimentBreakdownForPartner(partner, reviews);
   }, [partner, reviews]);
 
-  const getRiskLevel = (score: number) => {
-    if (score >= 800) return { level: "Low", textColor: "text-green-700" };
-    if (score >= 700) return { level: "Medium", textColor: "text-yellow-700" };
-    if (score >= 600) return { level: "High", textColor: "text-orange-700" };
-    return { level: "Critical", textColor: "text-red-700" };
+  // New function to derive risk level based on Nova Score for display
+  const getRiskLevelDisplay = (novaScore: number) => {
+    if (novaScore > 750) return { level: "Low", textColor: "text-green-700", variant: "default" as const };
+    if (novaScore >= 700 && novaScore <= 750) return { level: "Medium", textColor: "text-yellow-700", variant: "secondary" as const };
+    if (novaScore < 700) return { level: "High", textColor: "text-red-700", variant: "destructive" as const };
+    return { level: "Unknown", textColor: "text-gray-500", variant: "outline" as const }; // Fallback
   };
 
-  const risk = getRiskLevel(partner.novaScore);
+  const risk = getRiskLevelDisplay(partner.novaScore); // Use the new function
 
   const chartConfig = {
     score: { label: "Nova Score", color: "#8884d8" },
@@ -179,8 +180,8 @@ export function PartnerProfileView({ partner, onBack }: PartnerProfileViewProps)
                   <CardTitle className="text-sm font-medium text-muted-foreground">Risk Level</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <Badge variant={partner.riskLevel === "low" ? "default" : partner.riskLevel === "medium" ? "secondary" : "destructive"}>
-                    {partner.riskLevel.toUpperCase()}
+                  <Badge variant={risk.variant}> {/* Use derived variant */}
+                    {risk.level} {/* Use derived level */}
                   </Badge>
                   <p className="text-xs text-muted-foreground mt-1">Current risk assessment</p>
                 </CardContent>
