@@ -149,7 +149,7 @@ export function ForecastCharts() {
     // Forecasted earnings (Sep-Dec)
     partner.forecastedEarnings.slice(0, 4).forEach((earnings, index) => {
       data.push({
-        month: monthNames[8 + index], // Sep is index 8
+        month: `Forecast ${monthNames[8 + index]}`, // Prepend "Forecast" for these months
         actual: null,
         forecast: earnings, // This is the Excel forecast value
         novaScore: partner.novaScore + (Math.random() - 0.5) * 30, // Keep simulated forecasted score for now

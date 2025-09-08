@@ -75,7 +75,7 @@ export function PartnerProfileView({ partner, onBack }: PartnerProfileViewProps)
     const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
     
     return partner.forecastedEarnings.slice(0, 4).map((earnings, index) => ({
-      month: monthNames[8 + index], // Sep is index 8
+      month: `Forecast ${monthNames[8 + index]}`, // Prepend "Forecast" for these months
       earnings,
       confidence: 85 + Math.random() * 10, // Keep simulated confidence
     }));
@@ -225,7 +225,7 @@ export function PartnerProfileView({ partner, onBack }: PartnerProfileViewProps)
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold text-foreground">{partner.avgRating.toFixed(1)}</div>
-                  <p className="text-xs text-muted-foreground mt-1">Customer satisfaction</p>
+                  <p className className="text-xs text-muted-foreground mt-1">Customer satisfaction</p>
                 </CardContent>
               </Card>
               <Card>
