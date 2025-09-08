@@ -163,9 +163,11 @@ export function ExcelImport({ onImportComplete, onImportError }: ExcelImportProp
   }
 
   const downloadTemplate = () => {
+    // This template data defines the structure and example values for the Excel file.
+    // Ensure your uploaded Excel file matches these column headers and data types.
     const templateData: Partner[] = [
       {
-        id: "template",
+        id: "partner-001",
         name: "John Doe",
         email: "john.doe@example.com",
         phone: "+1-555-0123",
@@ -188,6 +190,31 @@ export function ExcelImport({ onImportComplete, onImportError }: ExcelImportProp
         gender: "male",
         ethnicity: "white",
         rawReviewsText: "Great service; Driver was friendly and on time; Clean car",
+      },
+      {
+        id: "partner-002",
+        name: "Jane Smith",
+        email: "jane.smith@example.com",
+        phone: "+1-555-0124",
+        novaScore: 680,
+        earningsHistory: [2200, 2300, 2100, 2400, 2250, 2350],
+        tripVolume: 100,
+        onTimePickupRate: 0.88,
+        leavesTaken: 5,
+        medicalStability: "moderate",
+        vehicleCondition: 70,
+        forecastedEarnings: [2300, 2450, 2300, 2500, 2400],
+        riskLevel: "medium",
+        joinDate: "2022-08-01",
+        lastActive: "2024-01-13",
+        totalTrips: 1050,
+        avgRating: 4.2,
+        cancellationRate: 0.07,
+        ageGroup: "25-30",
+        areaType: "suburban",
+        gender: "female",
+        ethnicity: "asian",
+        rawReviewsText: "Good driver, but a bit late; Car could be cleaner",
       },
     ]
 
