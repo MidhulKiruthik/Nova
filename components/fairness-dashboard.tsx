@@ -60,7 +60,8 @@ export function FairnessDashboard({ fairnessMetrics }: FairnessDashboardProps) {
   const radarData = useMemo(() => {
     // Map all valid fairness metrics directly to radar chart data
     return validFairnessMetrics.map(metric => {
-      const fairnessScore = Math.max(0, Math.min(100, Math.round((1 - Math.abs(metric.bias)) * 100)));
+      // Scale the fairness score for visual emphasis on the radar chart
+      const fairnessScore = Math.max(0, Math.min(100, Math.round((1 - Math.abs(metric.bias) * 2) * 100)));
       return {
         demographic: metric.group, // Use the specific group name for the axis
         fairnessScore,
