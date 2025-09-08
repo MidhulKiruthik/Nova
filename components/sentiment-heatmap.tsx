@@ -43,7 +43,7 @@ export function SentimentHeatmap({ partners }: SentimentHeatmapProps) {
   }
 
   // Generate sentiment data for heatmap visualization
-  const generateHeatmapData = useMemo((): HeatmapCell[] => {
+  const heatmapData = useMemo((): HeatmapCell[] => {
     const periods = generateTimePeriods();
     const data: HeatmapCell[] = [];
 
