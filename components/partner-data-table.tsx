@@ -115,13 +115,16 @@ export function PartnerDataTable({ partners, onPartnerSelect }: PartnerDataTable
     return `${(value * 100).toFixed(1)}%`
   }
 
-  // Helper to convert novaScore (0-1000) to a sentiment-like scale (0-5) for display
-  const novaScoreToSentimentDisplay = (novaScore: number) => (novaScore / 1000) * 5;
+  // Helper to convert numerical sentiment score (0-5) to a sentiment-like scale (0-5) for display
+  const getSentimentDisplayScore = (partner: Partner) => {
+    return partner.overallSentimentScore !== undefined
+      ? partner.overallSentimentScore
+      : (partner.novaScore / 1000) * 5; // Fallback to Nova Score if no explicit sentiment
+  }
 
-  const getSentimentColor = (novaScore: number) => {
-    const sentimentDisplay = novaScoreToSentimentDisplay(novaScore);
-    if (sentimentDisplay > 3.5) return "text-chart-2" // Positive
-    if (sentimentDisplay < 1.5) return "text-destructive" // Negative
+  const getSentimentColor = (sentimentScore: number) => {
+    if (sentimentScore > 3.5) return "text-chart-2" // Positive
+    if (sentimentScore < 1.5) return "text-destructive" // Negative
     return "text-muted-foreground" // Neutral
   }
 
@@ -253,10 +256,10 @@ export function PartnerDataTable({ partners, onPartnerSelect }: PartnerDataTable
                     variant="ghost"
                     size="sm"
                     className="h-8 p-0 font-medium"
-                    onClick={() => handleSort("novaScore")}
+                    onClick={() => handleSort("overallSentimentScore")}
                   >
                     Sentiment
-                    {getSortIcon("novaScore")}
+                    {getSortIcon("overallSentimentScore")}
                   </Button>
                 </TableHead>
                 <TableHead>
@@ -323,7 +326,7 @@ export function PartnerDataTable({ partners, onPartnerSelect }: PartnerDataTable
                   partner.earningsHistory.reduce((sum, val) => sum + val, 0) / partner.earningsHistory.length
                 const forecastTrend =
                   partner.forecastedEarnings[partner.forecastedEarnings.length - 1] - partner.forecastedEarnings[0]
-                const sentimentDisplay = novaScoreToSentimentDisplay(partner.novaScore);
+                const sentimentDisplay = getSentimentDisplayScore(partner);
 
                 return (
                   <TableRow
@@ -347,7 +350,7 @@ export function PartnerDataTable({ partners, onPartnerSelect }: PartnerDataTable
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        <span className={`font-medium ${getSentimentColor(partner.novaScore)}`}>
+                        <span className={`font-medium ${getSentimentColor(sentimentDisplay)}`}>
                           {sentimentDisplay.toFixed(1)}/5
                         </span>
                         <div className="w-12 h-2 bg-muted rounded-full overflow-hidden">

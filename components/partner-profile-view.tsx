@@ -112,7 +112,14 @@ export function PartnerProfileView({ partner, onBack }: PartnerProfileViewProps)
   const getSentimentBreakdown = (partnerId: string) => {
     const partnerReviews = reviews.filter(r => r.partnerId === partnerId);
     if (partnerReviews.length === 0) {
-      return { positive: 0, neutral: 100, negative: 0 }; // Default to neutral if no reviews
+      // If no reviews in data store, use overallSentimentScore from partner if available
+      if (partner.overallSentimentScore !== undefined) {
+        const score = partner.overallSentimentScore;
+        if (score > 3.5) return { positive: 100, neutral: 0, negative: 0 };
+        if (score < 1.5) return { positive: 0, neutral: 0, negative: 100 };
+        return { positive: 0, neutral: 100, negative: 0 };
+      }
+      return { positive: 0, neutral: 100, negative: 0 }; // Default to neutral if no reviews and no overallSentimentScore
     }
 
     let positiveCount = 0;
@@ -296,6 +303,13 @@ export function PartnerProfileView({ partner, onBack }: PartnerProfileViewProps)
                 <CardDescription>Review sentiment breakdown and trends</CardDescription>
               </CardHeader>
               <CardContent>
+                {partner.overallSentimentScore !== undefined && (
+                  <div className="mb-4 p-3 bg-muted rounded-md">
+                    <p className="text-sm text-muted-foreground">
+                      Overall Sentiment Score from Excel: <span className="font-medium text-foreground">{partner.overallSentimentScore.toFixed(1)}/5</span>
+                    </p>
+                  </div>
+                )}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
                   <div>
                     <div className="text-3xl font-bold text-green-600">{sentimentBreakdown.positive}%</div>
