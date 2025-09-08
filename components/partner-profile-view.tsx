@@ -46,8 +46,12 @@ interface PartnerProfileViewProps {
 export function PartnerProfileView({ partner, onBack }: PartnerProfileViewProps) {
   const [activeTab, setActiveTab] = useState("overview");
 
-  const avgEarnings = partner.earningsHistory.reduce((sum, val) => sum + val, 0) / partner.earningsHistory.length;
-  const avgForecast = partner.forecastedEarnings.reduce((sum, val) => sum + val, 0) / partner.forecastedEarnings.length;
+  const avgEarnings = partner.earningsHistory.length > 0
+    ? partner.earningsHistory.reduce((sum, val) => sum + val, 0) / partner.earningsHistory.length
+    : 0; // Default to 0 if array is empty
+  const avgForecast = partner.forecastedEarnings.length > 0
+    ? partner.forecastedEarnings.reduce((sum, val) => sum + val, 0) / partner.forecastedEarnings.length
+    : 0; // Default to 0 if array is empty
 
   const historicalScores = useMemo(() => {
     const data: { month: string; score: number; earnings: number }[] = [];
@@ -174,7 +178,66 @@ export function PartnerProfileView({ partner, onBack }: PartnerProfileViewProps)
 
           {/* Overview Tab */}
           <TabsContent value="overview" className="space-y-6">
-            {/* ... Your overview cards and radar chart ... */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Nova Score</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-foreground">{partner.novaScore}</div>
+                  <p className="text-xs text-muted-foreground mt-1">Overall performance index</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Risk Level</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Badge variant={partner.riskLevel === "low" ? "default" : partner.riskLevel === "medium" ? "secondary" : "destructive"}>
+                    {partner.riskLevel.toUpperCase()}
+                  </Badge>
+                  <p className="text-xs text-muted-foreground mt-1">Current risk assessment</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Average Rating</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-foreground">{partner.avgRating.toFixed(1)}</div>
+                  <p className="text-xs text-muted-foreground mt-1">Customer satisfaction</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Total Trips</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-foreground">{partner.totalTrips}</div>
+                  <p className="text-xs text-muted-foreground mt-1">Lifetime completed trips</p>
+                </CardContent>
+              </Card>
+            </div>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Performance Radar</CardTitle>
+                <CardDescription>Key performance indicators at a glance</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ChartContainer config={chartConfig} className="h-[300px]" key={`radar-chart-${partner.id}`}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <RadarChart outerRadius={90} width={730} height={250} data={radarData}>
+                      <PolarGrid />
+                      <PolarAngleAxis dataKey="subject" />
+                      <PolarRadiusAxis angle={90} domain={[0, 100]} />
+                      <Radar name={partner.name} dataKey="A" stroke="#8884d8" fill="#8884d8" fillOpacity={0.6} />
+                      <Tooltip content={<ChartTooltipContent />} />
+                    </RadarChart>
+                  </ResponsiveContainer>
+                </ChartContainer>
+              </CardContent>
+            </Card>
           </TabsContent>
 
           {/* Performance Tab */}
