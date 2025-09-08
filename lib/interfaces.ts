@@ -17,6 +17,12 @@ export interface Partner {
   totalTrips: number
   avgRating: number
   cancellationRate: number
+  // New fields for demographic data from Excel
+  ageGroup: string // e.g., "18-30", "31-45", "46+"
+  areaType: "urban" | "suburban" | "rural" | string // Added string for flexibility
+  gender: "male" | "female" | "other" | string // Added string for flexibility
+  ethnicity: "white" | "hispanic" | "black" | "asian" | "other" | string // Added string for flexibility
+  rawReviewsText: string // To hold the combined review text from Excel
 }
 
 export interface Review {
