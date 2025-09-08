@@ -14,15 +14,9 @@ import {
   PolarRadiusAxis,
   Radar,
   ResponsiveContainer,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  LineChart,
-  Line,
 } from "recharts"
 import { AlertTriangle, CheckCircle, TrendingUp, Users, Shield, Eye } from "lucide-react"
 import type { FairnessMetric } from "@/lib/interfaces"
-import { mockBiasTrendData } from "@/lib/mock-fairness-data"
 
 interface FairnessDashboardProps {
   fairnessMetrics: FairnessMetric[]
@@ -31,11 +25,9 @@ interface FairnessDashboardProps {
 export function FairnessDashboard({ fairnessMetrics }: FairnessDashboardProps) {
   const [isLoading, setIsLoading] = useState(true)
 
-  // Use the original fairnessMetrics directly, no time-based adjustment
-  const adjustedFairnessMetrics = useMemo(() => fairnessMetrics, [fairnessMetrics]);
-
-  const validAdjustedFairnessMetrics =
-    adjustedFairnessMetrics?.filter(
+  // Use the dynamically generated fairnessMetrics directly
+  const validFairnessMetrics =
+    fairnessMetrics?.filter(
       (metric) =>
         metric &&
         typeof metric.demographic === "string" &&
@@ -48,34 +40,32 @@ export function FairnessDashboard({ fairnessMetrics }: FairnessDashboardProps) {
         isFinite(metric.bias),
     ) || []
 
-  // Calculate overall fairness score based on adjusted metrics
+  // Calculate overall fairness score based on valid metrics
   const overallFairnessScore =
-    validAdjustedFairnessMetrics.length > 0
+    validFairnessMetrics.length > 0
       ? Math.round(
           (1 -
             Math.abs(
-              validAdjustedFairnessMetrics.reduce((sum, m) => sum + Math.abs(m.bias), 0) /
-                validAdjustedFairnessMetrics.length,
+              validFairnessMetrics.reduce((sum, m) => sum + Math.abs(m.bias), 0) /
+                validFairnessMetrics.length,
             )) *
             100,
         )
       : 0
 
-  // Identify bias alerts based on adjusted metrics
-  const biasAlerts = validAdjustedFairnessMetrics.filter((m) => Math.abs(m.bias) > 0.05)
-  const criticalAlerts = validAdjustedFairnessMetrics.filter((m) => Math.abs(m.bias) > 0.1)
+  // Identify bias alerts based on valid metrics
+  const biasAlerts = validFairnessMetrics.filter((m) => Math.abs(m.bias) > 0.05)
+  const criticalAlerts = validFairnessMetrics.filter((m) => Math.abs(m.bias) > 0.1)
 
-  const radarData = validAdjustedFairnessMetrics
+  const radarData = validFairnessMetrics
     .map((metric) => {
       const fairnessScore = Math.max(0, Math.min(100, Math.round((1 - Math.abs(metric.bias)) * 100)))
-      const bias = Math.max(0, Math.min(100, Math.abs(metric.bias) * 100))
-      const avgScore = Math.max(0, Math.min(850, metric.averageScore))
+      // const bias = Math.max(0, Math.min(100, Math.abs(metric.bias) * 100)) // Not directly used in radar, but kept for context
+      // const avgScore = Math.max(0, Math.min(850, metric.averageScore)) // Not directly used in radar, but kept for context
 
       return {
-        demographic: metric.demographic.length > 12 ? metric.demographic.substring(0, 12) + "..." : metric.demographic,
+        demographic: metric.group.length > 12 ? metric.group.substring(0, 12) + "..." : metric.group,
         fairnessScore,
-        bias,
-        avgScore,
       }
     })
     .filter(
@@ -83,21 +73,14 @@ export function FairnessDashboard({ fairnessMetrics }: FairnessDashboardProps) {
         item.demographic &&
         item.demographic.trim().length > 0 &&
         !isNaN(item.fairnessScore) &&
-        !isNaN(item.bias) &&
-        !isNaN(item.avgScore) &&
-        isFinite(item.fairnessScore) &&
-        isFinite(item.bias) &&
-        isFinite(item.avgScore),
+        isFinite(item.fairnessScore),
     )
 
-  // Use mockBiasTrendData directly without filtering
-  const filteredBiasTrendData = mockBiasTrendData;
-
-  // Demographic comparison data based on adjusted metrics
-  const demographicComparison = validAdjustedFairnessMetrics.map((metric) => ({
+  // Demographic comparison data based on valid metrics
+  const demographicComparison = validFairnessMetrics.map((metric) => ({
     demographic: metric.demographic,
     averageScore: metric.averageScore,
-    bias: metric.bias * 100,
+    bias: metric.bias * 100, // Convert to percentage for display
     count: metric.count,
     fairnessLevel:
       Math.abs(metric.bias) < 0.02
@@ -117,46 +100,10 @@ export function FairnessDashboard({ fairnessMetrics }: FairnessDashboardProps) {
     return "text-destructive"
   }
 
-  const getBiasLevel = (bias: number) => {
-    const absBias = Math.abs(bias)
-    if (absBias < 0.02) return "Excellent"
-    if (absBias < 0.05) return "Good"
-    if (absBias < 0.1) return "Needs Attention"
-    return "Critical"
-  }
-
   const chartConfig = {
     fairnessScore: {
       label: "Fairness Score",
       color: "var(--chart-2)",
-    },
-    bias: {
-      label: "Bias Level",
-      color: "var(--chart-3)",
-    },
-    averageScore: {
-      label: "Average Score",
-      color: "var(--chart-1)",
-    },
-    overall: {
-      label: "Overall Bias",
-      color: "var(--chart-1)",
-    },
-    gender: {
-      label: "Gender Bias",
-      color: "var(--chart-2)",
-    },
-    age: {
-      label: "Age Bias",
-      color: "var(--chart-3)",
-    },
-    location: {
-      label: "Location Bias",
-      color: "var(--chart-4)",
-    },
-    race: {
-      label: "Racial Bias",
-      color: "hsl(var(--destructive))",
     },
   }
 
@@ -178,7 +125,6 @@ export function FairnessDashboard({ fairnessMetrics }: FairnessDashboardProps) {
                 <CardDescription>Bias detection and fairness monitoring across demographic groups</CardDescription>
               </div>
             </div>
-            {/* Removed time range buttons */}
           </div>
         </CardHeader>
       </Card>
@@ -194,7 +140,7 @@ export function FairnessDashboard({ fairnessMetrics }: FairnessDashboardProps) {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-foreground">{overallFairnessScore}%</div>
-            <p className="text-xs text-chart-2 mt-1">+3.2% from last month</p>
+            <p className="text-xs text-chart-2 mt-1">Based on current data</p>
           </CardContent>
         </Card>
 
@@ -219,7 +165,7 @@ export function FairnessDashboard({ fairnessMetrics }: FairnessDashboardProps) {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-foreground">{validAdjustedFairnessMetrics.length}</div>
+            <div className="text-2xl font-bold text-foreground">{validFairnessMetrics.length}</div>
             <p className="text-xs text-muted-foreground mt-1">Active groups</p>
           </CardContent>
         </Card>
@@ -232,8 +178,8 @@ export function FairnessDashboard({ fairnessMetrics }: FairnessDashboardProps) {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-chart-2">+15%</div>
-            <p className="text-xs text-muted-foreground mt-1">Fairness improvement</p>
+            <div className="text-2xl font-bold text-chart-2">N/A</div> {/* No historical trend data from Excel */}
+            <p className="text-xs text-muted-foreground mt-1">Requires historical data</p>
           </CardContent>
         </Card>
       </div>
@@ -308,31 +254,9 @@ export function FairnessDashboard({ fairnessMetrics }: FairnessDashboardProps) {
             <CardDescription>Historical bias levels and improvement over time</CardDescription>
           </CardHeader>
           <CardContent>
-            {isLoading ? (
-              <div className="h-[400px] flex items-center justify-center text-muted-foreground">Loading chart...</div>
-            ) : filteredBiasTrendData.length > 0 ? (
-              <ChartContainer config={chartConfig} className="h-[400px]" key={`trend-static`}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={filteredBiasTrendData} margin={{ top: 20, right: 30, bottom: 20, left: 30 }}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="month" />
-                    <YAxis domain={[-0.12, 0.02]} tickFormatter={(value) => `${(value * 100).toFixed(1)}%`} />
-                    <Line
-                      type="monotone"
-                      dataKey="overall"
-                      stroke="var(--color-overall)"
-                      strokeWidth={2}
-                      name="Overall Bias"
-                      dot={false}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              </ChartContainer>
-            ) : (
-              <div className="h-[400px] flex items-center justify-center text-muted-foreground">
-                No trend data available
-              </div>
-            )}
+            <div className="h-[400px] flex items-center justify-center text-muted-foreground">
+              No historical bias trend data available from Excel.
+            </div>
           </CardContent>
         </Card>
       </div>

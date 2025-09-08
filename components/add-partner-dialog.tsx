@@ -38,11 +38,16 @@ export function AddPartnerDialog({ onPartnerAdded }: AddPartnerDialogProps) {
     totalTrips: 0,
     avgRating: 0,
     cancellationRate: 0,
+    ageGroup: "",
+    areaType: "",
+    gender: "",
+    ethnicity: "",
+    rawReviewsText: "",
   })
 
   const handleAddPartner = () => {
-    if (!newPartner.name || !newPartner.email) {
-      toast.error("Name and Email are required to add a partner.")
+    if (!newPartner.name || !newPartner.email || !newPartner.ageGroup || !newPartner.gender || !newPartner.ethnicity || !newPartner.areaType) {
+      toast.error("Name, Email, Age Group, Gender, Ethnicity, and Area Type are required to add a partner.")
       return
     }
 
@@ -65,10 +70,34 @@ export function AddPartnerDialog({ onPartnerAdded }: AddPartnerDialogProps) {
       totalTrips: newPartner.totalTrips || 0,
       avgRating: newPartner.avgRating || 0,
       cancellationRate: newPartner.cancellationRate || 0,
+      ageGroup: newPartner.ageGroup || "",
+      areaType: newPartner.areaType || "",
+      gender: newPartner.gender || "",
+      ethnicity: newPartner.ethnicity || "",
+      rawReviewsText: newPartner.rawReviewsText || "",
     }
 
     onPartnerAdded(partner)
-    setNewPartner({}) // Reset form
+    setNewPartner({ // Reset form
+      name: "",
+      email: "",
+      phone: "",
+      novaScore: 0,
+      tripVolume: 0,
+      onTimePickupRate: 0,
+      leavesTaken: 0,
+      medicalStability: "stable",
+      vehicleCondition: 0,
+      riskLevel: "medium",
+      totalTrips: 0,
+      avgRating: 0,
+      cancellationRate: 0,
+      ageGroup: "",
+      gender: "",
+      ethnicity: "",
+      areaType: "",
+      rawReviewsText: "",
+    })
     setIsOpen(false)
     toast.success("Partner added successfully!")
   }
@@ -90,7 +119,7 @@ export function AddPartnerDialog({ onPartnerAdded }: AddPartnerDialogProps) {
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="basic">Basic Info</TabsTrigger>
             <TabsTrigger value="performance">Performance</TabsTrigger>
-            <TabsTrigger value="risk">Risk Metrics</TabsTrigger>
+            <TabsTrigger value="demographics">Demographics</TabsTrigger>
           </TabsList>
           <TabsContent value="basic" className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
@@ -192,41 +221,20 @@ export function AddPartnerDialog({ onPartnerAdded }: AddPartnerDialogProps) {
                   placeholder="0.0 - 5.0"
                 />
               </div>
-            </div>
-          </TabsContent>
-          <TabsContent value="risk" className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="riskLevel">Risk Level</Label>
-                <Select
-                  value={newPartner.riskLevel || "medium"}
-                  onValueChange={(value) => setNewPartner({ ...newPartner, riskLevel: value as any })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select risk level" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="low">Low</SelectItem>
-                    <SelectItem value="medium">Medium</SelectItem>
-                    <SelectItem value="high">High</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="medicalStability">Medical Stability</Label>
-                <Select
-                  value={newPartner.medicalStability || "stable"}
-                  onValueChange={(value) => setNewPartner({ ...newPartner, medicalStability: value as any })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select medical stability" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="stable">Stable</SelectItem>
-                    <SelectItem value="moderate">Moderate</SelectItem>
-                    <SelectItem value="concerning">Concerning</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Label htmlFor="cancellationRate">Cancellation Rate</Label>
+                <Input
+                  id="cancellationRate"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  max="1"
+                  value={newPartner.cancellationRate || ""}
+                  onChange={(e) =>
+                    setNewPartner({ ...newPartner, cancellationRate: Number.parseFloat(e.target.value) || 0 })
+                  }
+                  placeholder="0.00 - 1.00"
+                />
               </div>
               <div>
                 <Label htmlFor="vehicleCondition">Vehicle Condition</Label>
@@ -242,19 +250,67 @@ export function AddPartnerDialog({ onPartnerAdded }: AddPartnerDialogProps) {
                   placeholder="0-100 score"
                 />
               </div>
+            </div>
+          </TabsContent>
+          <TabsContent value="demographics" className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="cancellationRate">Cancellation Rate</Label>
+                <Label htmlFor="ageGroup">Age Group</Label>
                 <Input
-                  id="cancellationRate"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  max="1"
-                  value={newPartner.cancellationRate || ""}
-                  onChange={(e) =>
-                    setNewPartner({ ...newPartner, cancellationRate: Number.parseFloat(e.target.value) || 0 })
-                  }
-                  placeholder="0.00 - 1.00"
+                  id="ageGroup"
+                  value={newPartner.ageGroup || ""}
+                  onChange={(e) => setNewPartner({ ...newPartner, ageGroup: e.target.value })}
+                  placeholder="e.g., 18-30, 31-45"
+                />
+              </div>
+              <div>
+                <Label htmlFor="gender">Gender</Label>
+                <Select
+                  value={newPartner.gender || ""}
+                  onValueChange={(value) => setNewPartner({ ...newPartner, gender: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select gender" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="male">Male</SelectItem>
+                    <SelectItem value="female">Female</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="ethnicity">Ethnicity</Label>
+                <Input
+                  id="ethnicity"
+                  value={newPartner.ethnicity || ""}
+                  onChange={(e) => setNewPartner({ ...newPartner, ethnicity: e.target.value })}
+                  placeholder="e.g., White, Hispanic, Black"
+                />
+              </div>
+              <div>
+                <Label htmlFor="areaType">Area Type</Label>
+                <Select
+                  value={newPartner.areaType || ""}
+                  onValueChange={(value) => setNewPartner({ ...newPartner, areaType: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select area type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="urban">Urban</SelectItem>
+                    <SelectItem value="suburban">Suburban</SelectItem>
+                    <SelectItem value="rural">Rural</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="col-span-2">
+                <Label htmlFor="rawReviewsText">Raw Reviews (semicolon-separated)</Label>
+                <Input
+                  id="rawReviewsText"
+                  value={newPartner.rawReviewsText || ""}
+                  onChange={(e) => setNewPartner({ ...newPartner, rawReviewsText: e.target.value })}
+                  placeholder="e.g., Great service; Friendly driver"
                 />
               </div>
             </div>

@@ -59,76 +59,75 @@ export function ForecastCharts() {
     )
   }
 
-  const generateForecastData = () => {
+  const generateOverallForecastData = () => {
     const months = forecastPeriod === "3months" ? 3 : forecastPeriod === "6months" ? 6 : 12
-    const historicalMonths = 6
+    const historicalMonths = 6 // Always show 6 historical months
 
     const data = []
     const currentDate = new Date()
 
-    for (let i = historicalMonths; i > 0; i--) {
-      const date = new Date(currentDate)
-      date.setMonth(date.getMonth() - i)
-      const monthName = date.toLocaleDateString("en-US", { month: "short", year: "2-digit" })
+    // Calculate average historical data from available partners
+    const avgHistoricalScores: number[] = Array(historicalMonths).fill(0);
+    const avgHistoricalEarnings: number[] = Array(historicalMonths).fill(0);
 
-      const avgScore = validPartners.reduce((sum, p) => sum + p.novaScore, 0) / validPartners.length
-      const variation = (Math.random() - 0.5) * 40
-      const historicalScore = Math.max(300, Math.min(850, avgScore + variation))
+    validPartners.forEach(p => {
+      p.earningsHistory.slice(0, historicalMonths).forEach((e, i) => {
+        avgHistoricalEarnings[i] += e;
+      });
+      // Simulate historical Nova scores based on current score
+      for (let i = 0; i < historicalMonths; i++) {
+        const scoreVariation = (Math.random() - 0.5) * 30; // Small random variation
+        avgHistoricalScores[i] += Math.max(300, Math.min(850, p.novaScore + scoreVariation - (historicalMonths - 1 - i) * 5));
+      }
+    });
 
-      const avgEarnings =
-        validPartners.reduce((sum, p) => {
-          const partnerAvg = p.earningsHistory.reduce((s, e) => s + e, 0) / p.earningsHistory.length
-          return sum + partnerAvg
-        }, 0) / validPartners.length
-
+    for (let i = 0; i < historicalMonths; i++) {
+      const date = new Date(currentDate);
+      date.setMonth(date.getMonth() - (historicalMonths - 1 - i));
+      const monthName = date.toLocaleDateString("en-US", { month: "short", year: "2-digit" });
       data.push({
         month: monthName,
-        novaScore: Math.round(historicalScore),
-        earnings: Math.round(avgEarnings + (Math.random() - 0.5) * 500),
-        riskScore: Math.round(100 - (historicalScore / 850) * 100),
+        novaScore: Math.round(avgHistoricalScores[i] / validPartners.length),
+        earnings: Math.round(avgHistoricalEarnings[i] / validPartners.length),
         isHistorical: true,
-      })
+      });
     }
 
-    const avgScore = validPartners.reduce((sum, p) => sum + p.novaScore, 0) / validPartners.length
-    const avgEarnings =
-      validPartners.reduce((sum, p) => {
-        const partnerAvg = p.earningsHistory.reduce((s, e) => s + e, 0) / p.earningsHistory.length
-        return sum + partnerAvg
-      }, 0) / validPartners.length
+    // Add current month data (average of current partner data)
+    const currentAvgNovaScore = validPartners.reduce((sum, p) => sum + p.novaScore, 0) / validPartners.length;
+    const currentAvgEarnings = validPartners.reduce((sum, p) => p.earningsHistory.length > 0 ? sum + p.earningsHistory[p.earningsHistory.length - 1] : sum, 0) / validPartners.length;
 
     data.push({
       month: currentDate.toLocaleDateString("en-US", { month: "short", year: "2-digit" }),
-      novaScore: Math.round(avgScore),
-      earnings: Math.round(avgEarnings),
-      riskScore: Math.round(100 - (avgScore / 850) * 100),
+      novaScore: Math.round(currentAvgNovaScore),
+      earnings: Math.round(currentAvgEarnings),
       isHistorical: false,
       isCurrent: true,
-    })
+    });
 
+    // Generate forecast data
     for (let i = 1; i <= months; i++) {
-      const date = new Date(currentDate)
-      date.setMonth(date.getMonth() + i)
-      const monthName = date.toLocaleDateString("en-US", { month: "short", year: "2-digit" })
+      const date = new Date(currentDate);
+      date.setMonth(date.getMonth() + i);
+      const monthName = date.toLocaleDateString("en-US", { month: "short", year: "2-digit" });
 
-      const trendFactor = 1 + i * 0.02
-      const forecastScore = Math.max(300, Math.min(850, avgScore * trendFactor + (Math.random() - 0.5) * 30))
-      const forecastEarnings = Math.round(avgEarnings * trendFactor + (Math.random() - 0.5) * 400)
+      const trendFactor = 1 + i * 0.01; // Slight positive trend
+      const forecastScore = Math.max(300, Math.min(850, currentAvgNovaScore * trendFactor + (Math.random() - 0.5) * 20));
+      const forecastEarnings = Math.round(currentAvgEarnings * trendFactor + (Math.random() - 0.5) * 300);
 
       data.push({
         month: monthName,
         novaScore: Math.round(forecastScore),
         earnings: forecastEarnings,
-        riskScore: Math.round(100 - (forecastScore / 850) * 100),
         isHistorical: false,
         isForecast: true,
-      })
+      });
     }
 
-    return data
+    return data;
   }
 
-  const forecastData = generateForecastData()
+  const overallForecastData = generateOverallForecastData()
 
   const generatePartnerForecast = (partnerId: string) => {
     const partner = validPartners.find((p) => p.id === partnerId)
@@ -137,17 +136,19 @@ export function ForecastCharts() {
     const data = []
     const currentDate = new Date()
 
+    // Historical earnings
     partner.earningsHistory.forEach((earnings, index) => {
       const date = new Date(currentDate)
-      date.setMonth(date.getMonth() - (partner.earningsHistory.length - index))
+      date.setMonth(date.getMonth() - (partner.earningsHistory.length - 1 - index))
       data.push({
         month: date.toLocaleDateString("en-US", { month: "short" }),
         actual: earnings,
         forecast: null,
-        novaScore: partner.novaScore + (Math.random() - 0.5) * 50,
+        novaScore: partner.novaScore + (Math.random() - 0.5) * 50, // Simulate historical score
       })
     })
 
+    // Forecasted earnings
     partner.forecastedEarnings.forEach((earnings, index) => {
       const date = new Date(currentDate)
       date.setMonth(date.getMonth() + index + 1)
@@ -155,7 +156,7 @@ export function ForecastCharts() {
         month: date.toLocaleDateString("en-US", { month: "short" }),
         actual: null,
         forecast: earnings,
-        novaScore: partner.novaScore + index * 5 + (Math.random() - 0.5) * 30,
+        novaScore: partner.novaScore + index * 5 + (Math.random() - 0.5) * 30, // Simulate forecasted score
       })
     })
 
@@ -165,11 +166,28 @@ export function ForecastCharts() {
   const partnerForecastData = generatePartnerForecast(selectedPartner)
   const selectedPartnerData = validPartners.find((p) => p.id === selectedPartner)
 
-  const riskForecastData = [
-    { name: "Low Risk", current: 45, forecast: 52, color: "#10b981" },
-    { name: "Medium Risk", current: 35, forecast: 32, color: "#f59e0b" },
-    { name: "High Risk", current: 20, forecast: 16, color: "#ef4444" },
-  ]
+  // Dynamically generate risk forecast data based on current partners
+  const generateRiskForecastData = () => {
+    const totalPartners = validPartners.length;
+    if (totalPartners === 0) return [];
+
+    const currentLow = validPartners.filter(p => p.riskLevel === "low").length;
+    const currentMedium = validPartners.filter(p => p.riskLevel === "medium").length;
+    const currentHigh = validPartners.filter(p => p.riskLevel === "high").length;
+
+    // Simple forecast: assume a slight improvement in risk distribution
+    const forecastLow = Math.min(totalPartners, currentLow + Math.floor(totalPartners * 0.05));
+    const forecastHigh = Math.max(0, currentHigh - Math.floor(totalPartners * 0.03));
+    const forecastMedium = totalPartners - forecastLow - forecastHigh;
+
+    return [
+      { name: "Low Risk", current: currentLow, forecast: forecastLow, color: "#10b981" },
+      { name: "Medium Risk", current: currentMedium, forecast: forecastMedium, color: "#f59e0b" },
+      { name: "High Risk", current: currentHigh, forecast: forecastHigh, color: "#ef4444" },
+    ];
+  };
+
+  const riskForecastData = generateRiskForecastData();
 
   const chartConfig = {
     novaScore: {
@@ -192,7 +210,7 @@ export function ForecastCharts() {
       label: "Forecast",
       color: "var(--chart-2)",
     },
-  }; // Added missing closing brace here
+  };
 
   return (
     <div className="space-y-6">
@@ -241,7 +259,7 @@ export function ForecastCharts() {
           <CardContent>
             <ChartContainer config={chartConfig} className="h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={forecastData}>
+                <LineChart data={overallForecastData}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="month" />
                   <YAxis domain={[300, 850]} />
@@ -297,7 +315,7 @@ export function ForecastCharts() {
           <CardContent>
             <ChartContainer config={chartConfig} className="h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={forecastData}>
+                <AreaChart data={overallForecastData}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="month" />
                   <YAxis />

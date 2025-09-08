@@ -36,7 +36,10 @@ import {
   Radar,
 } from "recharts";
 import { ChartContainer, ChartTooltipContent } from "@/components/ui/chart";
-import type { Partner } from "@/lib/interfaces";
+import type { Partner, Review } from "@/lib/interfaces";
+import { useDataStore } from "@/hooks/use-data-store";
+import { analyzeReviewSentiment } from "@/lib/nova-score-model";
+
 
 interface PartnerProfileViewProps {
   partner: Partner;
@@ -44,6 +47,7 @@ interface PartnerProfileViewProps {
 }
 
 export function PartnerProfileView({ partner, onBack }: PartnerProfileViewProps) {
+  const { reviews } = useDataStore(); // Get reviews from data store
   const [activeTab, setActiveTab] = useState("overview");
 
   const avgEarnings = partner.earningsHistory.length > 0
@@ -105,15 +109,36 @@ export function PartnerProfileView({ partner, onBack }: PartnerProfileViewProps)
     { subject: "Health Stability", A: Math.max(100 - partner.leavesTaken * 10, 0), fullMark: 100 },
   ];
 
-  const getSentimentBreakdown = (novaScore: number) => {
-    const scale = (novaScore / 1000) * 5;
-    if (scale > 3.5) return { positive: 85, neutral: 12, negative: 3 };
-    if (scale > 2.5) return { positive: 65, neutral: 25, negative: 10 };
-    if (scale > 1.5) return { positive: 35, neutral: 45, negative: 20 };
-    return { positive: 15, neutral: 25, negative: 60 };
+  const getSentimentBreakdown = (partnerId: string) => {
+    const partnerReviews = reviews.filter(r => r.partnerId === partnerId);
+    if (partnerReviews.length === 0) {
+      return { positive: 0, neutral: 100, negative: 0 }; // Default to neutral if no reviews
+    }
+
+    let positiveCount = 0;
+    let neutralCount = 0;
+    let negativeCount = 0;
+
+    partnerReviews.forEach(review => {
+      const sentimentScore = review.sentimentScore ?? analyzeReviewSentiment(review.comment);
+      if (sentimentScore > 3.5) {
+        positiveCount++;
+      } else if (sentimentScore < 1.5) {
+        negativeCount++;
+      } else {
+        neutralCount++;
+      }
+    });
+
+    const total = partnerReviews.length;
+    return {
+      positive: Math.round((positiveCount / total) * 100),
+      neutral: Math.round((neutralCount / total) * 100),
+      negative: Math.round((negativeCount / total) * 100),
+    };
   };
 
-  const sentimentBreakdown = getSentimentBreakdown(partner.novaScore);
+  const sentimentBreakdown = getSentimentBreakdown(partner.id);
 
   const getRiskLevel = (score: number) => {
     if (score >= 800) return { level: "Low", textColor: "text-green-700" };

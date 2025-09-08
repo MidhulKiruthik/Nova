@@ -17,8 +17,8 @@ export interface DataChangeEvent {
 
 class DataStore {
   private partners: Partner[] = []
-  private reviews: Review[] = []
-  private fairnessMetrics: FairnessMetric[] = []
+  private reviews: Review[] = [] // Dynamically generated from partner.rawReviewsText
+  private fairnessMetrics: FairnessMetric[] = [] // Dynamically generated from partner demographic data
   private listeners: (() => void)[] = []
   private syncListeners: ((status: SyncStatus) => void)[] = []
   private changeHistory: DataChangeEvent[] = []
@@ -111,8 +111,8 @@ class DataStore {
     if (typeof window !== "undefined") {
       try {
         localStorage.setItem("nova-partners", JSON.stringify(this.partners))
-        localStorage.setItem("nova-reviews", JSON.stringify(this.reviews))
-        localStorage.setItem("nova-fairness", JSON.stringify(this.fairnessMetrics))
+        localStorage.setItem("nova-reviews", JSON.stringify(this.reviews)) // Save generated reviews
+        localStorage.setItem("nova-fairness", JSON.stringify(this.fairnessMetrics)) // Save generated fairness metrics
         localStorage.setItem(
           "nova-sync-status",
           JSON.stringify({
@@ -129,14 +129,14 @@ class DataStore {
   loadFromLocalStorage() {
     if (typeof window !== "undefined") {
       try {
-        const partners = localStorage.getItem("nova-partners")
-        const reviews = localStorage.getItem("nova-reviews")
-        const fairness = localStorage.getItem("nova-fairness")
+        const partnersData = localStorage.getItem("nova-partners")
+        const reviewsData = localStorage.getItem("nova-reviews")
+        const fairnessData = localStorage.getItem("nova-fairness")
         const syncData = localStorage.getItem("nova-sync-status")
 
-        if (partners) this.partners = JSON.parse(partners)
-        if (reviews) this.reviews = JSON.parse(reviews)
-        if (fairness) this.fairnessMetrics = JSON.parse(fairness)
+        if (partnersData) this.partners = JSON.parse(partnersData)
+        if (reviewsData) this.reviews = JSON.parse(reviewsData)
+        if (fairnessData) this.fairnessMetrics = JSON.parse(fairnessData)
 
         if (syncData) {
           const parsed = JSON.parse(syncData)
@@ -147,6 +147,8 @@ class DataStore {
           this.changeHistory = parsed.changeHistory || []
         }
 
+        // After loading raw data, re-process to ensure consistency
+        this._processPartnersAndDeriveMetrics(this.partners);
         this.notify()
       } catch (error) {
         console.error("Failed to load from localStorage:", error)
@@ -166,18 +168,96 @@ class DataStore {
     this.listeners.forEach((callback) => callback())
   }
 
-  setPartners(partners: Partner[]) {
-    // When setting partners, recalculate Nova Score for each
-    this.partners = partners.map(p => ({
+  // --- Internal methods to derive reviews and fairness metrics ---
+  private _generateReviewsFromPartners(partners: Partner[]): Review[] {
+    const generatedReviews: Review[] = [];
+    partners.forEach(partner => {
+      if (partner.rawReviewsText) {
+        // Assuming reviews are separated by a semicolon in the Excel cell
+        const comments = partner.rawReviewsText.split(';').map(s => s.trim()).filter(Boolean);
+        comments.forEach((comment, index) => {
+          generatedReviews.push({
+            id: `${partner.id}-r${index + 1}`,
+            partnerId: partner.id,
+            rating: partner.avgRating, // Use partner's avgRating as a proxy
+            comment: comment,
+            sentiment: "neutral", // Will be updated by sentimentScore
+            date: new Date().toISOString().split('T')[0], // Current date or derive from partner joinDate
+            tripId: `${partner.id}-t${index + 1}`,
+            sentimentScore: analyzeReviewSentiment(comment),
+          });
+        });
+      }
+    });
+    return generatedReviews;
+  }
+
+  private _calculateFairnessMetrics(partners: Partner[]): FairnessMetric[] {
+    if (partners.length === 0) return [];
+
+    const fairnessMetrics: FairnessMetric[] = [];
+    const demographicCategories = ["ageGroup", "areaType", "gender", "ethnicity"] as const;
+
+    const overallAvgNovaScore = partners.reduce((sum, p) => sum + p.novaScore, 0) / partners.length;
+
+    demographicCategories.forEach(category => {
+      const groups = new Map<string, { totalScore: number; count: number }>();
+
+      partners.forEach(partner => {
+        const groupValue = partner[category];
+        if (groupValue) {
+          if (!groups.has(groupValue)) {
+            groups.set(groupValue, { totalScore: 0, count: 0 });
+          }
+          const groupData = groups.get(groupValue)!;
+          groupData.totalScore += partner.novaScore;
+          groupData.count += 1;
+        }
+      });
+
+      groups.forEach((data, groupName) => {
+        const averageScore = data.count > 0 ? data.totalScore / data.count : 0;
+        const bias = overallAvgNovaScore > 0 ? (averageScore - overallAvgNovaScore) / overallAvgNovaScore : 0;
+
+        fairnessMetrics.push({
+          demographic: `${category}: ${groupName}`,
+          category: category === "ageGroup" ? "age" : category === "areaType" ? "area" : category as any,
+          group: groupName,
+          averageScore: Math.round(averageScore),
+          count: data.count,
+          bias: parseFloat(bias.toFixed(3)),
+        });
+      });
+    });
+
+    return fairnessMetrics;
+  }
+
+  private _processPartnersAndDeriveMetrics(rawPartners: Partner[]) {
+    // 1. Generate Reviews
+    this.reviews = this._generateReviewsFromPartners(rawPartners);
+
+    // 2. Recalculate Nova Scores for all partners based on the generated reviews
+    // Note: calculateNovaScore now takes the partner object directly and uses its rawReviewsText
+    this.partners = rawPartners.map(p => ({
       ...p,
-      novaScore: calculateNovaScore(p, this.reviews)
-    }))
+      novaScore: calculateNovaScore(p) // Nova score calculated using rawReviewsText
+    }));
+
+    // 3. Calculate Fairness Metrics based on the newly scored partners
+    this.fairnessMetrics = this._calculateFairnessMetrics(this.partners);
+  }
+
+  // --- Public API methods ---
+
+  setPartners(partners: Partner[]) {
+    this._processPartnersAndDeriveMetrics(partners);
     this.recordChange({
       type: "bulk_import",
       timestamp: new Date(),
       data: { count: partners.length },
-    })
-    this.notify()
+    });
+    this.notify();
   }
 
   getPartners(): Partner[] {
@@ -187,9 +267,11 @@ class DataStore {
   addPartner(partner: Partner) {
     const newPartnerWithScore = {
       ...partner,
-      novaScore: calculateNovaScore(partner, this.reviews)
+      novaScore: calculateNovaScore(partner) // Calculate score for new partner
     }
     this.partners.push(newPartnerWithScore)
+    // Re-process all data to update reviews and fairness metrics
+    this._processPartnersAndDeriveMetrics(this.partners);
     this.recordChange({
       type: "partner_added",
       timestamp: new Date(),
@@ -203,10 +285,13 @@ class DataStore {
     if (index !== -1) {
       const oldPartner = this.partners[index]
       const updatedPartner = { ...this.partners[index], ...updates }
+      
       // Recalculate Nova Score if relevant fields are updated
-      updatedPartner.novaScore = calculateNovaScore(updatedPartner, this.reviews)
+      updatedPartner.novaScore = calculateNovaScore(updatedPartner)
 
       this.partners[index] = updatedPartner
+      // Re-process all data to update reviews and fairness metrics
+      this._processPartnersAndDeriveMetrics(this.partners);
       this.recordChange({
         type: "partner_updated",
         timestamp: new Date(),
@@ -219,6 +304,8 @@ class DataStore {
   deletePartner(id: string) {
     const partner = this.partners.find((p) => p.id === id)
     this.partners = this.partners.filter((p) => p.id !== id)
+    // Re-process all data to update reviews and fairness metrics
+    this._processPartnersAndDeriveMetrics(this.partners);
     this.recordChange({
       type: "partner_deleted",
       timestamp: new Date(),
@@ -227,42 +314,26 @@ class DataStore {
     this.notify()
   }
 
-  setReviews(reviews: Review[]) {
-    this.reviews = reviews.map(review => ({
-      ...review,
-      sentimentScore: review.sentimentScore ?? analyzeReviewSentiment(review.comment) // Ensure sentimentScore is calculated
-    }));
-    // Recalculate Nova Scores for all partners if reviews change
-    this.partners = this.partners.map(p => ({
-      ...p,
-      novaScore: calculateNovaScore(p, this.reviews)
-    }))
-    this.notify()
-  }
-
   getReviews(): Review[] {
     return this.reviews
-  }
-
-  setFairnessMetrics(metrics: FairnessMetric[]) {
-    this.fairnessMetrics = metrics
-    this.notify()
   }
 
   getFairnessMetrics(): FairnessMetric[] {
     return this.fairnessMetrics
   }
 
-  initializeWithMockData(partners: Partner[], reviews: Review[], fairnessMetrics: FairnessMetric[]) {
-    this.reviews = reviews.map(review => ({ // Ensure sentimentScore is calculated for mock reviews
-      ...review,
-      sentimentScore: review.sentimentScore ?? analyzeReviewSentiment(review.comment)
-    }));
-    this.partners = partners.map(p => ({ // Then calculate scores for partners
-      ...p,
-      novaScore: calculateNovaScore(p, this.reviews)
-    }));
-    this.fairnessMetrics = fairnessMetrics;
+  // This method now just ensures data is processed if it exists, or starts empty
+  initializeWithMockData() {
+    // On client-side, this will trigger loadFromLocalStorage
+    // On server-side, it will do nothing as dataStore.instance is a dummy
+    if (typeof window !== "undefined") {
+      this.loadFromLocalStorage();
+      if (this.partners.length === 0) {
+        // Optionally, you could load a minimal default set here if no local storage data
+        // For now, we'll rely on the user to import via DataManagementPage
+        console.log("No data found in local storage. Please import data via Data Management.");
+      }
+    }
     this.notify();
   }
 
@@ -303,8 +374,8 @@ export const dataStore = {
         updatePartner: () => {},
         deletePartner: () => {},
         setPartners: () => {},
-        setReviews: () => {},
-        setFairnessMetrics: () => {},
+        setReviews: () => {}, // No longer directly sets reviews
+        setFairnessMetrics: () => {}, // No longer directly sets fairness metrics
         forceSync: async () => {},
         clearAllData: () => {},
         getChangeHistory: () => [],

@@ -6,7 +6,7 @@ export interface ExcelPartnerData {
   Name: string
   Email: string
   Phone: string
-  "Nova Score": number // Changed from "ML Score"
+  "Nova Score": number
   "Trip Volume": number
   "On-Time Rate": number
   "Leaves Taken": number
@@ -29,6 +29,11 @@ export interface ExcelPartnerData {
   "Forecast Mar": number
   "Forecast Apr": number
   "Forecast May": number
+  "Age Group": string // New field
+  "Area Type": string // New field
+  "Gender": string // New field
+  "Ethnicity": string // New field
+  "Reviews": string // New field for raw review text
 }
 
 // Convert Partner object to Excel-friendly format
@@ -38,7 +43,7 @@ export const partnerToExcelRow = (partner: Partner): ExcelPartnerData => {
     Name: partner.name,
     Email: partner.email,
     Phone: partner.phone,
-    "Nova Score": partner.novaScore, // Changed from ML Score
+    "Nova Score": partner.novaScore,
     "Trip Volume": partner.tripVolume,
     "On-Time Rate": partner.onTimePickupRate,
     "Leaves Taken": partner.leavesTaken,
@@ -61,6 +66,11 @@ export const partnerToExcelRow = (partner: Partner): ExcelPartnerData => {
     "Forecast Mar": partner.forecastedEarnings[2] || 0,
     "Forecast Apr": partner.forecastedEarnings[3] || 0,
     "Forecast May": partner.forecastedEarnings[4] || 0,
+    "Age Group": partner.ageGroup || "",
+    "Area Type": partner.areaType || "",
+    "Gender": partner.gender || "",
+    "Ethnicity": partner.ethnicity || "",
+    "Reviews": partner.rawReviewsText || "",
   }
 }
 
@@ -71,7 +81,7 @@ export const excelRowToPartner = (row: ExcelPartnerData): Partner => {
     name: row.Name || "",
     email: row.Email || "",
     phone: row.Phone || "",
-    novaScore: row["Nova Score"] || 0, // Changed from ML Score
+    novaScore: row["Nova Score"] || 0,
     earningsHistory: [
       row["Earnings Jan"] || 0,
       row["Earnings Feb"] || 0,
@@ -98,6 +108,11 @@ export const excelRowToPartner = (row: ExcelPartnerData): Partner => {
     totalTrips: row["Total Trips"] || 0,
     avgRating: row["Avg Rating"] || 0,
     cancellationRate: row["Cancellation Rate"] || 0,
+    ageGroup: row["Age Group"] || "",
+    areaType: row["Area Type"] || "",
+    gender: row["Gender"] || "",
+    ethnicity: row["Ethnicity"] || "",
+    rawReviewsText: row["Reviews"] || "",
   }
 }
 
@@ -180,7 +195,7 @@ export const filterPartnersForExport = (partners: Partner[], options: ExportOpti
 
   if (options.filterByScoreRange) {
     const { min, max } = options.filterByScoreRange
-    filtered = filtered.filter((p) => p.novaScore >= min && p.novaScore <= max) // Changed from mlScore
+    filtered = filtered.filter((p) => p.novaScore >= min && p.novaScore <= max)
   }
 
   return filtered
@@ -193,8 +208,8 @@ export const createAnalyticsReport = (partners: Partner[], fairnessMetrics: Fair
   const summaryData = [
     {
       "Total Partners": filteredPartners.length,
-      "Average Nova Score": Math.round( // Changed from Nova Score
-        filteredPartners.reduce((sum, p) => sum + p.novaScore, 0) / filteredPartners.length, // Changed from novaScore
+      "Average Nova Score": Math.round(
+        filteredPartners.reduce((sum, p) => sum + p.novaScore, 0) / filteredPartners.length,
       ),
       "High Risk Partners": filteredPartners.filter((p) => p.riskLevel === "high").length,
       "Medium Risk Partners": filteredPartners.filter((p) => p.riskLevel === "medium").length,
@@ -213,40 +228,40 @@ export const createAnalyticsReport = (partners: Partner[], fairnessMetrics: Fair
   const scoreDistribution = [
     {
       "Score Range": "800+",
-      Count: filteredPartners.filter((p) => p.novaScore >= 800).length, // Changed from novaScore
+      Count: filteredPartners.filter((p) => p.novaScore >= 800).length,
       Percentage:
-        ((filteredPartners.filter((p) => p.novaScore >= 800).length / filteredPartners.length) * 100).toFixed(1) + "%", // Changed from novaScore
+        ((filteredPartners.filter((p) => p.novaScore >= 800).length / filteredPartners.length) * 100).toFixed(1) + "%",
     },
     {
       "Score Range": "700-799",
-      Count: filteredPartners.filter((p) => p.novaScore >= 700 && p.novaScore < 800).length, // Changed from novaScore
+      Count: filteredPartners.filter((p) => p.novaScore >= 700 && p.novaScore < 800).length,
       Percentage:
         (
-          (filteredPartners.filter((p) => p.novaScore >= 700 && p.novaScore < 800).length / filteredPartners.length) * // Changed from novaScore
+          (filteredPartners.filter((p) => p.novaScore >= 700 && p.novaScore < 800).length / filteredPartners.length) *
           100
         ).toFixed(1) + "%",
     },
     {
       "Score Range": "600-699",
-      Count: filteredPartners.filter((p) => p.novaScore >= 600 && p.novaScore < 700).length, // Changed from novaScore
+      Count: filteredPartners.filter((p) => p.novaScore >= 600 && p.novaScore < 700).length,
       Percentage:
         (
-          (filteredPartners.filter((p) => p.novaScore >= 600 && p.novaScore < 700).length / filteredPartners.length) * // Changed from novaScore
+          (filteredPartners.filter((p) => p.novaScore >= 600 && p.novaScore < 700).length / filteredPartners.length) *
           100
         ).toFixed(1) + "%",
     },
     {
       "Score Range": "Below 600",
-      Count: filteredPartners.filter((p) => p.novaScore < 600).length, // Changed from novaScore
+      Count: filteredPartners.filter((p) => p.novaScore < 600).length,
       Percentage:
-        ((filteredPartners.filter((p) => p.novaScore < 600).length / filteredPartners.length) * 100).toFixed(1) + "%", // Changed from novaScore
+        ((filteredPartners.filter((p) => p.novaScore < 600).length / filteredPartners.length) * 100).toFixed(1) + "%",
     },
   ]
 
   // Performance metrics
   const performanceMetrics = filteredPartners.map((partner) => ({
     "Partner Name": partner.name,
-    "Nova Score": partner.novaScore, // Changed from Nova Score
+    "Nova Score": partner.novaScore,
     "Risk Level": partner.riskLevel,
     "Total Trips": partner.totalTrips,
     "Average Rating": partner.avgRating,
@@ -260,8 +275,9 @@ export const createAnalyticsReport = (partners: Partner[], fairnessMetrics: Fair
 
   // Fairness analysis
   const fairnessAnalysis = fairnessMetrics.map((metric) => ({
-    Demographic: metric.demographic,
-    "Average Score": metric.averageScore,
+    "Demographic Category": metric.category,
+    "Demographic Group": metric.group,
+    "Average Nova Score": metric.averageScore,
     "Partner Count": metric.count,
     "Bias Score": metric.bias,
     "Bias Level": metric.bias > 0.05 ? "High Positive" : metric.bias < -0.05 ? "High Negative" : "Acceptable",
@@ -313,7 +329,7 @@ export const createDetailedReport = (partners: Partner[], options: ExportOptions
     ? filteredPartners.map((partner) => ({
         "Partner ID": partner.id,
         "Partner Name": partner.name,
-        "Current Nova Score": partner.novaScore, // Changed from ML Score
+        "Current Nova Score": partner.novaScore,
         "Forecast Jan": partner.forecastedEarnings[0] || 0,
         "Forecast Feb": partner.forecastedEarnings[1] || 0,
         "Forecast Mar": partner.forecastedEarnings[2] || 0,
@@ -357,8 +373,9 @@ export const createDetailedReport = (partners: Partner[], options: ExportOptions
 export const createFairnessReport = (partners: Partner[], fairnessMetrics: FairnessMetric[]): ExportReport => {
   // Bias analysis by demographic
   const biasAnalysis = fairnessMetrics.map((metric) => ({
-    "Demographic Group": metric.demographic,
-    "Average Nova Score": metric.averageScore, // Changed from Nova Score
+    "Demographic Category": metric.category,
+    "Demographic Group": metric.group,
+    "Average Nova Score": metric.averageScore,
     "Sample Size": metric.count,
     "Bias Score": metric.bias,
     "Bias Direction": metric.bias > 0 ? "Positive" : metric.bias < 0 ? "Negative" : "Neutral",
@@ -371,38 +388,16 @@ export const createFairnessReport = (partners: Partner[], fairnessMetrics: Fairn
           : "Continue Monitoring",
   }))
 
-  // Partner distribution by demographics (simulated)
-  const demographicDistribution = [
-    {
-      "Age Group": "18-30",
-      "Partner Count": partners.filter((p) => p.novaScore < 700).length, // Changed from novaScore
-      "Avg Score": 682,
-      "Risk Distribution": "Mixed",
-    },
-    {
-      "Age Group": "31-45",
-      "Partner Count": partners.filter((p) => p.novaScore >= 700 && p.novaScore < 800).length, // Changed from novaScore
-      "Avg Score": 724,
-      "Risk Distribution": "Mostly Low-Medium",
-    },
-    {
-      "Age Group": "46+",
-      "Partner Count": partners.filter((p) => p.novaScore >= 800).length, // Changed from novaScore
-      "Avg Score": 698,
-      "Risk Distribution": "Low Risk Dominant",
-    },
-  ]
-
   // Compliance summary
+  const compliantGroups = fairnessMetrics.filter((m) => Math.abs(m.bias) <= 0.05).length;
+  const totalGroups = fairnessMetrics.length;
+
   const complianceSummary = [
     {
-      "Total Demographics Analyzed": fairnessMetrics.length,
-      "Compliant Groups": fairnessMetrics.filter((m) => Math.abs(m.bias) <= 0.05).length,
-      "Groups Requiring Attention": fairnessMetrics.filter((m) => Math.abs(m.bias) > 0.05).length,
-      "High Risk Groups": fairnessMetrics.filter((m) => Math.abs(m.bias) > 0.1).length,
-      "Overall Compliance Rate":
-        ((fairnessMetrics.filter((m) => Math.abs(m.bias) <= 0.05).length / fairnessMetrics.length) * 100).toFixed(1) +
-        "%",
+      "Total Demographics Analyzed": totalGroups,
+      "Compliant Groups": compliantGroups,
+      "Groups Requiring Attention": totalGroups - compliantGroups,
+      "Overall Compliance Rate": totalGroups > 0 ? ((compliantGroups / totalGroups) * 100).toFixed(1) + "%" : "0%",
       "Report Date": new Date().toLocaleDateString(),
     },
   ]
@@ -412,11 +407,10 @@ export const createFairnessReport = (partners: Partner[], fairnessMetrics: Fairn
     sheets: [
       { name: "Compliance Summary", data: complianceSummary },
       { name: "Bias Analysis", data: biasAnalysis },
-      { name: "Demographic Distribution", data: demographicDistribution },
     ],
     metadata: {
       exportDate: new Date().toISOString(),
-      totalRecords: fairnessMetrics.length,
+      totalRecords: partners.length, // Total partners considered for fairness
       filters: ["Fairness Compliance Analysis"],
       reportType: "Fairness Compliance Report",
     },

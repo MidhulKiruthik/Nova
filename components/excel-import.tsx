@@ -8,7 +8,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Upload, FileSpreadsheet, CheckCircle, AlertCircle, Download } from "lucide-react"
-import type { Partner } from "@/lib/interfaces" // Updated import
+import type { Partner } from "@/lib/interfaces"
 import { readExcelFile, createExcelFile } from "@/lib/excel-utils"
 import { toast } from "sonner" // Import sonner toast
 
@@ -48,9 +48,22 @@ export function ExcelImport({ onImportComplete, onImportError }: ExcelImportProp
       if (!partner.email || !partner.email.includes("@")) {
         errors.push(`Row ${rowNum}: Valid email is required`)
       }
-      if (partner.novaScore < 0 || partner.novaScore > 1000) { // Changed from mlScore
-        errors.push(`Row ${rowNum}: Nova Score must be between 0-1000`) // Changed from ML Score
+      if (partner.novaScore < 0 || partner.novaScore > 1000) {
+        errors.push(`Row ${rowNum}: Nova Score must be between 0-1000`)
       }
+      if (!partner.ageGroup || partner.ageGroup.trim() === "") {
+        errors.push(`Row ${rowNum}: Age Group is required for fairness analysis`)
+      }
+      if (!partner.gender || partner.gender.trim() === "") {
+        errors.push(`Row ${rowNum}: Gender is required for fairness analysis`)
+      }
+      if (!partner.ethnicity || partner.ethnicity.trim() === "") {
+        errors.push(`Row ${rowNum}: Ethnicity is required for fairness analysis`)
+      }
+      if (!partner.areaType || partner.areaType.trim() === "") {
+        errors.push(`Row ${rowNum}: Area Type is required for fairness analysis`)
+      }
+
 
       // Warning validations
       if (partner.onTimePickupRate < 0 || partner.onTimePickupRate > 1) {
@@ -68,8 +81,12 @@ export function ExcelImport({ onImportComplete, onImportError }: ExcelImportProp
         partner.name &&
         partner.email &&
         partner.email.includes("@") &&
-        partner.novaScore >= 0 && // Changed from mlScore
-        partner.novaScore <= 1000 // Changed from mlScore
+        partner.novaScore >= 0 &&
+        partner.novaScore <= 1000 &&
+        partner.ageGroup &&
+        partner.gender &&
+        partner.ethnicity &&
+        partner.areaType
       ) {
         validRecords++
       }
@@ -152,7 +169,7 @@ export function ExcelImport({ onImportComplete, onImportError }: ExcelImportProp
         name: "John Doe",
         email: "john.doe@example.com",
         phone: "+1-555-0123",
-        novaScore: 750, // Changed from mlScore
+        novaScore: 750,
         earningsHistory: [2500, 2700, 2600, 2800, 2650, 2750],
         tripVolume: 120,
         onTimePickupRate: 0.92,
@@ -166,6 +183,11 @@ export function ExcelImport({ onImportComplete, onImportError }: ExcelImportProp
         totalTrips: 1200,
         avgRating: 4.7,
         cancellationRate: 0.04,
+        ageGroup: "31-45",
+        areaType: "urban",
+        gender: "male",
+        ethnicity: "white",
+        rawReviewsText: "Great service; Driver was friendly and on time; Clean car",
       },
     ]
 
@@ -338,8 +360,10 @@ export function ExcelImport({ onImportComplete, onImportError }: ExcelImportProp
                         <tr>
                           <th className="text-left p-3 font-medium">Name</th>
                           <th className="text-left p-3 font-medium">Email</th>
-                          <th className="text-left p-3 font-medium">Nova Score</th> {/* Changed from ML Score */}
+                          <th className="text-left p-3 font-medium">Nova Score</th>
                           <th className="text-left p-3 font-medium">Risk Level</th>
+                          <th className="text-left p-3 font-medium">Age Group</th>
+                          <th className="text-left p-3 font-medium">Gender</th>
                           <th className="text-left p-3 font-medium">Status</th>
                         </tr>
                       </thead>
@@ -348,7 +372,7 @@ export function ExcelImport({ onImportComplete, onImportError }: ExcelImportProp
                           <tr key={index} className="border-b">
                             <td className="p-3">{partner.name}</td>
                             <td className="p-3">{partner.email}</td>
-                            <td className="p-3">{partner.novaScore}</td> {/* Changed from mlScore */}
+                            <td className="p-3">{partner.novaScore}</td>
                             <td className="p-3">
                               <Badge
                                 variant={
@@ -362,8 +386,10 @@ export function ExcelImport({ onImportComplete, onImportError }: ExcelImportProp
                                 {partner.riskLevel}
                               </Badge>
                             </td>
+                            <td className="p-3">{partner.ageGroup}</td>
+                            <td className="p-3">{partner.gender}</td>
                             <td className="p-3">
-                              {partner.name && partner.email && partner.email.includes("@") ? (
+                              {partner.name && partner.email && partner.email.includes("@") && partner.ageGroup && partner.gender ? (
                                 <Badge variant="default">
                                   <CheckCircle className="w-3 h-3 mr-1" />
                                   Valid

@@ -6,13 +6,10 @@ import { PartnerProfileView } from "@/components/partner-profile-view";
 import { FairnessDashboard } from "@/components/fairness-dashboard";
 import { ForecastCharts } from "@/components/forecast-charts";
 import { SentimentHeatmap } from "@/components/sentiment-heatmap";
-import { DataManagementPage } from "@/components/data-management-page"; // New import
-import { PartnersOverview } from "@/components/partners-overview"; // New import
+import { DataManagementPage } from "@/components/data-management-page";
+import { PartnersOverview } from "@/components/partners-overview";
 import { SyncStatusIndicator } from "@/components/sync-status-indicator";
 import { useDataStore } from "@/hooks/use-data-store";
-import { mockPartners } from "@/lib/mock-partners";
-import { mockReviews } from "@/lib/mock-reviews";
-import { mockFairnessMetrics } from "@/lib/mock-fairness-data";
 import { Home, Users, BarChart, Shield, TrendingUp, MessageSquare, Settings, FileSpreadsheet } from "lucide-react";
 import Image from "next/image";
 import type { Partner } from "@/lib/interfaces";
@@ -23,10 +20,10 @@ export default function Page() {
   const [activeView, setActiveView] = useState<string>("partners"); // Default to partners view
 
   useEffect(() => {
-    if (partners.length === 0) {
-      initializeWithMockData(mockPartners, mockReviews, mockFairnessMetrics);
-    }
-  }, [partners.length, initializeWithMockData]);
+    // Initialize data store. It will load from local storage or start empty.
+    // User will be prompted to import data via Data Management page if empty.
+    initializeWithMockData();
+  }, [initializeWithMockData]);
 
   const handlePartnerSelect = (partner: Partner) => {
     setSelectedPartner(partner);

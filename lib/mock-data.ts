@@ -1,5 +1,2 @@
 export * from "./interfaces"
-export * from "./mock-partners"
-export * from "./mock-reviews"
-export * from "./mock-fairness-data"
 export * from "./mock-utils"

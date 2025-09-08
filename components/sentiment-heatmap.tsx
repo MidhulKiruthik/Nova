@@ -1,10 +1,11 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import type { Partner } from "@/lib/interfaces" // Updated import
+import type { Partner, Review } from "@/lib/interfaces"
+import { useDataStore } from "@/hooks/use-data-store"
 
 interface SentimentHeatmapProps {
   partners: Partner[]
@@ -14,104 +15,114 @@ interface HeatmapCell {
   partnerId: string
   partnerName: string
   period: string
-  novaScore: number // Changed from mlScore
+  novaScore: number
   tripCount: number
   avgRating: number
+  sentimentScore: number // Directly use sentiment score
 }
 
 export function SentimentHeatmap({ partners }: SentimentHeatmapProps) {
+  const { reviews } = useDataStore(); // Get reviews from data store
   const [viewMode, setViewMode] = useState<"monthly" | "weekly">("monthly")
 
   // Generate time periods for the heatmap
   const generateTimePeriods = () => {
     if (viewMode === "monthly") {
-      return ["Oct 2023", "Nov 2023", "Dec 2023", "Jan 2024", "Feb 2024", "Mar 2024"]
+      // Generate last 6 months dynamically
+      const periods = [];
+      const currentDate = new Date();
+      for (let i = 5; i >= 0; i--) {
+        const date = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1);
+        periods.push(date.toLocaleDateString("en-US", { month: "short", year: "2-digit" }));
+      }
+      return periods;
     } else {
+      // For weekly, we'll just use generic labels for now as we don't have granular date data
       return ["Week 1", "Week 2", "Week 3", "Week 4", "Week 5", "Week 6"]
     }
   }
 
-  // Generate mock sentiment data for heatmap visualization
-  const generateHeatmapData = (): HeatmapCell[] => {
-    const periods = generateTimePeriods()
-    const data: HeatmapCell[] = []
+  // Generate sentiment data for heatmap visualization
+  const generateHeatmapData = useMemo((): HeatmapCell[] => {
+    const periods = generateTimePeriods();
+    const data: HeatmapCell[] = [];
 
     partners.forEach((partner) => {
       periods.forEach((period, index) => {
-        // Generate realistic novaScore variations over time
-        const baseNovaScore = partner.novaScore
-        const variation = (Math.random() - 0.5) * 100 // ±50 variation on a 0-1000 scale
-        const periodNovaScore = Math.max(0, Math.min(1000, baseNovaScore + variation))
+        // Filter reviews relevant to this partner
+        const partnerReviews = reviews.filter(r => r.partnerId === partner.id);
+        
+        // Calculate average sentiment score for the partner (or period if granular data existed)
+        const avgSentimentForPartner = partnerReviews.length > 0 
+          ? partnerReviews.reduce((sum, r) => sum + (r.sentimentScore || 2.5), 0) / partnerReviews.length
+          : 2.5; // Default to neutral if no reviews
+
+        // Convert average sentiment (0-5) to novaScore scale (0-1000) for consistency
+        const periodNovaScore = (avgSentimentForPartner / 5) * 1000;
 
         // Generate trip counts that correlate with novaScore
-        const baseTripCount = Math.floor(partner.tripVolume / periods.length)
-        const tripVariation = Math.floor((Math.random() - 0.5) * 20)
-        const tripCount = Math.max(5, baseTripCount + tripVariation)
+        const baseTripCount = Math.floor(partner.tripVolume / periods.length);
+        const tripVariation = Math.floor((Math.random() - 0.5) * 20);
+        const tripCount = Math.max(5, baseTripCount + tripVariation);
 
         data.push({
           partnerId: partner.id,
           partnerName: partner.name,
           period,
-          novaScore: periodNovaScore,
+          novaScore: Math.round(periodNovaScore),
           tripCount,
-          avgRating: Math.max(1, Math.min(5, partner.avgRating + (Math.random() - 0.5) * 0.6)),
-        })
-      })
-    })
+          avgRating: partner.avgRating, // Use partner's overall avgRating
+          sentimentScore: parseFloat(avgSentimentForPartner.toFixed(1)),
+        });
+      });
+    });
 
-    return data
-  }
+    return data;
+  }, [partners, reviews, viewMode]); // Re-generate when partners, reviews, or viewMode changes
 
-  const heatmapData = generateHeatmapData()
   const periods = generateTimePeriods()
 
-  // Helper to convert novaScore (0-1000) to a sentiment-like scale (0-5) for display
-  const novaScoreToSentimentDisplay = (novaScore: number) => (novaScore / 1000) * 5;
-
-  const getSentimentColor = (novaScore: number) => {
-    const sentimentDisplay = novaScoreToSentimentDisplay(novaScore);
-    if (sentimentDisplay > 3.5) return "bg-emerald-500" // Positive
-    if (sentimentDisplay > 2.5) return "bg-emerald-400" // Slightly positive
-    if (sentimentDisplay > 1.5) return "bg-yellow-400" // Neutral
-    if (sentimentDisplay > 0.5) return "bg-orange-500" // Slightly negative
+  const getSentimentColor = (sentimentScore: number) => {
+    if (sentimentScore > 3.5) return "bg-emerald-500" // Positive
+    if (sentimentScore > 2.5) return "bg-emerald-400" // Slightly positive
+    if (sentimentScore > 1.5) return "bg-yellow-400" // Neutral
+    if (sentimentScore > 0.5) return "bg-orange-500" // Slightly negative
     return "bg-red-500" // Negative
   }
 
-  const getSentimentIntensity = (novaScore: number) => {
-    const sentimentDisplay = novaScoreToSentimentDisplay(novaScore);
-    const intensity = Math.abs(sentimentDisplay - 2.5) / 2.5; // Normalize intensity from 0 (neutral) to 1 (extreme)
+  const getSentimentIntensity = (sentimentScore: number) => {
+    const intensity = Math.abs(sentimentScore - 2.5) / 2.5; // Normalize intensity from 0 (neutral) to 1 (extreme)
     if (intensity > 0.7) return "opacity-100"
     if (intensity > 0.4) return "opacity-80"
     if (intensity > 0.2) return "opacity-60"
     return "opacity-40"
   }
 
-  const getSentimentLabel = (novaScore: number) => {
-    const sentimentDisplay = novaScoreToSentimentDisplay(novaScore);
-    if (sentimentDisplay > 3.5) return "Excellent"
-    if (sentimentDisplay > 2.5) return "Good"
-    if (sentimentDisplay > 1.5) return "Neutral"
-    if (sentimentDisplay > 0.5) return "Poor"
+  const getSentimentLabel = (sentimentScore: number) => {
+    if (sentimentScore > 3.5) return "Excellent"
+    if (sentimentScore > 2.5) return "Good"
+    if (sentimentScore > 1.5) return "Neutral"
+    if (sentimentScore > 0.5) return "Poor"
     return "Critical"
   }
 
-  const getPartnerData = (partnerId: string, period: string) => {
+  const getPartnerDataForPeriod = (partnerId: string, period: string) => {
     return heatmapData.find((d) => d.partnerId === partnerId && d.period === period)
   }
 
   // Calculate summary statistics
   const avgSentimentByPeriod = periods.map((period) => {
     const periodData = heatmapData.filter((d) => d.period === period)
-    const avgNovaScore = periodData.reduce((sum, d) => sum + d.novaScore, 0) / periodData.length
-    return { period, avg: novaScoreToSentimentDisplay(avgNovaScore) } // Convert back to sentiment for display
+    const avgSentiment = periodData.reduce((sum, d) => sum + d.sentimentScore, 0) / periodData.length
+    return { period, avg: avgSentiment }
   })
 
   const partnerSummaries = partners
     .map((partner) => {
       const partnerData = heatmapData.filter((d) => d.partnerId === partner.id)
-      const avgNovaScore = partnerData.reduce((sum, d) => sum + d.novaScore, 0) / partnerData.length
+      const avgSentiment = partnerData.reduce((sum, d) => sum + d.sentimentScore, 0) / partnerData.length
       const totalTrips = partnerData.reduce((sum, d) => sum + d.tripCount, 0)
-      return { partner, avgSentiment: novaScoreToSentimentDisplay(avgNovaScore), totalTrips } // Convert back to sentiment for display
+      return { partner, avgSentiment: avgSentiment, totalTrips }
     })
     .sort((a, b) => b.avgSentiment - a.avgSentiment)
 
@@ -163,22 +174,20 @@ export function SentimentHeatmap({ partners }: SentimentHeatmapProps) {
                 <div key={partner.id} className="grid grid-cols-7 gap-1 mb-1">
                   <div className="p-3 bg-card border border-border rounded-md">
                     <div className="text-sm font-medium text-foreground truncate">{partner.name}</div>
-                    <div className="text-xs text-muted-foreground">Score: {partner.novaScore}</div> {/* Changed from novaScore */}
+                    <div className="text-xs text-muted-foreground">Score: {partner.novaScore}</div>
                   </div>
                   {periods.map((period) => {
-                    const cellData = getPartnerData(partner.id, period)
+                    const cellData = getPartnerDataForPeriod(partner.id, period)
                     if (!cellData) return <div key={period} className="p-3 bg-muted rounded-md" />
-
-                    const sentimentValue = novaScoreToSentimentDisplay(cellData.novaScore); // Convert novaScore back to sentiment for display
 
                     return (
                       <div
                         key={period}
-                        className={`p-3 rounded-md border border-border cursor-pointer hover:scale-105 transition-transform ${getSentimentColor(cellData.novaScore)} ${getSentimentIntensity(cellData.novaScore)}`}
-                        title={`${partner.name} - ${period}\nSentiment: ${sentimentValue.toFixed(1)}/5\nTrips: ${cellData.tripCount}\nRating: ${cellData.avgRating.toFixed(1)}`}
+                        className={`p-3 rounded-md border border-border cursor-pointer hover:scale-105 transition-transform ${getSentimentColor(cellData.sentimentScore)} ${getSentimentIntensity(cellData.sentimentScore)}`}
+                        title={`${partner.name} - ${period}\nSentiment: ${cellData.sentimentScore.toFixed(1)}/5\nTrips: ${cellData.tripCount}\nRating: ${cellData.avgRating.toFixed(1)}`}
                       >
                         <div className="text-xs font-medium text-white text-center">
-                          {sentimentValue.toFixed(1)}/5
+                          {cellData.sentimentScore.toFixed(1)}/5
                         </div>
                         <div className="text-xs text-white/80 text-center">{cellData.tripCount} trips</div>
                       </div>
@@ -256,7 +265,7 @@ export function SentimentHeatmap({ partners }: SentimentHeatmapProps) {
           <CardContent>
             <div className="space-y-3">
               {partnerSummaries.slice(0, 5).map((summary, index) => (
-                <div key={summary.partner.id} className="flex items-center justify-between">
+                <div key={summary.partner.id} className="flex items-center gap-3 justify-between">
                   <div className="flex items-center gap-3">
                     <div className="w-6 h-6 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-xs font-bold">
                       {index + 1}

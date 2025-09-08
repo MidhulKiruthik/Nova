@@ -5,6 +5,10 @@ import type { Partner, Review } from "./interfaces";
  * Returns a score between 0 (very negative) and 5 (very positive).
  */
 export function analyzeReviewSentiment(text: string): number {
+  if (!text || text.trim() === "") {
+    return 2.5; // Neutral score for empty or missing reviews
+  }
+
   const lowerText = text.toLowerCase();
   let rawScore = 0; // Raw score between -1 and 1
 
@@ -61,18 +65,18 @@ export function analyzeReviewSentiment(text: string): number {
  * Calculates the Nova Score for a partner based on various responsibility metrics and review sentiment.
  * The Nova Score is scaled from 0 to 1000, similar to a credit score.
  * This function now employs a multiple regression-like approach with weighted factors.
+ * It now takes rawReviewsText directly from the partner object for sentiment analysis.
  */
-export function calculateNovaScore(partner: Partner, allReviews: Review[]): number {
+export function calculateNovaScore(partner: Partner): number {
   let score = 0; // Start with 0 and build up
 
-  // Filter reviews for this specific partner and calculate average sentiment score
-  const partnerReviews = allReviews.filter(review => review.partnerId === partner.id);
-  const totalSentimentScore = partnerReviews.reduce((sum, review) => {
-    // If sentimentScore is not present, calculate it (e.g., for older mock data or new reviews)
-    const score = review.sentimentScore ?? analyzeReviewSentiment(review.comment);
-    return sum + score;
+  // Calculate average sentiment score from rawReviewsText
+  // Assuming rawReviewsText might contain multiple reviews separated by a delimiter (e.g., ';')
+  const reviewComments = partner.rawReviewsText ? partner.rawReviewsText.split(';').map(s => s.trim()).filter(Boolean) : [];
+  const totalSentimentScore = reviewComments.reduce((sum, comment) => {
+    return sum + analyzeReviewSentiment(comment);
   }, 0);
-  const avgSentimentScore = partnerReviews.length > 0 ? totalSentimentScore / partnerReviews.length : 2.5; // Default to neutral (2.5) if no reviews
+  const avgSentimentScore = reviewComments.length > 0 ? totalSentimentScore / reviewComments.length : 2.5; // Default to neutral (2.5) if no reviews
 
   // Map categorical risk level to a numerical value (higher is worse)
   let numericRiskLevel = 0;

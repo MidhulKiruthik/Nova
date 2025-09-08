@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { ArrowUpDown, ArrowUp, ArrowDown, Search, Filter } from "lucide-react"
-import type { Partner } from "@/lib/interfaces" // Updated import
+import type { Partner } from "@/lib/interfaces"
 
 interface PartnerDataTableProps {
   partners: Partner[]
@@ -18,10 +18,12 @@ type SortField = keyof Partner | "none"
 type SortDirection = "asc" | "desc" | "none"
 
 export function PartnerDataTable({ partners, onPartnerSelect }: PartnerDataTableProps) {
-  const [sortField, setSortField] = useState<SortField>("novaScore") // Changed from mlScore
+  const [sortField, setSortField] = useState<SortField>("novaScore")
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc")
   const [searchTerm, setSearchTerm] = useState("")
   const [riskFilter, setRiskFilter] = useState<"all" | "low" | "medium" | "high">("all")
+  const [ageGroupFilter, setAgeGroupFilter] = useState<string>("all")
+  const [genderFilter, setGenderFilter] = useState<string>("all")
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -44,9 +46,17 @@ export function PartnerDataTable({ partners, onPartnerSelect }: PartnerDataTable
     const filtered = partners.filter((partner) => {
       const matchesSearch =
         partner.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        partner.email.toLowerCase().includes(searchTerm.toLowerCase())
-      const matchesRisk = riskFilter === "all" || partner.riskLevel === riskFilter
-      return matchesSearch && matchesRisk
+        partner.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        partner.ageGroup.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        partner.gender.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        partner.ethnicity.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        partner.areaType.toLowerCase().includes(searchTerm.toLowerCase());
+
+      const matchesRisk = riskFilter === "all" || partner.riskLevel === riskFilter;
+      const matchesAgeGroup = ageGroupFilter === "all" || partner.ageGroup === ageGroupFilter;
+      const matchesGender = genderFilter === "all" || partner.gender === genderFilter;
+
+      return matchesSearch && matchesRisk && matchesAgeGroup && matchesGender;
     })
 
     if (sortField !== "none" && sortDirection !== "none") {
@@ -71,7 +81,7 @@ export function PartnerDataTable({ partners, onPartnerSelect }: PartnerDataTable
     }
 
     return filtered
-  }, [partners, searchTerm, riskFilter, sortField, sortDirection])
+  }, [partners, searchTerm, riskFilter, ageGroupFilter, genderFilter, sortField, sortDirection])
 
   const getRiskBadgeStyle = (risk: string) => {
     switch (risk) {
@@ -115,6 +125,18 @@ export function PartnerDataTable({ partners, onPartnerSelect }: PartnerDataTable
     return "text-muted-foreground" // Neutral
   }
 
+  // Extract unique age groups and genders for filters
+  const uniqueAgeGroups = useMemo(() => {
+    const groups = new Set(partners.map(p => p.ageGroup).filter(Boolean));
+    return ["all", ...Array.from(groups).sort()];
+  }, [partners]);
+
+  const uniqueGenders = useMemo(() => {
+    const genders = new Set(partners.map(p => p.gender).filter(Boolean));
+    return ["all", ...Array.from(genders).sort()];
+  }, [partners]);
+
+
   return (
     <Card>
       <CardHeader>
@@ -131,8 +153,8 @@ export function PartnerDataTable({ partners, onPartnerSelect }: PartnerDataTable
         </div>
 
         {/* Filters */}
-        <div className="flex items-center gap-4 mt-4">
-          <div className="relative flex-1 max-w-sm">
+        <div className="flex flex-wrap items-center gap-4 mt-4">
+          <div className="relative flex-1 min-w-[180px] max-w-sm">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
             <Input
               placeholder="Search partners..."
@@ -172,6 +194,36 @@ export function PartnerDataTable({ partners, onPartnerSelect }: PartnerDataTable
               High
             </Button>
           </div>
+          <div className="flex items-center gap-2">
+            <label htmlFor="age-group-filter" className="sr-only">Age Group</label>
+            <select
+              id="age-group-filter"
+              value={ageGroupFilter}
+              onChange={(e) => setAgeGroupFilter(e.target.value)}
+              className="px-3 py-2 border border-border rounded-md bg-background text-foreground text-sm"
+            >
+              {uniqueAgeGroups.map(group => (
+                <option key={group} value={group}>
+                  {group === "all" ? "All Age Groups" : group}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="flex items-center gap-2">
+            <label htmlFor="gender-filter" className="sr-only">Gender</label>
+            <select
+              id="gender-filter"
+              value={genderFilter}
+              onChange={(e) => setGenderFilter(e.target.value)}
+              className="px-3 py-2 border border-border rounded-md bg-background text-foreground text-sm"
+            >
+              {uniqueGenders.map(gender => (
+                <option key={gender} value={gender}>
+                  {gender === "all" ? "All Genders" : gender}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
       </CardHeader>
       <CardContent>
@@ -190,7 +242,7 @@ export function PartnerDataTable({ partners, onPartnerSelect }: PartnerDataTable
                     variant="ghost"
                     size="sm"
                     className="h-8 p-0 font-medium"
-                    onClick={() => handleSort("novaScore")} // Changed from mlScore
+                    onClick={() => handleSort("novaScore")}
                   >
                     Nova Score
                     {getSortIcon("novaScore")}
@@ -201,7 +253,7 @@ export function PartnerDataTable({ partners, onPartnerSelect }: PartnerDataTable
                     variant="ghost"
                     size="sm"
                     className="h-8 p-0 font-medium"
-                    onClick={() => handleSort("novaScore")} // Changed from mlScore
+                    onClick={() => handleSort("novaScore")}
                   >
                     Sentiment
                     {getSortIcon("novaScore")}
@@ -223,7 +275,7 @@ export function PartnerDataTable({ partners, onPartnerSelect }: PartnerDataTable
                     variant="ghost"
                     size="sm"
                     className="h-8 p-0 font-medium"
-                    onClick={() => handleSort("onTimePickupRate")} // Changed from onTimeRate
+                    onClick={() => handleSort("onTimePickupRate")}
                   >
                     On-Time Rate
                     {getSortIcon("onTimePickupRate")}
@@ -288,7 +340,7 @@ export function PartnerDataTable({ partners, onPartnerSelect }: PartnerDataTable
                     <TableCell>
                       <div
                         className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium font-mono"
-                        style={getScoreBadgeStyle(partner.novaScore)} // Changed from novaScore
+                        style={getScoreBadgeStyle(partner.novaScore)}
                       >
                         {partner.novaScore}
                       </div>
@@ -317,7 +369,7 @@ export function PartnerDataTable({ partners, onPartnerSelect }: PartnerDataTable
                       <div className="text-xs text-muted-foreground">this month</div>
                     </TableCell>
                     <TableCell>
-                      <span className="font-medium">{formatPercentage(partner.onTimePickupRate)}</span> {/* Changed from onTimeRate */}
+                      <span className="font-medium">{formatPercentage(partner.onTimePickupRate)}</span>
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">

@@ -18,10 +18,10 @@ export interface Partner {
   avgRating: number
   cancellationRate: number
   // New fields for demographic data from Excel
-  ageGroup: string // e.g., "18-30", "31-45", "46+"
-  areaType: "urban" | "suburban" | "rural" | string // Added string for flexibility
-  gender: "male" | "female" | "other" | string // Added string for flexibility
-  ethnicity: "white" | "hispanic" | "black" | "asian" | "other" | string // Added string for flexibility
+  ageGroup: string
+  areaType: string
+  gender: string
+  ethnicity: string
   rawReviewsText: string // To hold the combined review text from Excel
 }
 
@@ -38,6 +38,8 @@ export interface Review {
 
 export interface FairnessMetric {
   demographic: string
+  category: "age" | "area" | "gender" | "ethnicity"
+  group: string // e.g., "18-30", "Male", "Urban"
   averageScore: number
   count: number
   bias: number // -1 to 1, where 0 is no bias

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react"
 import { dataStore, type SyncStatus } from "@/lib/data-store"
-import type { Partner, Review, FairnessMetric } from "@/lib/interfaces" // Updated import path
+import type { Partner, Review, FairnessMetric } from "@/lib/interfaces"
 
 export const useDataStore = () => {
   // Initialize with empty/default values for SSR consistency
@@ -20,7 +20,8 @@ export const useDataStore = () => {
       dataStoreRef.current = dataStore.instance;
       const currentDataStore = dataStoreRef.current;
 
-      currentDataStore.loadFromLocalStorage();
+      // Initialize with mock data (which now just loads from local storage or starts empty)
+      currentDataStore.initializeWithMockData();
 
       // Initial data load
       setPartners(currentDataStore.getPartners());
@@ -72,11 +73,10 @@ export const useDataStore = () => {
     updatePartner: (id: string, updates: Partial<Partner>) => safeDataStoreCall('updatePartner', id, updates),
     deletePartner: (id: string) => safeDataStoreCall('deletePartner', id),
     setPartners: (partners: Partner[]) => safeDataStoreCall('setPartners', partners),
-    setReviews: (reviews: Review[]) => safeDataStoreCall('setReviews', reviews),
-    setFairnessMetrics: (metrics: FairnessMetric[]) => safeDataStoreCall('setFairnessMetrics', metrics),
+    // setReviews and setFairnessMetrics are now internal to DataStore
     forceSync: () => safeDataStoreCall('forceSync'),
     clearAllData: () => safeDataStoreCall('clearAllData'),
     getChangeHistory: () => safeDataStoreCall('getChangeHistory') || [],
-    initializeWithMockData: (partners: Partner[], reviews: Review[], fairnessMetrics: FairnessMetric[]) => safeDataStoreCall('initializeWithMockData', partners, reviews, fairnessMetrics),
+    initializeWithMockData: () => safeDataStoreCall('initializeWithMockData'),
   };
 };
