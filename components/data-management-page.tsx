@@ -4,6 +4,7 @@ import { ExcelImport } from "./excel-import"
 import { ExportManager } from "./export-manager"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { FileSpreadsheet, Trash2 } from "lucide-react"
+import { SyncNowButton } from "./sync-now-button"
 import { useDataStore } from "@/hooks/use-data-store"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
@@ -36,7 +37,9 @@ export function DataManagementPage() {
               <FileSpreadsheet className="w-5 h-5" />
               <CardTitle>Data Management</CardTitle>
             </div>
-            <AlertDialog>
+            <div className="flex items-center gap-2">
+              <SyncNowButton />
+              <AlertDialog>
               <AlertDialogTrigger asChild>
                 <Button variant="destructive" size="sm">
                   <Trash2 className="w-4 h-4 mr-2" />
@@ -55,7 +58,8 @@ export function DataManagementPage() {
                   <AlertDialogAction onClick={handleClearAllData}>Continue</AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
-            </AlertDialog>
+              </AlertDialog>
+            </div>
           </div>
           <CardDescription>Import new partner data from Excel or export existing data for analysis.</CardDescription>
         </CardHeader>

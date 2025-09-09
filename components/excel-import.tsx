@@ -9,9 +9,11 @@ import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Upload, FileSpreadsheet, CheckCircle, AlertCircle, Download } from "lucide-react"
 import { toast } from "sonner"
+import { useDataStore } from "@/hooks/use-data-store"
 
 interface ExcelImportProps {
   onImportError: (error: string) => void
+  onImportComplete?: (importedPartners: any[]) => void
 }
 
 interface Partner {
@@ -26,7 +28,8 @@ interface Partner {
   // Add other fields if needed
 }
 
-export function ExcelImport({ onImportError }: ExcelImportProps) {
+export function ExcelImport({ onImportError, onImportComplete }: ExcelImportProps) {
+  const { setPartners } = useDataStore()
   const [isDragOver, setIsDragOver] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
   const [importProgress, setImportProgress] = useState(0)
@@ -66,24 +69,32 @@ export function ExcelImport({ onImportError }: ExcelImportProps) {
       const formData = new FormData()
       formData.append("file", file)
 
-      const response = await fetch("http://127.0.0.1:8000/process-pipeline", {
+      const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"
+      const response = await fetch(`${apiBase}/process`, {
         method: "POST",
         body: formData,
       })
 
       if (!response.ok) {
-        throw new Error("Pipeline processing failed")
+        // Try to parse JSON error from server to give better feedback
+        let msg = `Pipeline processing failed: ${response.status}`
+        try {
+          const err = await response.json()
+          if (err && err.error) msg += ` - ${err.error}`
+          if (err && err.details) msg += `: ${err.details}`
+        } catch (_) {}
+        throw new Error(msg)
       }
 
       setImportProgress(50)
 
       const blob = await response.blob()
-      const url = window.URL.createObjectURL(blob)
+  const url = window.URL.createObjectURL(blob)
 
-      // Auto-download processed file
-      const link = document.createElement("a")
-      link.href = url
-      link.download = "processed.xlsx"
+  // Auto-download processed file
+  const link = document.createElement("a")
+  link.href = url
+  link.download = "partner_dataset_final.xlsx"
       document.body.appendChild(link)
       link.click()
       link.remove()
@@ -92,10 +103,32 @@ export function ExcelImport({ onImportError }: ExcelImportProps) {
       setImportProgress(100)
       setImportStep("complete")
       toast.success("Excel processed and downloaded!", { id: "excel-import" })
+
+      // After successful processing, try to fetch canonical partners from server and notify parent
+      try {
+        const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"
+        const resp = await fetch(`${apiBase}/partners`)
+        if (resp.ok) {
+          const data = await resp.json()
+          if (Array.isArray(data.partners)) {
+            // Update parent if provided
+            if (typeof onImportComplete === 'function') {
+              onImportComplete(data.partners)
+            } else {
+              // Fallback: update data store directly so UI populates
+              setPartners(data.partners)
+            }
+          }
+        }
+      } catch (err) {
+        // Non-fatal: we already downloaded the file. Parent can choose to ignore.
+        console.warn('Could not fetch partners after upload', err)
+      }
     } catch (error) {
       console.error("Import error:", error)
-      onImportError("Failed to process Excel file. Please check the format.")
-      toast.error("Failed to process Excel file.", { id: "excel-import" })
+  const message = error instanceof Error ? error.message : String(error)
+  onImportError?.(message)
+  toast.error(message, { id: "excel-import" })
     } finally {
       setIsProcessing(false)
     }

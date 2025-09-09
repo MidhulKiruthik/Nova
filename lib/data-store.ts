@@ -115,27 +115,69 @@ class DataStore {
   }
 
   private async performSync() {
-    if (!this.isOnline || this.syncStatus.pendingChanges === 0) {
+    if (!this.isOnline) {
+      this.updateSyncStatus({ status: "offline" })
       return
     }
 
     this.updateSyncStatus({ status: "syncing" })
 
+    const apiBase = ((): string => {
+      if (typeof window === 'undefined') return (process.env.NEXT_PUBLIC_API_URL as string) || 'http://localhost:5000'
+      try {
+        // Next.js exposes env on __NEXT_DATA__ during SSR; prefer explicit fallback
+        const nd = (window as any).__NEXT_DATA__
+        if (nd && nd.env && nd.env.NEXT_PUBLIC_API_URL) return nd.env.NEXT_PUBLIC_API_URL
+      } catch (_) {}
+      return (process.env.NEXT_PUBLIC_API_URL as string) || 'http://localhost:5000'
+    })()
+
     try {
-      await new Promise((resolve) => setTimeout(resolve, 500))
-      this.saveToLocalStorage()
+      // If we have pending changes, push them to server
+      if (this.changeHistory.length > 0) {
+        const resp = await fetch(`${apiBase}/sync`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ partners: this.partners, changeHistory: this.changeHistory }),
+        })
+
+        if (!resp.ok) {
+          throw new Error(`Server sync failed: ${resp.status}`)
+        }
+
+        // We intentionally don't replace local data here yet; we'll fetch canonical copy next
+      }
+
+      // Fetch canonical partners from server to ensure we are up-to-date
+      const getResp = await fetch(`${apiBase}/partners`, { method: 'GET' })
+      if (getResp.ok) {
+        const data = await getResp.json()
+        if (Array.isArray(data.partners)) {
+          this._processPartnersAndDeriveMetrics(data.partners)
+          this.saveToLocalStorage()
+        }
+      } else {
+        // If GET failed, still persist locally and report error
+        console.warn('Failed to fetch partners after sync:', getResp.status)
+      }
+
+      // Clear local change history on success
+      this.changeHistory = []
 
       this.updateSyncStatus({
-        status: "idle",
+        status: 'idle',
         lastSync: new Date(),
         pendingChanges: 0,
         error: undefined,
       })
     } catch (error) {
+      console.error('performSync error:', error)
       this.updateSyncStatus({
-        status: "error",
-        error: error instanceof Error ? error.message : "Sync failed",
+        status: 'error',
+        error: error instanceof Error ? error.message : 'Sync failed',
       })
+      // Ensure we still save locally so user data isn't lost
+      try { this.saveToLocalStorage() } catch (_) {}
     }
   }
 
@@ -203,8 +245,8 @@ class DataStore {
   // --- Internal methods to derive reviews and fairness metrics ---
   private _generateReviewsFromPartners(partners: Partner[]): Review[] {
     const generatedReviews: Review[] = [];
-    partners.forEach(partner => {
-      if (partner.rawReviewsText) {
+  partners.forEach(partner => {
+  if (partner.rawReviewsText) {
         const comments = partner.rawReviewsText.split(';').map(s => s.trim()).filter(Boolean);
         comments.forEach((comment, index) => {
           // Prioritize overallSentimentScore from Excel if available, otherwise analyze comment
@@ -232,7 +274,7 @@ class DataStore {
     if (partners.length === 0) return [];
 
     const fairnessMetrics: FairnessMetric[] = [];
-    const demographicCategories = ["ageGroup", "areaType", "gender", "ethnicity"] as const;
+  const demographicCategories = ["ageGroup", "areaType", "gender", "ethnicity"] as const;
 
     const overallAvgNovaScore = partners.reduce((sum, p) => sum + p.novaScore, 0) / partners.length;
 
@@ -240,12 +282,13 @@ class DataStore {
       const groups = new Map<string, { totalScore: number; count: number }>();
 
       partners.forEach(partner => {
-        let groupValue = partner[category];
+        // partner[category] can be string; normalizeAgeGroup returns string|null so allow that union
+        let groupValue: string | null = (partner as any)[category] || null;
         if (category === "ageGroup" && groupValue) {
-          groupValue = normalizeAgeGroup(groupValue); // Normalize age group here
+          groupValue = normalizeAgeGroup(groupValue); // Normalize age group here (may return null)
         }
 
-        if (groupValue) { // Only proceed if groupValue is not null (i.e., it matched a target age group or is not ageGroup)
+        if (groupValue) { // Only proceed if groupValue is a non-empty string
           if (!groups.has(groupValue)) {
             groups.set(groupValue, { totalScore: 0, count: 0 });
           }
@@ -358,9 +401,33 @@ class DataStore {
     if (typeof window !== "undefined") {
       this.loadFromLocalStorage();
       if (this.partners.length === 0) {
-        // Optionally, you could load a minimal default set here if no local storage data
-        // For now, we'll rely on the user to import via DataManagementPage
-        console.log("No data found in local storage. Please import data via Data Management.");
+        // No local data — try to fetch canonical partners from backend (/partners)
+        ;(async () => {
+          try {
+            const apiBase = ((): string => {
+              if (typeof window === 'undefined') return 'http://localhost:5000'
+              try {
+                const nd = (window as any).__NEXT_DATA__
+                if (nd && nd.env && nd.env.NEXT_PUBLIC_API_URL) return nd.env.NEXT_PUBLIC_API_URL
+              } catch (_) {}
+              return 'http://localhost:5000'
+            })()
+
+            const resp = await fetch(`${apiBase}/partners`)
+            if (resp.ok) {
+              const data = await resp.json()
+              if (Array.isArray(data.partners)) {
+                this._processPartnersAndDeriveMetrics(data.partners)
+                this.saveToLocalStorage()
+                console.log(`Loaded ${data.partners.length} partners from server`)
+              }
+            }
+          } catch (err) {
+            console.warn('Failed to load partners from server:', err)
+          } finally {
+            this.notify()
+          }
+        })()
       }
     }
     this.notify();
@@ -416,8 +483,8 @@ export const dataStore = {
         subscribe: () => () => {},
         subscribeSyncStatus: () => () => {},
         _normalizeAgeGroup: () => null, // Dummy implementation for server-side
-      } as DataStore) // Cast to DataStore to satisfy type checker
-    : clientDataStoreInstance,
+  } as unknown as DataStore) // Cast to DataStore via unknown to satisfy type checker
+  : clientDataStoreInstance,
 };
 
 // Keep getDataStoreInstance for backward compatibility if other files still use it,

@@ -25,3 +25,19 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.sqlite3
+.env
+.env.*
+
+# Ignore Python site packages accidentally committed
+**/site-packages/
+processed.xlsx
+partners_store.json
