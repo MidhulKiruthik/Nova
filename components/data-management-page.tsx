@@ -1,5 +1,6 @@
 "use client"
 
+import React from "react"
 import { ExcelImport } from "./excel-import"
 import { ExportManager } from "./export-manager"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -8,6 +9,7 @@ import { SyncNowButton } from "./sync-now-button"
 import { useDataStore } from "@/hooks/use-data-store"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -22,10 +24,16 @@ import {
 
 export function DataManagementPage() {
   const { partners, fairnessMetrics, setPartners, clearAllData } = useDataStore()
+  const [alsoClearServer, setAlsoClearServer] = React.useState(true)
 
-  const handleClearAllData = () => {
-    clearAllData()
-    toast.success("All application data cleared successfully!")
+  const handleClearAllData = async () => {
+    try {
+      await clearAllData(alsoClearServer)
+      toast.success("All application data cleared successfully!")
+    } catch (err) {
+      console.error(err)
+      toast.error(`Failed to clear data: ${err instanceof Error ? err.message : String(err)}`)
+    }
   }
 
   return (
@@ -46,13 +54,19 @@ export function DataManagementPage() {
                   Clear All Data
                 </Button>
               </AlertDialogTrigger>
-              <AlertDialogContent>
+                <AlertDialogContent>
                 <AlertDialogHeader>
                   <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                   <AlertDialogDescription>
                     This action cannot be undone. This will permanently delete all partner data, reviews, and fairness metrics from your local storage.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
+                  <div className="px-6">
+                    <label className="flex items-center gap-2 mt-4">
+                      <Checkbox checked={alsoClearServer} onCheckedChange={(v: boolean | "indeterminate") => setAlsoClearServer(Boolean(v))} />
+                      <span className="text-sm">Also clear canonical data on the server (will call server /sync)</span>
+                    </label>
+                  </div>
                 <AlertDialogFooter>
                   <AlertDialogCancel>Cancel</AlertDialogCancel>
                   <AlertDialogAction onClick={handleClearAllData}>Continue</AlertDialogAction>

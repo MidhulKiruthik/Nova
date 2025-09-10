@@ -40,6 +40,35 @@ export function FairnessDashboard({ fairnessMetrics }: FairnessDashboardProps) {
         isFinite(metric.bias),
     ) || []
 
+  // Ensure predefined age groups are present so they always appear on the radar
+  const AGE_GROUPS = ["18-30", "31-45", "46-70"]
+  const augmentedFairnessMetrics = useMemo(() => {
+    // copy to avoid mutating props
+    const copy = [...validFairnessMetrics]
+    const existingAgeGroups = new Set(
+      copy.filter((m) => m.category === "age" && m.group).map((m) => m.group),
+    )
+
+    // compute a fallback average score/bias for missing groups
+    const overallAvg =
+      copy.reduce((s, m) => s + (typeof m.averageScore === "number" ? m.averageScore : 0), 0) /
+      Math.max(1, copy.length)
+    AGE_GROUPS.forEach((g) => {
+      if (!existingAgeGroups.has(g)) {
+        copy.push({
+          demographic: `Age: ${g}`,
+          category: "age",
+          group: g,
+          averageScore: overallAvg || 0,
+          count: 0,
+          bias: 0,
+        })
+      }
+    })
+
+    return copy
+  }, [validFairnessMetrics])
+
   // Calculate overall fairness score based on valid metrics
   const overallFairnessScore =
     validFairnessMetrics.length > 0
@@ -58,11 +87,15 @@ export function FairnessDashboard({ fairnessMetrics }: FairnessDashboardProps) {
   const criticalAlerts = validFairnessMetrics.filter((m) => Math.abs(m.bias) > 0.1)
 
   const radarData = useMemo(() => {
-    // Map all valid fairness metrics directly to radar chart data
-    return validFairnessMetrics.map(metric => {
-      // Scale the fairness score for visual emphasis on the radar chart
-      // Multiplying by 5 makes even small biases result in a more noticeable drop
-      const fairnessScore = Math.max(0, Math.min(100, Math.round((1 - Math.abs(metric.bias) * 5) * 100)));
+    // Map all valid fairness metrics (augmented to include age buckets) to radar chart data
+    return augmentedFairnessMetrics.map(metric => {
+      // Scale the fairness score for visual emphasis on the radar chart.
+      // Use a stronger multiplier for age demographics so age-group biases are more visible.
+  const multiplier = metric.category === 'age' ? 7 : 5;
+      const fairnessScore = Math.max(
+        0,
+        Math.min(100, Math.round((1 - Math.abs(metric.bias) * multiplier) * 100)),
+      );
       return {
         demographic: metric.group, // Use the specific group name for the axis
         fairnessScore,

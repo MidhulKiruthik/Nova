@@ -437,7 +437,8 @@ class DataStore {
     return this.changeHistory
   }
 
-  clearAllData() {
+  // Clear all local data. If `syncServer` is true, attempt to clear canonical server copy as well
+  async clearAllData(syncServer: boolean = false) {
     this.partners = []
     this.reviews = []
     this.fairnessMetrics = []
@@ -449,6 +450,43 @@ class DataStore {
       localStorage.removeItem("nova-reviews")
       localStorage.removeItem("nova-fairness")
       localStorage.removeItem("nova-sync-status")
+    }
+
+    // Optionally clear server canonical copy by calling /sync with empty partners.
+    if (syncServer && typeof window !== 'undefined') {
+      try {
+        this.updateSyncStatus({ status: 'syncing' })
+        const apiBase = ((): string => {
+          try {
+            const nd = (window as any).__NEXT_DATA__
+            if (nd && nd.env && nd.env.NEXT_PUBLIC_API_URL) return nd.env.NEXT_PUBLIC_API_URL
+          } catch (_) {}
+          return (process.env.NEXT_PUBLIC_API_URL as string) || 'http://localhost:5000'
+        })()
+
+        const resp = await fetch(`${apiBase}/sync`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ partners: [], changeHistory: [] }),
+        })
+
+        if (!resp.ok) {
+          console.warn('Server clear /sync returned', resp.status)
+          this.updateSyncStatus({ status: 'error', error: `Server clear failed: ${resp.status}` })
+        } else {
+          // success - ensure we fetch canonical partners to reflect server state
+          try {
+            await this.performSync()
+          } catch (err) {
+            console.warn('performSync after server clear failed', err)
+            // still mark idle but record error
+            this.updateSyncStatus({ status: 'idle', lastSync: new Date(), pendingChanges: 0, error: String(err) })
+          }
+        }
+      } catch (err) {
+        console.error('Failed to clear server partners:', err)
+        this.updateSyncStatus({ status: 'error', error: err instanceof Error ? err.message : String(err) })
+      }
     }
 
     this.notify()

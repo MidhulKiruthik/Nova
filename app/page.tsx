@@ -17,7 +17,7 @@ import { PartnerSentimentList } from "@/components/partner-sentiment-list"; // I
 export default function Page() {
   const { partners, fairnessMetrics } = useDataStore();
   const [selectedPartner, setSelectedPartner] = useState<Partner | null>(null);
-  const [activeView, setActiveView] = useState<string>("partners"); // Default to partners view
+  const [activeView, setActiveView] = useState<string>("data-management"); // Default to Data Management view
 
   const handlePartnerSelect = (partner: Partner) => {
     setSelectedPartner(partner);
@@ -45,7 +45,7 @@ export default function Page() {
         <SidebarContent>
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton isActive={activeView === "partners"} onClick={() => setActiveView("partners")}>
+              <SidebarMenuButton isActive={activeView === "partners"} onClick={() => setActiveView("partners")}> 
                 <Users />
                 <span>Partners</span>
               </SidebarMenuButton>

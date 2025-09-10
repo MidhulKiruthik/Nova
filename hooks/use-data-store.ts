@@ -63,8 +63,15 @@ export const useDataStore = () => {
     dataStoreRef.current?.forceSync();
   }, []);
 
-  const clearAllData = useCallback(() => {
-    dataStoreRef.current?.clearAllData();
+  // Expose an async clearAllData that can optionally clear server-side data when called with true
+  const clearAllData = useCallback(async (syncServer: boolean = false) => {
+    try {
+      await dataStoreRef.current?.clearAllData(syncServer);
+    } catch (err) {
+      // swallow here; callers can catch if desired
+      console.error('clearAllData failed', err);
+      throw err;
+    }
   }, []);
 
   const getChangeHistory = useCallback(() => {

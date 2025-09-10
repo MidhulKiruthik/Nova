@@ -73,11 +73,16 @@ export function PartnerProfileView({ partner, onBack }: PartnerProfileViewProps)
   const forecastData = useMemo(() => {
     const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
     
-    return partner.forecastedEarnings.slice(0, 4).map((earnings, index) => ({
-      month: index === 0 ? "Forecast Sept" : `Forecast ${monthNames[8 + index]}`,
-      earnings,
-      confidence: 85 + Math.random() * 10,
-    }));
+    const lastHistoricalAvg = avgEarnings || 1
+    return partner.forecastedEarnings.slice(0, 4).map((earnings, index) => {
+      const pctChange = ((earnings - lastHistoricalAvg) / Math.max(1, lastHistoricalAvg)) * 100
+      return {
+        month: index === 0 ? "Forecast Sept" : `Forecast ${monthNames[8 + index]}`,
+        earnings,
+        confidence: 85 + Math.random() * 10,
+        pctChange,
+      }
+    })
   }, [partner.forecastedEarnings]);
 
   const performanceMetrics = [
@@ -94,6 +99,15 @@ export function PartnerProfileView({ partner, onBack }: PartnerProfileViewProps)
     { subject: "Vehicle Quality", A: partner.vehicleCondition, fullMark: 100 },
     { subject: "Trip Volume", A: Math.min(partner.tripVolume / 10, 100), fullMark: 100 },
     { subject: "Health Stability", A: Math.max(100 - partner.leavesTaken * 10, 0), fullMark: 100 },
+    // Forecast Trend: percent change from avg historical earnings to last forecasted month
+    (() => {
+      const lastForecast = partner.forecastedEarnings.length > 0 ? partner.forecastedEarnings[partner.forecastedEarnings.length - 1] : avgForecast;
+      const base = avgEarnings > 0 ? avgEarnings : Math.max(1, avgForecast);
+      const pctChange = ((lastForecast - base) / base) * 100; // e.g., -20 to +30
+      // scale to 0-100 for radar display, center at 50 where 50 means no change
+      const scaled = Math.max(0, Math.min(100, 50 + pctChange));
+      return { subject: "Forecast Trend", A: scaled, fullMark: 100 };
+    })(),
   ];
 
   const sentimentBreakdown = useMemo(() => {
@@ -252,7 +266,7 @@ export function PartnerProfileView({ partner, onBack }: PartnerProfileViewProps)
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold text-foreground">{partner.avgRating.toFixed(1)}</div>
-                  <p className className="text-xs text-muted-foreground mt-1">Customer satisfaction</p>
+                  <p className="text-xs text-muted-foreground mt-1">Customer satisfaction</p>
                 </CardContent>
               </Card>
               <Card>
@@ -350,12 +364,13 @@ export function PartnerProfileView({ partner, onBack }: PartnerProfileViewProps)
               <CardContent>
                 <ChartContainer config={chartConfig} className="h-[400px]" key={`forecast-chart-${partner.id}`}>
                   <ResponsiveContainer width="100%" height="100%">
+                    {/* Show percent-change rather than raw earnings for clearer visual change */}
                     <AreaChart data={forecastData}>
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="month" />
-                      <YAxis />
+                      <YAxis domain={[dataMin => Math.floor(dataMin - 10), dataMax => Math.ceil(dataMax + 10)]} unit="%" tickFormatter={(v) => `${v.toFixed(0)}%`} />
                       <Tooltip content={<ChartTooltipContent />} />
-                      <Area type="monotone" dataKey="earnings" stroke="#82ca9d" fill="#82ca9d" fillOpacity={0.3} />
+                      <Area type="monotone" dataKey="pctChange" stroke="#82ca9d" fill="#82ca9d" fillOpacity={0.3} />
                     </AreaChart>
                   </ResponsiveContainer>
                 </ChartContainer>
