@@ -51,11 +51,22 @@ const ForecastTooltip = ({ active, payload, label }: any) => {
     const p = payload[0].payload ?? {};
     const earnings = typeof p.earnings === "number" ? p.earnings : null;
     const pctChange = typeof p.pctChange === "number" ? p.pctChange : null;
+
     return (
-      <div className="bg-white p-2 rounded-lg shadow-md border">
+      <div className="bg-gray-900 text-white p-2 rounded-lg shadow-md border border-gray-700">
         <p className="font-semibold">{label}</p>
-        {earnings !== null && <p>Earnings: ₹{earnings.toLocaleString()}</p>}
-        {pctChange !== null && <p>Change: {pctChange.toFixed(1)}%</p>}
+        {earnings !== null && (
+          <p>Earnings: ₹{earnings.toLocaleString()}</p>
+        )}
+        {pctChange !== null && (
+          <p
+            className={
+              pctChange >= 0 ? "text-green-400 font-medium" : "text-red-400 font-medium"
+            }
+          >
+            Change: {pctChange.toFixed(1)}%
+          </p>
+        )}
       </div>
     );
   }
