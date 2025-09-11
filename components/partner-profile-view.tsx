@@ -10,8 +10,15 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft } from "lucide-react";
+import {
+  ArrowLeft,
+  TrendingUp,
+  TrendingDown,
+  AlertTriangle,
+  CheckCircle,
+} from "lucide-react";
 import {
   LineChart,
   Line,
@@ -28,25 +35,27 @@ import {
   PolarRadiusAxis,
   Radar,
 } from "recharts";
-import { ChartContainer } from "@/components/ui/chart";
-import type { Partner } from "@/lib/interfaces";
+import { ChartContainer, ChartTooltipContent } from "@/components/ui/chart";
+import type { Partner, Review } from "@/lib/interfaces";
 import { useDataStore } from "@/hooks/use-data-store";
-import { analyzeReviewSentiment } from "@/lib/nova-score-model";
+import { analyzeReviewSentiment, mapScoreToCategoricalSentiment } from "@/lib/nova-score-model";
 
 interface PartnerProfileViewProps {
   partner: Partner;
   onBack: () => void;
 }
 
-// ✅ Custom tooltip for forecast chart
-const CustomTooltip = ({ active, payload, label }: any) => {
+// --- Minimal custom tooltip for forecast (only used in Forecast chart) ---
+const ForecastTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
-    const { earnings, pctChange } = payload[0].payload;
+    const p = payload[0].payload ?? {};
+    const earnings = typeof p.earnings === "number" ? p.earnings : null;
+    const pctChange = typeof p.pctChange === "number" ? p.pctChange : null;
     return (
       <div className="bg-white p-2 rounded-lg shadow-md border">
         <p className="font-semibold">{label}</p>
-        <p>Earnings: ₹{earnings.toLocaleString()}</p>
-        <p>Change: {pctChange.toFixed(1)}%</p>
+        {earnings !== null && <p>Earnings: ₹{earnings.toLocaleString()}</p>}
+        {pctChange !== null && <p>Change: {pctChange.toFixed(1)}%</p>}
       </div>
     );
   }
@@ -57,79 +66,47 @@ export function PartnerProfileView({ partner, onBack }: PartnerProfileViewProps)
   const { reviews } = useDataStore();
   const [activeTab, setActiveTab] = useState("overview");
 
-  const avgEarnings =
-    partner.earningsHistory.length > 0
-      ? partner.earningsHistory.reduce((sum, val) => sum + val, 0) /
-        partner.earningsHistory.length
-      : 0;
-
-  const avgForecast =
-    partner.forecastedEarnings.length > 0
-      ? partner.forecastedEarnings.reduce((sum, val) => sum + val, 0) /
-        partner.forecastedEarnings.length
-      : 0;
+  const avgEarnings = partner.earningsHistory.length > 0
+    ? partner.earningsHistory.reduce((sum, val) => sum + val, 0) / partner.earningsHistory.length
+    : 0;
+  const avgForecast = partner.forecastedEarnings.length > 0
+    ? partner.forecastedEarnings.reduce((sum, val) => sum + val, 0) / partner.forecastedEarnings.length
+    : 0;
 
   const historicalScores = useMemo(() => {
     const data: { month: string; score: number; earnings: number }[] = [];
-    const monthNames = [
-      "Jan",
-      "Feb",
-      "Mar",
-      "Apr",
-      "May",
-      "Jun",
-      "Jul",
-      "Aug",
-      "Sep",
-      "Oct",
-      "Nov",
-      "Dec",
-    ];
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
     partner.earningsHistory.slice(0, 8).forEach((earnings, index) => {
       const scoreVariation = (Math.random() - 0.5) * 30;
-      const historicalScore = Math.max(
-        300,
-        Math.min(850, partner.novaScore + scoreVariation - (7 - index) * 2)
-      );
-      data.push({
-        month: monthNames[index],
-        score: Math.round(historicalScore),
-        earnings: earnings,
-      });
+      const historicalScore = Math.max(300, Math.min(850, partner.novaScore + scoreVariation - (7 - index) * 2));
+      data.push({ month: monthNames[index], score: Math.round(historicalScore), earnings: earnings });
     });
 
     return data;
   }, [partner.earningsHistory, partner.novaScore]);
 
   const forecastData = useMemo(() => {
-    const monthNames = [
-      "Jan",
-      "Feb",
-      "Mar",
-      "Apr",
-      "May",
-      "Jun",
-      "Jul",
-      "Aug",
-      "Sep",
-      "Oct",
-      "Nov",
-      "Dec",
-    ];
-
-    const lastHistoricalAvg = avgEarnings || 1;
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    
+    const lastHistoricalAvg = avgEarnings || 1
     return partner.forecastedEarnings.slice(0, 4).map((earnings, index) => {
-      const pctChange =
-        ((earnings - lastHistoricalAvg) / Math.max(1, lastHistoricalAvg)) * 100;
+      const pctChange = ((earnings - lastHistoricalAvg) / Math.max(1, lastHistoricalAvg)) * 100
       return {
         month: index === 0 ? "Forecast Sept" : `Forecast ${monthNames[8 + index]}`,
         earnings,
         confidence: 85 + Math.random() * 10,
         pctChange,
-      };
-    });
+      }
+    })
   }, [partner.forecastedEarnings]);
+
+  const performanceMetrics = [
+    { metric: "Trip Volume", value: Math.min(partner.tripVolume / 10, 100) },
+    { metric: "On-Time Rate", value: partner.onTimePickupRate * 100 },
+    { metric: "Vehicle Condition", value: partner.vehicleCondition },
+    { metric: "Customer Rating", value: partner.avgRating * 20 },
+  ];
 
   const radarData = [
     { subject: "Reliability", A: partner.onTimePickupRate * 100, fullMark: 100 },
@@ -137,52 +114,92 @@ export function PartnerProfileView({ partner, onBack }: PartnerProfileViewProps)
     { subject: "Customer Satisfaction", A: partner.avgRating * 20, fullMark: 100 },
     { subject: "Vehicle Quality", A: partner.vehicleCondition, fullMark: 100 },
     { subject: "Trip Volume", A: Math.min(partner.tripVolume / 10, 100), fullMark: 100 },
-    {
-      subject: "Health Stability",
-      A: Math.max(100 - partner.leavesTaken * 10, 0),
-      fullMark: 100,
-    },
+    { subject: "Health Stability", A: Math.max(100 - partner.leavesTaken * 10, 0), fullMark: 100 },
+    // Forecast Trend: percent change from avg historical earnings to last forecasted month
     (() => {
-      const lastForecast =
-        partner.forecastedEarnings.length > 0
-          ? partner.forecastedEarnings[partner.forecastedEarnings.length - 1]
-          : avgForecast;
+      const lastForecast = partner.forecastedEarnings.length > 0 ? partner.forecastedEarnings[partner.forecastedEarnings.length - 1] : avgForecast;
       const base = avgEarnings > 0 ? avgEarnings : Math.max(1, avgForecast);
-      const pctChange = ((lastForecast - base) / base) * 100;
+      const pctChange = ((lastForecast - base) / base) * 100; // e.g., -20 to +30
+      // scale to 0-100 for radar display, center at 50 where 50 means no change
       const scaled = Math.max(0, Math.min(100, 50 + pctChange));
       return { subject: "Forecast Trend", A: scaled, fullMark: 100 };
     })(),
   ];
 
   const sentimentBreakdown = useMemo(() => {
-    // ... unchanged (your sentiment logic)
-    return { positive: 0, neutral: 100, negative: 0, total: 0 };
+    let effectiveSentimentScore: number;
+    let totalReviewsConsidered: number;
+
+    if (partner.overallSentimentScore !== undefined) {
+      effectiveSentimentScore = partner.overallSentimentScore;
+      totalReviewsConsidered = 1;
+    } else if (partner.rawReviewsText && partner.rawReviewsText.trim() !== "") {
+      const comments = partner.rawReviewsText.split(';').map(s => s.trim()).filter(Boolean);
+      if (comments.length > 0) {
+        const totalSentiment = comments.reduce((sum, comment) => sum + analyzeReviewSentiment(comment), 0);
+        effectiveSentimentScore = totalSentiment / comments.length;
+        totalReviewsConsidered = comments.length;
+      } else {
+        effectiveSentimentScore = 2.5;
+        totalReviewsConsidered = 0;
+      }
+    } else {
+      effectiveSentimentScore = 2.5;
+      totalReviewsConsidered = 0;
+    }
+
+    if (totalReviewsConsidered === 0) {
+      return { positive: 0, neutral: 100, negative: 0, total: 0 };
+    }
+
+    // Dynamic percentages based on effective sentiment score (0-5 scale)
+    const score = effectiveSentimentScore;
+    const neutralPoint = 2.5;
+    const maxRange = 2.5; // Max distance from neutral point to either extreme (0 or 5)
+    const neutralReductionFactor = 1.5; // Factor > 1 to reduce neutral percentage
+
+    let positive = 0;
+    let negative = 0;
+    let neutral = 0;
+
+    if (score > neutralPoint) {
+      positive = ((score - neutralPoint) / maxRange) * 100 * neutralReductionFactor;
+      positive = Math.min(100, positive); // Clamp to 100%
+      neutral = 100 - positive;
+    } else if (score < neutralPoint) {
+      negative = ((neutralPoint - score) / maxRange) * 100 * neutralReductionFactor;
+      negative = Math.min(100, negative); // Clamp to 100%
+      neutral = 100 - negative;
+    } else {
+      neutral = 100;
+    }
+
+    // Ensure percentages sum to 100 and are non-negative
+    positive = Math.round(Math.max(0, positive));
+    negative = Math.round(Math.max(0, negative));
+    neutral = Math.round(Math.max(0, neutral));
+
+    // Adjust to ensure sum is exactly 100 due to rounding
+    const sum = positive + neutral + negative;
+    if (sum !== 100) {
+      // Distribute the difference to neutral to maintain sum of 100
+      neutral += (100 - sum);
+    }
+    neutral = Math.max(0, neutral); // Ensure neutral doesn't go below zero
+
+    return {
+      positive,
+      neutral,
+      negative,
+      total: totalReviewsConsidered,
+    };
   }, [partner]);
 
   const getRiskLevelDisplay = (novaScore: number) => {
-    if (novaScore > 750)
-      return {
-        level: "Low",
-        textColor: "text-green-700",
-        variant: "default" as const,
-      };
-    if (novaScore >= 700 && novaScore <= 750)
-      return {
-        level: "Medium",
-        textColor: "text-yellow-700",
-        variant: "secondary" as const,
-      };
-    if (novaScore < 700)
-      return {
-        level: "High",
-        textColor: "text-red-700",
-        variant: "destructive" as const,
-      };
-    return {
-      level: "Unknown",
-      textColor: "text-gray-500",
-      variant: "outline" as const,
-    };
+    if (novaScore > 750) return { level: "Low", textColor: "text-green-700", variant: "default" as const };
+    if (novaScore >= 700 && novaScore <= 750) return { level: "Medium", textColor: "text-yellow-700", variant: "secondary" as const };
+    if (novaScore < 700) return { level: "High", textColor: "text-red-700", variant: "destructive" as const };
+    return { level: "Unknown", textColor: "text-gray-500", variant: "outline" as const };
   };
 
   const risk = getRiskLevelDisplay(partner.novaScore);
@@ -195,45 +212,187 @@ export function PartnerProfileView({ partner, onBack }: PartnerProfileViewProps)
 
   return (
     <div className="min-h-screen bg-background">
+      <header className="border-b border-border bg-card">
+        <div className="container mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <Button variant="ghost" size="sm" onClick={onBack}>
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back to Dashboard
+              </Button>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
+                  <span className="text-primary-foreground font-bold text-sm">
+                    {partner.name.split(" ").map((n) => n[0]).join("")}
+                  </span>
+                </div>
+                <div>
+                  <h1 className="text-xl font-bold text-foreground">{partner.name}</h1>
+                  <p className="text-sm text-muted-foreground">Partner ID: {partner.id}</p>
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center gap-4">
+              <Badge variant="outline" className={risk.textColor}>
+                {risk.level} Risk
+              </Badge>
+              <div className="text-right">
+                <div className="text-2xl font-bold text-foreground">{partner.novaScore}</div>
+                <p className="text-xs text-muted-foreground">Nova Score</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
       <main className="container mx-auto px-6 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          {/* ... other tabs ... */}
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="performance">Performance</TabsTrigger>
+            <TabsTrigger value="sentiment">Sentiment</TabsTrigger>
+            <TabsTrigger value="forecast">Forecast</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="overview" className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Nova Score</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-foreground">{partner.novaScore}</div>
+                  <p className="text-xs text-muted-foreground mt-1">Overall performance index</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Risk Level</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Badge variant={risk.variant}>
+                    {risk.level}
+                  </Badge>
+                  <p className="text-xs text-muted-foreground mt-1">Current risk assessment</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Average Rating</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-foreground">{partner.avgRating.toFixed(1)}</div>
+                  <p className="text-xs text-muted-foreground mt-1">Customer satisfaction</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Total Trips</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-foreground">{partner.totalTrips}</div>
+                  <p className="text-xs text-muted-foreground mt-1">Lifetime completed trips</p>
+                </CardContent>
+              </Card>
+            </div>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Performance Radar</CardTitle>
+                <CardDescription>Key performance indicators at a glance</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ChartContainer config={chartConfig} className="h-[300px]" key={`radar-chart-${partner.id}`}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <RadarChart outerRadius={90} width={730} height={250} data={radarData}>
+                      <PolarGrid />
+                      <PolarAngleAxis dataKey="subject" />
+                      <PolarRadiusAxis angle={90} domain={[0, 100]} />
+                      <Radar name={partner.name} dataKey="A" stroke="#8884d8" fill="#8884d8" fillOpacity={0.6} />
+                      <Tooltip content={<ChartTooltipContent />} />
+                    </RadarChart>
+                  </ResponsiveContainer>
+                </ChartContainer>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="performance" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Historical Performance</CardTitle>
+                <CardDescription>Nova Score trends over the past 12 months</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ChartContainer config={chartConfig} className="h-[400px]" key={`historical-chart-${partner.id}`}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={historicalScores}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="month" />
+                      <YAxis />
+                      <Tooltip content={<ChartTooltipContent />} />
+                      <Line type="monotone" dataKey="score" stroke="#8884d8" strokeWidth={2} dot={false} />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </ChartContainer>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="sentiment" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Customer Sentiment Analysis</CardTitle>
+                <CardDescription>Review sentiment breakdown and trends</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {partner.overallSentimentScore !== undefined && (
+                  <div className="mb-4 p-3 bg-muted rounded-md">
+                    <p className="text-sm text-muted-foreground">
+                      Overall Sentiment Score from Excel: <span className="font-medium text-foreground">{partner.overallSentimentScore.toFixed(1)}/5</span>
+                    </p>
+                  </div>
+                )}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
+                  <div>
+                    <div className="text-3xl font-bold text-green-600">{sentimentBreakdown.positive}%</div>
+                    <p className="text-sm text-muted-foreground">Positive Reviews</p>
+                  </div>
+                  <div>
+                    <div className="text-3xl font-bold text-yellow-600">{sentimentBreakdown.neutral}%</div>
+                    <p className="text-sm text-muted-foreground">Neutral Reviews</p>
+                  </div>
+                  <div>
+                    <div className="text-3xl font-bold text-red-600">{sentimentBreakdown.negative}%</div>
+                    <p className="text-sm text-muted-foreground">Negative Reviews</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
 
           <TabsContent value="forecast" className="space-y-6">
             <Card>
               <CardHeader>
                 <CardTitle>Earnings Forecast</CardTitle>
-                <CardDescription>
-                  Predicted earnings based on historical patterns
-                </CardDescription>
+                <CardDescription>Predicted earnings based on historical patterns</CardDescription>
               </CardHeader>
               <CardContent>
-                <ChartContainer
-                  config={chartConfig}
-                  className="h-[400px]"
-                  key={`forecast-chart-${partner.id}`}
-                >
+                <ChartContainer config={chartConfig} className="h-[400px]" key={`forecast-chart-${partner.id}`}>
                   <ResponsiveContainer width="100%" height="100%">
+                    {/* Show percent-change rather than raw earnings for clearer visual change */}
                     <AreaChart data={forecastData}>
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="month" />
-                      {/* ✅ FIXED YAxis */}
+                      {/* Minimal fix: explicitly use pctChange as Y axis dataKey */}
                       <YAxis
                         dataKey="pctChange"
-                        domain={[
-                          (dataMin) => Math.floor(dataMin - 10),
-                          (dataMax) => Math.ceil(dataMax + 10),
-                        ]}
+                        domain={[dataMin => Math.floor(dataMin - 10), dataMax => Math.ceil(dataMax + 10)]}
                         tickFormatter={(v) => `${v.toFixed(0)}%`}
                       />
-                      <Tooltip content={<CustomTooltip />} />
-                      <Area
-                        type="monotone"
-                        dataKey="pctChange"
-                        stroke="#82ca9d"
-                        fill="#82ca9d"
-                        fillOpacity={0.3}
-                      />
+                      {/* Minimal change: use small custom tooltip to show earnings + pct */}
+                      <Tooltip content={<ForecastTooltip />} />
+                      <Area type="monotone" dataKey="pctChange" stroke="#82ca9d" fill="#82ca9d" fillOpacity={0.3} />
                     </AreaChart>
                   </ResponsiveContainer>
                 </ChartContainer>
