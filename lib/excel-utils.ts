@@ -1,3 +1,19 @@
+// Download a blank template Excel file for partner import
+export function downloadTemplateExcel(filename = "nova-partner-template.xlsx") {
+  const columns = [
+    "ID", "Age", "Gender", "Ethnicity", "AreaType", "Name", "Mail", "Phone", "Nova Score", "Trip Volume", "On-Time Rate", "Leaves Taken", "Medical Stability", "Vehicle Condition", "Risk Level", "Join Date", "Total Trips", "Avg Rating", "Cancellation Rate", "Earnings Jan", "Earnings Feb", "Earnings Mar", "Earnings Apr", "Earnings May", "Earnings Jun", "Earnings Jul", "Earnings Aug", "Forecast Sept", "Forecast Oct", "Forecast Nov", "Forecast Dec", "Reviews", "sentiment"
+  ];
+  const ws = XLSX.utils.aoa_to_sheet([columns]);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Template");
+  const excelBuffer = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+  const blob = new Blob([excelBuffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = filename;
+  link.click();
+  URL.revokeObjectURL(link.href);
+}
 import * as XLSX from "xlsx"
 import type { Partner, FairnessMetric } from "./interfaces" // Updated import
 
