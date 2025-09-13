@@ -142,4 +142,4 @@ MIT License
 
 ## Contact
 
-For support or collaboration, contact [Midhul Kiruthik](mailto:midhulkiruthik@gmail.com).
+For support or collaboration, contact [Midhul Kiruthik](mailto:midhulkiruthik@gmail.com) or [Adharsh Srinivasan](mailto:adharshsb05@gmail.com).
