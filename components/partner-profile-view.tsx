@@ -50,23 +50,10 @@ const ForecastTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     const p = payload[0].payload ?? {};
     const earnings = typeof p.earnings === "number" ? p.earnings : null;
-    const pctChange = typeof p.pctChange === "number" ? p.pctChange : null;
-
     return (
-      <div className="bg-gray-900 text-white p-2 rounded-lg shadow-md border border-gray-700">
+      <div className="bg-white p-2 rounded-lg shadow-md border">
         <p className="font-semibold">{label}</p>
-        {earnings !== null && (
-          <p>Earnings: ₹{earnings.toLocaleString()}</p>
-        )}
-        {pctChange !== null && (
-          <p
-            className={
-              pctChange >= 0 ? "text-green-400 font-medium" : "text-red-400 font-medium"
-            }
-          >
-            Change: {pctChange.toFixed(1)}%
-          </p>
-        )}
+        {earnings !== null && <p>Earnings: ₹{earnings.toLocaleString()}</p>}
       </div>
     );
   }
@@ -98,18 +85,12 @@ export function PartnerProfileView({ partner, onBack }: PartnerProfileViewProps)
   }, [partner.earningsHistory, partner.novaScore]);
 
   const forecastData = useMemo(() => {
-    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    
-    const lastHistoricalAvg = avgEarnings || 1
-    return partner.forecastedEarnings.slice(0, 4).map((earnings, index) => {
-      const pctChange = ((earnings - lastHistoricalAvg) / Math.max(1, lastHistoricalAvg)) * 100
-      return {
-        month: index === 0 ? "Forecast Sept" : `Forecast ${monthNames[8 + index]}`,
-        earnings,
-        confidence: 85 + Math.random() * 10,
-        pctChange,
-      }
-    })
+    const monthNames = ["Sept", "Oct", "Nov", "Dec"];
+    return partner.forecastedEarnings.slice(0, 4).map((earnings, index) => ({
+      month: `Forecast ${monthNames[index]}`,
+      earnings,
+      confidence: 85 + Math.random() * 10,
+    }));
   }, [partner.forecastedEarnings]);
 
   const performanceMetrics = [
@@ -386,24 +367,22 @@ export function PartnerProfileView({ partner, onBack }: PartnerProfileViewProps)
             <Card>
               <CardHeader>
                 <CardTitle>Earnings Forecast</CardTitle>
-                <CardDescription>Predicted earnings based on historical patterns</CardDescription>
+                <CardDescription>Predicted earnings for Sept–Dec (₹ per month)</CardDescription>
               </CardHeader>
               <CardContent>
                 <ChartContainer config={chartConfig} className="h-[400px]" key={`forecast-chart-${partner.id}`}>
                   <ResponsiveContainer width="100%" height="100%">
-                    {/* Show percent-change rather than raw earnings for clearer visual change */}
                     <AreaChart data={forecastData}>
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="month" />
-                      {/* Minimal fix: explicitly use pctChange as Y axis dataKey */}
                       <YAxis
-                        dataKey="pctChange"
-                        domain={[dataMin => Math.floor(dataMin - 10), dataMax => Math.ceil(dataMax + 10)]}
-                        tickFormatter={(v) => `${v.toFixed(0)}%`}
+                        dataKey="earnings"
+                        domain={[dataMin => Math.floor(dataMin * 0.9), dataMax => Math.ceil(dataMax * 1.1)]}
+                        tickFormatter={(v) => `₹${v.toLocaleString()}`}
+                        label={{ value: "Earnings (₹ per month)", angle: -90, position: "insideLeft" }}
                       />
-                      {/* Minimal change: use small custom tooltip to show earnings + pct */}
                       <Tooltip content={<ForecastTooltip />} />
-                      <Area type="monotone" dataKey="pctChange" stroke="#82ca9d" fill="#82ca9d" fillOpacity={0.3} />
+                      <Area type="monotone" dataKey="earnings" stroke="#82ca9d" fill="#82ca9d" fillOpacity={0.3} />
                     </AreaChart>
                   </ResponsiveContainer>
                 </ChartContainer>
