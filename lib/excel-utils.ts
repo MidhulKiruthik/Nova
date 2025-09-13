@@ -7,7 +7,9 @@ export function downloadTemplateExcel(filename = "nova-partner-template.xlsx") {
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, "Template");
   const excelBuffer = XLSX.write(wb, { bookType: "xlsx", type: "array" });
-  const blob = new Blob([excelBuffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+  // Ensure we pass an ArrayBuffer (not a Uint8Array) to Blob to satisfy TypeScript DOM typings
+  const templateBlobData = excelBuffer instanceof Uint8Array ? excelBuffer.buffer : (excelBuffer as any)
+  const blob = new Blob([templateBlobData], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
   const link = document.createElement("a");
   link.href = URL.createObjectURL(blob);
   link.download = filename;
@@ -187,7 +189,9 @@ export const createExcelFile = (partners: Partner[]): Uint8Array => {
 // Download Excel file
 export const downloadExcelFile = (partners: Partner[], filename = "nova-partners.xlsx") => {
   const excelBuffer = createExcelFile(partners)
-  const blob = new Blob([excelBuffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" })
+  // Normalize to ArrayBuffer for Blob constructor to satisfy TypeScript's strict typings
+  const excelBlobData = excelBuffer instanceof Uint8Array ? excelBuffer.buffer : (excelBuffer as any)
+  const blob = new Blob([excelBlobData], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" })
 
   const link = document.createElement("a")
   link.href = URL.createObjectURL(blob)
@@ -357,7 +361,8 @@ export const createDetailedReport = (partners: Partner[], options: ExportOptions
       }))
     : []
 
-  const sheets = [{ name: "Partners", data: partnerData }]
+  // Explicitly type sheets as ExportReport['sheets'] so we can push differently-shaped data arrays later
+  const sheets: ExportReport['sheets'] = [{ name: "Partners", data: partnerData }]
 
   if (earningsData.length > 0) {
     sheets.push({ name: "Earnings History", data: earningsData })
@@ -468,7 +473,9 @@ export const createMultiSheetExcelFile = (report: ExportReport): Uint8Array => {
 
 export const downloadReport = (report: ExportReport) => {
   const excelBuffer = createMultiSheetExcelFile(report)
-  const blob = new Blob([excelBuffer], {
+  // Normalize to ArrayBuffer for Blob constructor
+  const reportBlobData = excelBuffer instanceof Uint8Array ? excelBuffer.buffer : (excelBuffer as any)
+  const blob = new Blob([reportBlobData], {
     type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
   })
 
