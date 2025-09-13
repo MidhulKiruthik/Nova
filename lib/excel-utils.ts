@@ -236,25 +236,8 @@ export const filterPartnersForExport = (partners: Partner[], options: ExportOpti
 export const createAnalyticsReport = (partners: Partner[], fairnessMetrics: FairnessMetric[]): ExportReport => {
   const filteredPartners = partners
 
-  // Summary statistics
-  const summaryData = [
-    {
-      "Total Partners": filteredPartners.length,
-      "Average Nova Score": Math.round(
-        filteredPartners.reduce((sum, p) => sum + p.novaScore, 0) / filteredPartners.length,
-      ),
-      "High Risk Partners": filteredPartners.filter((p) => p.riskLevel === "high").length,
-      "Medium Risk Partners": filteredPartners.filter((p) => p.riskLevel === "medium").length,
-      "Low Risk Partners": filteredPartners.filter((p) => p.riskLevel === "low").length,
-      "Average Rating": (filteredPartners.reduce((sum, p) => sum + p.avgRating, 0) / filteredPartners.length).toFixed(
-        2,
-      ),
-      "Average On-Time Rate": (
-        filteredPartners.reduce((sum, p) => sum + p.onTimePickupRate, 0) / filteredPartners.length
-      ).toFixed(3),
-      "Total Trips": filteredPartners.reduce((sum, p) => sum + p.totalTrips, 0),
-    },
-  ]
+  // Summary statistics: include all partner columns for each partner
+  const summaryData = filteredPartners.map(partnerToExcelRow)
 
   // Score distribution
   const scoreDistribution = [
