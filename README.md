@@ -135,8 +135,8 @@ Pull requests and issues are welcome! Please open an issue for bugs, feature req
 ---
 
 ## License
+MIT License – see the [LICENSE](LICENSE) file for details.
 
-MIT License
 
 ---
 
